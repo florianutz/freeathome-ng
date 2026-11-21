@@ -470,9 +470,7 @@ class FreeAtHomeController:
 
         for device_cls in DEVICE_CLASSES:
             if device_cls in (FahLight, FahSwitch):
-                wanted_pids = device_cls.pairing_ids(  # type: ignore[call-arg]
-                    function_id, switch_as_x=self.switch_as_x
-                )
+                wanted_pids = device_cls.pairing_ids(function_id, switch_as_x=self.switch_as_x)
             else:
                 wanted_pids = device_cls.pairing_ids(function_id)  # type: ignore[attr-defined]
 
@@ -484,7 +482,7 @@ class FreeAtHomeController:
                 continue
 
             param_spec = (
-                device_cls.parameter_ids(function_id)  # type: ignore[attr-defined]
+                device_cls.parameter_ids(function_id)
                 if hasattr(device_cls, "parameter_ids")
                 else None
             )
@@ -757,8 +755,8 @@ class FreeAtHomeController:
             # 3. Scenes Triggered
             scenes_triggered = frame.get("scenesTriggered") or {}
             if scenes_triggered:
-                for cb in list(self._scene_triggered_cbs):
-                    await cb(sysap_uuid, scenes_triggered)
+                for scene_cb in list(self._scene_triggered_cbs):
+                    await scene_cb(sysap_uuid, scenes_triggered)
 
             # 4. Runtime device additions
             added_devices_payload = dict(frame.get("devices") or {})
@@ -784,8 +782,8 @@ class FreeAtHomeController:
                     initializing=False,
                 )
                 if newly_created:
-                    for cb in list(self._devices_added_cbs):
-                        await cb(newly_created)
+                    for added_cb in list(self._devices_added_cbs):
+                        await added_cb(newly_created)
 
             # 5. Runtime device removals
             for removed_serial in frame.get("devicesRemoved") or []:
