@@ -88,7 +88,7 @@ CI (`.github/workflows/validate.yml`) additionally runs the tests on the minimum
 
 ## 8. Workflow
 
-- Small, single-purpose PRs on a feature branch; never push to `main` directly.
+- Small, single-purpose PRs on a feature branch; never push to `main` directly. Fill in `.github/pull_request_template.md`.
 - Bug fixes start with a failing test; for user reports with a dump use `/reproduce-from-dump`. Raw dumps never enter the repository, a PR or an issue comment.
 - Review comments: human reviewers first. Bot suggestions are accepted when they prevent a bug, fix a rule in this file or clearly help maintainers; otherwise answer why not. Agents stop and report after 3 failed attempts at the same CI failure.
 - Add user-visible changes to `CHANGELOG.md` under `[Unreleased]`.
@@ -103,6 +103,8 @@ CI (`.github/workflows/validate.yml`) additionally runs the tests on the minimum
 - `/release` — prepare a release (only when the maintainer starts it).
 - `/reproduce-from-dump` — anonymise a user's dump into a fixture and a failing test.
 - `/issue-analysis` — analyse an issue and draft a reply for approval.
+- `/bump-ha` — move tests to a new HA release; raise the minimum HA with an ADR when needed.
+- `/quality-scale-audit` — check every quality scale rule against the code, with evidence.
 
 Skill conventions: frontmatter with `description` (when to use), `argument-hint` and `allowed-tools`; `disable-model-invocation: true` for skills with outward effects; under ~100 lines, longer checklists in the skill's `references/`; a step that posts, tags or publishes waits for the maintainer.
 

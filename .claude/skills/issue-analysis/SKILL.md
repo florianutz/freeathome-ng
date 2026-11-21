@@ -18,7 +18,7 @@ Analyse issue #$ARGUMENTS. This skill analyses and drafts; it does not implement
 - Find the code path with Grep/Glob and read the files (device model in `api/devices/`, entity platform, `controller.py` for discovery, `migration.py` for takeover problems).
 - Check `CHANGELOG.md` and the merged PRs: is it already fixed or a known limitation (README "Known limitations")?
 - Check minimum requirements: HA ≥ the version in AGENTS.md section 1, SysAP firmware ≥ 2.6.0 with the Local API enabled.
-- Verify claims about Home Assistant behaviour against the HA developer docs or source, not memory.
+- Verify claims about Home Assistant behaviour against the installed HA source (`python -c "import homeassistant, os; print(os.path.dirname(homeassistant.__file__))"`) and the developer docs, not memory.
 - With an attached dump, say whether `/reproduce-from-dump` can reproduce it; do not run it in this skill.
 
 ## 3. Classify
