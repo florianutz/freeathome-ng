@@ -20,7 +20,7 @@ Run from the repository root:
 7. JSON/YAML sanity: `python3 -c "import json,yaml,pathlib as p; d=p.Path('custom_components/freeathome_ng'); [json.loads(f.read_text()) for f in [d/'manifest.json',d/'strings.json',*d.glob('translations/*.json'),*d.glob('icons.json')]]; yaml.safe_load((d/'services.yaml').read_text()); yaml.safe_load((d/'quality_scale.yaml').read_text())"`
 8. Optional, only if Docker is available: `docker run --rm -v "$PWD":/github/workspace ghcr.io/home-assistant/hassfest`
 
-If a tool is missing, install the dev extras once with `pip install -e ".[dev]"`.
+If a tool is missing, install the pinned stack once with `pip install -r requirements_test.txt` (Python 3.14).
 
 ## Report
 

@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Climate: thermostats failed to load on current Home Assistant (`AttributeError` while adding the entity) and never reported current or target temperature, because the entity used a non-existent `native_*` temperature API.
+
 ### Changed
 - Development: new engineering handbook (`AGENTS.md`), `CLAUDE.md`, architecture decision records (`docs/DECISIONS.md`), Integration Quality Scale tracking (`quality_scale.yaml`), Claude Code skills, `ruff format`, strict `mypy` for the `api/` layer, coverage reporting and a translation parity script in CI.
+- Development: the test suite now runs against real Home Assistant (`pytest-homeassistant-custom-component`, Python 3.14) instead of hand-written stubs, with syrupy snapshots of all entities and devices.
 
 ## [1.0.0] - 2026-11-21
 

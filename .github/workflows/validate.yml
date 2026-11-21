@@ -14,11 +14,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements_test.txt
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install aiohttp pytest pytest-asyncio pytest-cov pyyaml ruff mypy
+          pip install -r requirements_test.txt
       - name: Lint with ruff
         run: ruff check custom_components tests scripts
       - name: Check formatting with ruff

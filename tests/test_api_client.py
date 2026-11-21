@@ -7,15 +7,19 @@ import base64
 import json
 import logging
 import socket
+from unittest.mock import AsyncMock
 
+import aiohttp
 import pytest
 from aiohttp import web
-from freeathome_ng.api.client import (
+from mock_sysap_server import MockSysApServer
+
+from custom_components.freeathome_ng.api.client import (
     FreeAtHomeAuthError,
     FreeAtHomeConnectionError,
     FreeAtHomeLocalApiClient,
 )
-from freeathome_ng.api.controller import FreeAtHomeController
+from custom_components.freeathome_ng.api.controller import FreeAtHomeController
 
 SYSAP_UUID = "00000000-0000-0000-0000-000000000000"
 
@@ -340,7 +344,7 @@ async def test_websocket_reconnect_warning_deduplicated(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Verify repeated WebSocket reconnect failures only log one WARNING until recovery."""
-    import freeathome_ng.api.client as client_mod
+    import custom_components.freeathome_ng.api.client as client_mod
 
     monkeypatch.setattr(client_mod, "WS_RECONNECT_INITIAL_DELAY", 0.01)
     monkeypatch.setattr(client_mod, "WS_RECONNECT_MAX_DELAY", 0.01)
@@ -350,7 +354,7 @@ async def test_websocket_reconnect_warning_deduplicated(
         unused_port = sock.getsockname()[1]
 
     client = FreeAtHomeLocalApiClient(f"127.0.0.1:{unused_port}", "apiuser", "secret")
-    caplog.set_level(logging.WARNING, logger="freeathome_ng.api.client")
+    caplog.set_level(logging.WARNING, logger="custom_components.freeathome_ng.api.client")
 
     async def _noop(_msg: dict) -> None:
         return None
@@ -363,3 +367,40 @@ async def test_websocket_reconnect_warning_deduplicated(
         assert "Lost WebSocket connection" in warnings[0].message
     finally:
         await client.close()
+
+
+async def test_mock_sysap_server_health_and_ws_broadcast() -> None:
+    """Verify standalone MockSysApServer serves /health, REST, and broadcasts WS updates."""
+    server = MockSysApServer(port=0)
+    await server.start()
+    client = FreeAtHomeLocalApiClient(server.host_port, "apiuser", "secret")
+    controller = FreeAtHomeController(client)
+    try:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(f"http://{server.host_port}/health") as resp,
+        ):
+            assert resp.status == 200
+            health = await resp.json()
+            assert health["status"] == "healthy"
+            assert health["device_count"] > 10
+
+        await controller.initialize()
+        switch = next(
+            d for d in controller.get_devices("switch") if d.serialnumber == "ABB700D10001"
+        )
+        assert switch.is_on() is True  # type: ignore[attr-defined]
+
+        updated = asyncio.Event()
+        switch.register_device_updated_cb(AsyncMock(side_effect=lambda _d: updated.set()))
+        controller.start_listening()
+        await asyncio.sleep(0.05)
+
+        await client.set_datapoint(
+            controller.primary_sysap_uuid, "ABB700D10001", "ch0003", "odp0000", "0"
+        )
+        await asyncio.wait_for(updated.wait(), timeout=2.0)
+        assert switch.is_on() is False  # type: ignore[attr-defined]
+    finally:
+        await controller.close()
+        await server.stop()
