@@ -94,7 +94,7 @@ def _make_hass() -> tuple[SimpleNamespace, dict[str, list], dict[str, dict]]:
             async_remove=_remove_service,
         ),
         bus=SimpleNamespace(
-            async_listen_once=lambda *_a, **_kw: (lambda: None),
+            async_listen_once=lambda *_a, **_kw: lambda: None,
             async_fire=lambda *_a, **_kw: None,
         ),
         config=SimpleNamespace(path=lambda filename: filename),
@@ -134,7 +134,7 @@ def _make_entry(
         runtime_data=None,
         unload_cbs=unload_cbs,
         async_on_unload=lambda cb: unload_cbs.append(cb),
-        add_update_listener=lambda _cb: (lambda: None),
+        add_update_listener=lambda _cb: lambda: None,
         async_start_reauth=lambda _hass: (
             reauth_log.append(entry_id) if reauth_log is not None else None
         ),
@@ -207,7 +207,10 @@ async def test_reload_listener_and_suppress_reload() -> None:
         await async_setup_entry(hass, entry)  # type: ignore[arg-type]
 
         # Virtual device persistence alone must NOT trigger a reload
-        entry.data = {**entry.data, CONF_VIRTUAL_DEVICES: {"v1": {"device_type": "SwitchingActuator"}}}
+        entry.data = {
+            **entry.data,
+            CONF_VIRTUAL_DEVICES: {"v1": {"device_type": "SwitchingActuator"}},
+        }
         await _async_reload_entry(hass, entry)  # type: ignore[arg-type]
         assert logs["scheduled_reloads"] == []
 
@@ -372,7 +375,9 @@ async def test_service_validation_and_virtual_device_persistence() -> None:
             )
 
         reg_vdev = registries["services"][f"{DOMAIN}.{SERVICE_REGISTER_VIRTUAL_DEVICE}"]["handler"]
-        unreg_vdev = registries["services"][f"{DOMAIN}.{SERVICE_UNREGISTER_VIRTUAL_DEVICE}"]["handler"]
+        unreg_vdev = registries["services"][f"{DOMAIN}.{SERVICE_UNREGISTER_VIRTUAL_DEVICE}"][
+            "handler"
+        ]
 
         await reg_vdev(
             SimpleNamespace(
@@ -414,9 +419,10 @@ async def test_mock_sysap_server_health_and_ws_broadcast() -> None:
     client = FreeAtHomeLocalApiClient(server.host_port, "apiuser", "secret")
     controller = FreeAtHomeController(client)
     try:
-        async with aiohttp.ClientSession() as session, session.get(
-            f"http://{server.host_port}/health"
-        ) as resp:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(f"http://{server.host_port}/health") as resp,
+        ):
             assert resp.status == 200
             health = await resp.json()
             assert health["status"] == "healthy"
@@ -424,9 +430,7 @@ async def test_mock_sysap_server_health_and_ws_broadcast() -> None:
 
         await controller.initialize()
         switch = next(
-            d
-            for d in controller.get_devices("switch")
-            if d.serialnumber == "ABB700D10001"
+            d for d in controller.get_devices("switch") if d.serialnumber == "ABB700D10001"
         )
         assert switch.is_on() is True  # type: ignore[attr-defined]
 

@@ -89,9 +89,7 @@ class FreeAtHomeNgRuntime:
     controller: FreeAtHomeController
     entry: ConfigEntry[Any]
     config_snapshot: dict[str, Any] = field(default_factory=dict)
-    platform_adders: dict[str, Callable[[list[FahBaseDevice]], None]] = field(
-        default_factory=dict
-    )
+    platform_adders: dict[str, Callable[[list[FahBaseDevice]], None]] = field(default_factory=dict)
     hub_device_id: str | None = None
     suppress_reload: bool = False
 
@@ -142,9 +140,7 @@ def _resolve_target_runtimes(
     if host:
         filtered = [rt for rt in runtimes if rt.controller.client.host == host]
         if not filtered:
-            raise ServiceValidationError(
-                f"No loaded free@home NG entry matches host '{host}'"
-            )
+            raise ServiceValidationError(f"No loaded free@home NG entry matches host '{host}'")
         return filtered
     return runtimes
 
@@ -178,9 +174,7 @@ def _resolve_single_target_entry(
     if entry_id:
         match = loaded_entries.get(entry_id)
         if match is None or getattr(match, "runtime_data", None) is None:
-            raise ServiceValidationError(
-                f"free@home NG hub entry '{entry_id}' is not loaded"
-            )
+            raise ServiceValidationError(f"free@home NG hub entry '{entry_id}' is not loaded")
         if host and match.runtime_data.controller.client.host != host:
             raise ServiceValidationError(
                 f"free@home NG hub entry '{entry_id}' does not match host '{host}'"
@@ -194,9 +188,7 @@ def _resolve_single_target_entry(
             if cfg_entry.runtime_data.controller.client.host == host
         ]
         if not matching:
-            raise ServiceValidationError(
-                f"No loaded free@home NG entry matches host '{host}'"
-            )
+            raise ServiceValidationError(f"No loaded free@home NG entry matches host '{host}'")
         if len(matching) > 1:
             raise ServiceValidationError(
                 f"Multiple free@home NG entries match host '{host}'; specify entry_id."
@@ -210,14 +202,11 @@ def _resolve_single_target_entry(
     return candidates[0]
 
 
-async def _async_reload_entry(
-    hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry
-) -> None:
+async def _async_reload_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry) -> None:
     """Schedule a config entry reload when options or connection data change."""
     runtime = getattr(entry, "runtime_data", None)
     if runtime is not None and (
-        runtime.suppress_reload
-        or _connection_snapshot(entry) == runtime.config_snapshot
+        runtime.suppress_reload or _connection_snapshot(entry) == runtime.config_snapshot
     ):
         return
     if hasattr(hass.config_entries, "async_schedule_reload"):
@@ -226,9 +215,7 @@ async def _async_reload_entry(
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry) -> bool:
     """Set up free@home NG from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     loaded_entries: dict[str, FreeAtHomeNgConfigEntry] = domain_data.setdefault(
@@ -306,9 +293,7 @@ async def async_setup_entry(
             continue
         try:
             await controller.client.register_virtual_device(
-                sysap_uuid=str(
-                    vdev_cfg.get("sysap_uuid") or controller.primary_sysap_uuid
-                ),
+                sysap_uuid=str(vdev_cfg.get("sysap_uuid") or controller.primary_sysap_uuid),
                 native_id=native_id,
                 device_type=str(vdev_cfg["device_type"]),
                 display_name=vdev_cfg.get("display_name"),
@@ -317,9 +302,7 @@ async def async_setup_entry(
                 capabilities=vdev_cfg.get("capabilities"),
             )
         except Exception as err:
-            _LOGGER.warning(
-                "Failed restoring virtual device %s on startup: %s", native_id, err
-            )
+            _LOGGER.warning("Failed restoring virtual device %s on startup: %s", native_id, err)
 
     reauth_started = False
 
@@ -336,9 +319,7 @@ async def async_setup_entry(
 
     controller.set_auth_failed_callback(_handle_rejected_login)
 
-    async def _on_scene_triggered(
-        sysap_uuid: str, scenes_triggered: dict[str, Any]
-    ) -> None:
+    async def _on_scene_triggered(sysap_uuid: str, scenes_triggered: dict[str, Any]) -> None:
         hass.bus.async_fire(
             EVENT_SCENE_TRIGGERED,
             {
@@ -391,9 +372,7 @@ async def async_setup_entry(
     async def _shutdown(_event: Any) -> None:
         await controller.close()
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
-    )
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown))
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -408,9 +387,7 @@ async def async_remove_config_entry_device(
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Allow deleting a device from HA only if it is no longer on this SysAP."""
-    active_identifiers: set[tuple[str, str]] = {
-        (DOMAIN, f"hub_{config_entry.entry_id}")
-    }
+    active_identifiers: set[tuple[str, str]] = {(DOMAIN, f"hub_{config_entry.entry_id}")}
     runtime = getattr(config_entry, "runtime_data", None)
     if runtime is not None:
         for dev in runtime.controller.devices:
@@ -432,9 +409,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             filename = f"freeathome_ng_dump_{safe_host}_{timestamp}.json"
             path = hass.config.path(filename)
             await hass.async_add_executor_job(_write_json_file, path, config_data)
-            _LOGGER.info(
-                "Dumped free@home NG config for %s to %s", ctrl.client.host, path
-            )
+            _LOGGER.info("Dumped free@home NG config for %s to %s", ctrl.client.host, path)
 
     async def _handle_monitor(call: ServiceCall) -> None:
         duration = int(call.data.get("duration", 10))
@@ -446,9 +421,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             path = hass.config.path(filename)
             frames: list[dict[str, Any]] = []
 
-            def _capture(
-                frame: dict[str, Any], target: list[dict[str, Any]] = frames
-            ) -> None:
+            def _capture(frame: dict[str, Any], target: list[dict[str, Any]] = frames) -> None:
                 target.append(frame)
 
             ctrl.add_ws_frame_listener(_capture)
@@ -479,9 +452,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
         value = str(call.data["value"])
         for ctrl in _resolve_target_controllers(hass, host):
             sysap_uuid = call.data.get("sysap_uuid") or ctrl.primary_sysap_uuid
-            await ctrl.client.set_datapoint(
-                sysap_uuid, serial, channel, datapoint, value
-            )
+            await ctrl.client.set_datapoint(sysap_uuid, serial, channel, datapoint, value)
 
     async def _handle_register_virtual_device(call: ServiceCall) -> None:
         host = call.data.get("host")
@@ -567,9 +538,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
         dry_run = bool(call.data.get("dry_run", True))
         cutover = bool(call.data.get("cutover", False))
         raw_serials = str(call.data.get("serialnumbers") or "").strip()
-        filter_serials = (
-            set(parse_serialnumbers_text(raw_serials)) if raw_serials else None
-        )
+        filter_serials = set(parse_serialnumbers_text(raw_serials)) if raw_serials else None
         return await async_migrate_from_legacy(
             hass,
             target_entry,
@@ -698,9 +667,7 @@ def _write_jsonl_file(path: str, frames: list[dict[str, Any]]) -> None:
             handle.write(json.dumps(frame, ensure_ascii=False) + "\n")
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry) -> bool:
     """Unload free@home NG config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:

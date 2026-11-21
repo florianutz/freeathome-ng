@@ -54,19 +54,11 @@ class MockSysApServer:
         self.app = web.Application()
         self.app.router.add_get("/health", self.handle_health)
         self.app.router.add_get("/settings.json", self.handle_settings)
-        self.app.router.add_get(
-            "/fhapi/v1/api/rest/configuration", self.handle_configuration
-        )
+        self.app.router.add_get("/fhapi/v1/api/rest/configuration", self.handle_configuration)
         self.app.router.add_get("/fhapi/v1/api/rest/devicelist", self.handle_devicelist)
-        self.app.router.add_get(
-            "/fhapi/v1/api/rest/device/{sysap}/{serial}", self.handle_device
-        )
-        self.app.router.add_get(
-            "/fhapi/v1/api/rest/datapoint/{sysap}/{dp}", self.handle_datapoint
-        )
-        self.app.router.add_put(
-            "/fhapi/v1/api/rest/datapoint/{sysap}/{dp}", self.handle_datapoint
-        )
+        self.app.router.add_get("/fhapi/v1/api/rest/device/{sysap}/{serial}", self.handle_device)
+        self.app.router.add_get("/fhapi/v1/api/rest/datapoint/{sysap}/{dp}", self.handle_datapoint)
+        self.app.router.add_put("/fhapi/v1/api/rest/datapoint/{sysap}/{dp}", self.handle_datapoint)
         self.app.router.add_put(
             "/fhapi/v1/api/rest/parameter/{sysap}/{param}", self.handle_parameter
         )
@@ -78,9 +70,7 @@ class MockSysApServer:
             "/fhapi/v1/api/rest/proxydevice/{sysap}/{cls}/{dev}/action/{action}",
             self.handle_proxydevice,
         )
-        self.app.router.add_post(
-            "/fhapi/v1/api/rest/notifications", self.handle_notifications
-        )
+        self.app.router.add_post("/fhapi/v1/api/rest/notifications", self.handle_notifications)
         self.app.router.add_get("/fhapi/v1/api/ws", self.handle_ws)
 
         self._runner: web.AppRunner | None = None
@@ -92,9 +82,7 @@ class MockSysApServer:
         return f"{self.bind_host}:{self.port}"
 
     def _authorized(self, request: web.Request) -> bool:
-        expected = base64.b64encode(
-            f"{self.username}:{self.password}".encode()
-        ).decode("ascii")
+        expected = base64.b64encode(f"{self.username}:{self.password}".encode()).decode("ascii")
         return request.headers.get("Authorization") == f"Basic {expected}"
 
     async def broadcast_ws_frame(self, payload: dict[str, Any]) -> None:
@@ -164,11 +152,7 @@ class MockSysApServer:
             return web.Response(status=401)
         sysap = request.match_info["sysap"]
         serial = request.match_info["serial"]
-        dev = (
-            self.configuration.get(sysap, {})
-            .get("devices", {})
-            .get(serial)
-        )
+        dev = self.configuration.get(sysap, {}).get("devices", {}).get(serial)
         if dev is None:
             return web.json_response({"error": "not found"}, status=404)
         return web.json_response({sysap: {"devices": {serial: dev}}})
@@ -256,9 +240,7 @@ class MockSysApServer:
         native_id = request.match_info["native_id"]
         payload = await request.json()
         self.recorded.append(("PUT_VDEV", native_id, payload))
-        return web.json_response(
-            {sysap: {"devices": {native_id: {"serial": "600000000001"}}}}
-        )
+        return web.json_response({sysap: {"devices": {native_id: {"serial": "600000000001"}}}})
 
     async def handle_proxydevice(self, request: web.Request) -> web.Response:
         """Handle proxy device trigger action."""
@@ -329,9 +311,7 @@ async def _run(host: str, port: int, username: str, password: str) -> None:
 def main() -> None:
     """CLI entrypoint."""
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser(
-        description="Mock free@home SysAP REST & WebSocket server"
-    )
+    parser = argparse.ArgumentParser(description="Mock free@home SysAP REST & WebSocket server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--username", default="apiuser")

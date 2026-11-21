@@ -121,9 +121,7 @@ class FahThermostat(FahBaseDevice):
 
     async def set_target_temperature(self, temperature: float) -> None:
         """Set target temperature in degrees Celsius."""
-        await self.set_datapoint(
-            PID_ABSOLUTE_SETPOINT_TEMPERATURE, f"{float(temperature):.2f}"
-        )
+        await self.set_datapoint(PID_ABSOLUTE_SETPOINT_TEMPERATURE, f"{float(temperature):.2f}")
 
     async def set_fan_stage(self, stage: str) -> None:
         """Set fan stage (e.g. `auto`, `low`, `medium`, `high`)."""
@@ -139,13 +137,9 @@ class FahThermostat(FahBaseDevice):
 
     async def set_temperature_correction(self, correction: float) -> None:
         """Write temperature offset correction parameter."""
-        await self.set_parameter(
-            PARAM_TEMPERATURE_CORRECTION, f"{float(correction):.2f}"
-        )
+        await self.set_parameter(PARAM_TEMPERATURE_CORRECTION, f"{float(correction):.2f}")
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update thermostat state from incoming datapoint."""
         if self._datapoints.get(PID_SET_VALUE_TEMPERATURE) == dp:
             with contextlib.suppress(TypeError, ValueError):

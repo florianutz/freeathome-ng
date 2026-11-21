@@ -165,9 +165,7 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
         """Set fan mode stage."""
         await self.thermostat_device.set_fan_stage(fan_mode)
 
-    async def async_set_temperature_correction(
-        self, temperature_correction: float
-    ) -> None:
+    async def async_set_temperature_correction(self, temperature_correction: float) -> None:
         """Update temperature correction offset parameter."""
         await self.thermostat_device.set_temperature_correction(temperature_correction)
 

@@ -197,9 +197,7 @@ class FahLight(FahBaseDevice):
             await self.set_datapoint(PID_ABSOLUTE_SET_VALUE, str(self.brightness))
 
         if self.is_color_temp() and self.color_temp_percent is not None:
-            await self.set_datapoint(
-                PID_COLOR_TEMPERATURE, str(self.color_temp_percent)
-            )
+            await self.set_datapoint(PID_COLOR_TEMPERATURE, str(self.color_temp_percent))
 
         if self.is_rgb() and self.rgb_color is not None:
             r, g, b = self.get_rgb_color()  # type: ignore[misc]
@@ -246,9 +244,7 @@ class FahLight(FahBaseDevice):
             return int(v, 16)
         return None
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update light state from datapoint value."""
         if self._datapoints.get(PID_INFO_ON_OFF) == dp:
             self.state = value == "1"
@@ -325,9 +321,7 @@ class FahLightGroup(FahLight):
             await self.set_datapoint(PID_INFO_ON_OFF, "0")
         self.state = False
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update group state from SysAP group info datapoints."""
         if self._datapoints.get(PID_SYSAP_INFO_ON_OFF) == dp:
             self.state = value == "1"

@@ -192,11 +192,7 @@ def _build_sensor_entities(
     entities: list[SensorEntity] = []
     for dev in devices:
         if isinstance(dev, FahSensor):
-            entities.append(
-                FreeAtHomeNgSensor(
-                    dev, hub_device_id=hub_device_id, entry_id=entry_id
-                )
-            )
+            entities.append(FreeAtHomeNgSensor(dev, hub_device_id=hub_device_id, entry_id=entry_id))
         elif isinstance(dev, FahThermostat):
             entities.append(
                 FreeAtHomeNgThermostatTemperatureSensor(
@@ -205,9 +201,7 @@ def _build_sensor_entities(
             )
         elif isinstance(dev, FahBinarySensor) and dev.supports_dimming_status():
             entities.append(
-                FreeAtHomeNgDimmingStatusSensor(
-                    dev, hub_device_id=hub_device_id, entry_id=entry_id
-                )
+                FreeAtHomeNgDimmingStatusSensor(dev, hub_device_id=hub_device_id, entry_id=entry_id)
             )
     return entities
 
@@ -229,9 +223,7 @@ async def async_setup_entry(
         *ctrl.get_devices("binary_sensor"),
     ]
     async_add_entities(
-        _build_sensor_entities(
-            initial_sources, hub_device_id=hub_device_id, entry_id=entry_id
-        )
+        _build_sensor_entities(initial_sources, hub_device_id=hub_device_id, entry_id=entry_id)
     )
 
     register_platform_adder(
@@ -239,9 +231,7 @@ async def async_setup_entry(
         entry_id,
         "sensor",
         lambda new_devs: async_add_entities(
-            _build_sensor_entities(
-                new_devs, hub_device_id=hub_device_id, entry_id=entry_id
-            )
+            _build_sensor_entities(new_devs, hub_device_id=hub_device_id, entry_id=entry_id)
         ),
     )
 

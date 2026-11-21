@@ -57,9 +57,7 @@ class FahLock(FahBaseDevice):
         """Unlock/trigger the door opener."""
         await self.set_datapoint(PID_TIMED_START_STOP, "1")
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update lock state."""
         if self._datapoints.get(PID_INFO_ON_OFF) == dp:
             self.state = value

@@ -133,9 +133,7 @@ async def mock_sysap_server():
     app.router.add_get("/fhapi/v1/api/rest/datapoint/{sysap}/{dp}", handle_datapoint)
     app.router.add_put("/fhapi/v1/api/rest/datapoint/{sysap}/{dp}", handle_datapoint)
     app.router.add_put("/fhapi/v1/api/rest/parameter/{sysap}/{param}", handle_parameter)
-    app.router.add_put(
-        "/fhapi/v1/api/rest/virtualdevice/{sysap}/{native_id}", handle_virtualdevice
-    )
+    app.router.add_put("/fhapi/v1/api/rest/virtualdevice/{sysap}/{native_id}", handle_virtualdevice)
     app.router.add_get(
         "/fhapi/v1/api/rest/proxydevice/{sysap}/{cls}/{dev}/action/{action}",
         handle_proxydevice,
@@ -242,9 +240,7 @@ async def test_websocket_streaming(mock_sysap_server) -> None:
     try:
         client.start_websocket_listener(_on_msg)
         await asyncio.wait_for(done.wait(), timeout=3.0)
-        assert received[0][SYSAP_UUID]["datapoints"] == {
-            "ABB700D10001/ch0003/odp0000": "0"
-        }
+        assert received[0][SYSAP_UUID]["datapoints"] == {"ABB700D10001/ch0003/odp0000": "0"}
     finally:
         await client.close()
 

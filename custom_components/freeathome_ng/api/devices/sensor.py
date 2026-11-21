@@ -159,9 +159,7 @@ class FahSensor(FahBaseDevice):
                 return f"{base}/{dp}"
         return base
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update sensor state when its matched datapoint changes."""
         if dp in self._datapoints.values():
             self.state = value

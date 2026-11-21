@@ -311,15 +311,15 @@ FUNCTION_IDS_ENERGY = [
 
 # Binary sensor suffixes by channel nameId (when present in SysAP config)
 NAME_IDS_TO_BINARY_SENSOR_SUFFIX = {
-    0x000A: "",     # 1-way
-    0x0043: " L",   # 2-way left
-    0x0044: " R",   # 2-way right
+    0x000A: "",  # 1-way
+    0x0043: " L",  # 2-way left
+    0x0044: " R",  # 2-way right
     0x0045: " LT",  # 2-way left, top
     0x0046: " LB",  # 2-way left, bottom
     0x0047: " RT",  # 2-way right, top
     0x0048: " RB",  # 2-way right, bottom
-    0x0066: " T",   # 1-way, top
-    0x0067: " B",   # 1-way, bottom
+    0x0066: " T",  # 1-way, top
+    0x0067: " B",  # 1-way, bottom
 }
 
 # ==============================================================================

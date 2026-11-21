@@ -101,11 +101,7 @@ async def async_get_device_diagnostics(
     target_serial: str | None = None
 
     for ident_domain, ident_value in device.identifiers:
-        if (
-            ident_domain == DOMAIN
-            and not ident_value.startswith("hub_")
-            and "_" in ident_value
-        ):
+        if ident_domain == DOMAIN and not ident_value.startswith("hub_") and "_" in ident_value:
             target_sysap_uuid, target_serial = ident_value.split("_", 1)
             break
 
@@ -127,29 +123,19 @@ async def async_get_device_diagnostics(
         if dev.sysap_uuid == target_sysap_uuid and dev.serialnumber == target_serial
     ]
     raw_device_config = (
-        (ctrl.raw_configuration.get(target_sysap_uuid) or {})
-        .get("devices", {})
-        .get(target_serial)
+        (ctrl.raw_configuration.get(target_sysap_uuid) or {}).get("devices", {}).get(target_serial)
     )
 
     return {
         "device": {
             "sysap_uuid": target_sysap_uuid,
             "serialnumber": target_serial,
-            "model": (
-                matching_devices[0].device_info.get("model")
-                if matching_devices
-                else None
-            ),
+            "model": (matching_devices[0].device_info.get("model") if matching_devices else None),
             "suggested_area": (
-                matching_devices[0].device_info.get("suggested_area")
-                if matching_devices
-                else None
+                matching_devices[0].device_info.get("suggested_area") if matching_devices else None
             ),
             "sw_version": (
-                matching_devices[0].device_info.get("sw_version")
-                if matching_devices
-                else None
+                matching_devices[0].device_info.get("sw_version") if matching_devices else None
             ),
         },
         "controller": {

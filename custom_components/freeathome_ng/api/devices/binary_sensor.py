@@ -172,9 +172,7 @@ class FahBinarySensor(FahBaseDevice):
             "direction": direction,
         }
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Handle binary sensor datapoint updates."""
         if value is None or value == "":
             return

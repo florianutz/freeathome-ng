@@ -73,8 +73,7 @@ class FreeAtHomeNgFan(FreeAtHomeNgEntity, FanEntity):
     def supported_features(self) -> FanEntityFeature:
         """Return supported fan features."""
         features = FanEntityFeature(
-            getattr(FanEntityFeature, "TURN_ON", 0)
-            | getattr(FanEntityFeature, "TURN_OFF", 0)
+            getattr(FanEntityFeature, "TURN_ON", 0) | getattr(FanEntityFeature, "TURN_OFF", 0)
         )
         if self.fan_device.supports_percentage():
             features |= FanEntityFeature.SET_SPEED

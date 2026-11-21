@@ -83,9 +83,7 @@ async def test_discovery_room_names_prefix_and_filtering() -> None:
             if dev.serialnumber == "ABB700D10001" and dev.channel_id == "ch0003"
         )
         assert ceiling_switch.name == "NG Ceiling Lamp (Living Room)"
-        assert ceiling_switch.device_info["identifiers"] == {
-            (DOMAIN, f"{SYSAP_UUID}_ABB700D10001")
-        }
+        assert ceiling_switch.device_info["identifiers"] == {(DOMAIN, f"{SYSAP_UUID}_ABB700D10001")}
         assert ceiling_switch.device_info["model"] == "Sensor/switch actuator 1/1-gang"
         assert ceiling_switch.device_info["suggested_area"] == "Living Room"
         assert ceiling_switch.unique_id == f"{SYSAP_UUID}/ABB700D10001/ch0003"
@@ -110,7 +108,9 @@ async def test_lights_dimmer_color_temp_rgb_and_group() -> None:
     ctrl = _make_controller(use_room_names=False)
     try:
         lights = ctrl.get_devices("light")
-        dimmer = next(d for d in lights if d.channel_id == "ch0000" and d.serialnumber == "ABB700D10002")
+        dimmer = next(
+            d for d in lights if d.channel_id == "ch0000" and d.serialnumber == "ABB700D10002"
+        )
         assert isinstance(dimmer, FahLight)
         assert dimmer.is_on() is True
         assert dimmer.get_brightness() == 60
@@ -120,7 +120,9 @@ async def test_lights_dimmer_color_temp_rgb_and_group() -> None:
             SYSAP_UUID, "ABB700D10002", "ch0000", "idp0001", "35"
         )
 
-        tunable = next(d for d in lights if d.channel_id == "ch0001" and d.serialnumber == "ABB700D10002")
+        tunable = next(
+            d for d in lights if d.channel_id == "ch0001" and d.serialnumber == "ABB700D10002"
+        )
         assert isinstance(tunable, FahLight)
         assert tunable.min_color_temp == 2700
         assert tunable.max_color_temp == 6500
@@ -130,7 +132,9 @@ async def test_lights_dimmer_color_temp_rgb_and_group() -> None:
         tunable.set_color_temp(6500)
         assert tunable.color_temp_percent == 100
 
-        rgb = next(d for d in lights if d.channel_id == "ch0002" and d.serialnumber == "ABB700D10002")
+        rgb = next(
+            d for d in lights if d.channel_id == "ch0002" and d.serialnumber == "ABB700D10002"
+        )
         assert isinstance(rgb, FahLight)
         assert rgb.get_rgb_color() == (255, 128, 0)
         rgb.set_rgb_color(10, 20, 30)
@@ -152,9 +156,7 @@ async def test_cover_climate_fan_lock_trigger_scene() -> None:
     """Verify cover inversion, thermostat, ceiling fan, lock, trigger, and scene."""
     ctrl = _make_controller()
     try:
-        cover = next(
-            c for c in ctrl.get_devices("cover") if c.serialnumber == "ABB700D10003"
-        )
+        cover = next(c for c in ctrl.get_devices("cover") if c.serialnumber == "ABB700D10003")
         assert isinstance(cover, FahCover)
         assert cover.device_class() == "shutter"
         assert cover.get_cover_position() == 75  # 100 - 25
@@ -179,9 +181,7 @@ async def test_cover_climate_fan_lock_trigger_scene() -> None:
             SYSAP_UUID, "FFFF40010001", "ch0000", "odp0005", "30"
         )
 
-        timer_36 = next(
-            s for s in ctrl.get_devices("switch") if s.serialnumber == "FFFF4A000002"
-        )
+        timer_36 = next(s for s in ctrl.get_devices("switch") if s.serialnumber == "FFFF4A000002")
         assert isinstance(timer_36, FahSwitch)
         assert timer_36.is_on() is True
         await timer_36.turn_off()
@@ -407,9 +407,7 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
                 SYSAP_UUID: {
                     "sysapName": "SysAP 3.6",
                     "floorplan": {
-                        "floors": {
-                            "01": {"name": "Top Floor", "rooms": {"01": {"name": "Office"}}}
-                        }
+                        "floors": {"01": {"name": "Top Floor", "rooms": {"01": {"name": "Office"}}}}
                     },
                     "devices": {
                         "ABB700TEST36": {
@@ -538,14 +536,10 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
         ha_valve_sensor = FreeAtHomeNgSensor(valve_dev)
         assert "_attr_name" not in ha_valve_sensor.__dict__
         assert ha_valve_sensor._attr_translation_key == "valve_volume_flow"
-        assert ha_valve_sensor._attr_translation_placeholders == {
-            "channel_name": "Office Valve"
-        }
+        assert ha_valve_sensor._attr_translation_placeholders == {"channel_name": "Office Valve"}
 
         client.set_datapoint = AsyncMock()  # type: ignore[method-assign]
-        switches = {
-            (s.serialnumber, s.channel_id): s for s in ctrl.get_devices("switch")
-        }
+        switches = {(s.serialnumber, s.channel_id): s for s in ctrl.get_devices("switch")}
         day_night = switches[("ABB700000000", "ch0000")]
         corridor_light = switches[("ABB674605479", "ch0015")]
         call_level = switches[("ABB674605479", "ch0016")]

@@ -39,16 +39,12 @@ class FahBaseDevice:
         self._device_updated_cbs: list[Callable[[FahBaseDevice], Awaitable[None]]] = []
         self.available: bool = True
 
-    def register_device_updated_cb(
-        self, cb: Callable[[FahBaseDevice], Awaitable[None]]
-    ) -> None:
+    def register_device_updated_cb(self, cb: Callable[[FahBaseDevice], Awaitable[None]]) -> None:
         """Register an async callback invoked when the device state updates."""
         if cb not in self._device_updated_cbs:
             self._device_updated_cbs.append(cb)
 
-    def unregister_device_updated_cb(
-        self, cb: Callable[[FahBaseDevice], Awaitable[None]]
-    ) -> None:
+    def unregister_device_updated_cb(self, cb: Callable[[FahBaseDevice], Awaitable[None]]) -> None:
         """Unregister a previously registered callback."""
         if cb in self._device_updated_cbs:
             self._device_updated_cbs.remove(cb)
@@ -128,9 +124,7 @@ class FahBaseDevice:
             self._serialnumber, self._channel_id, param, str(value), self._sysap_uuid
         )
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update internal state from an incoming datapoint value."""
 
     def update_parameter(self, param: str, value: str) -> None:
