@@ -209,10 +209,7 @@ async def _async_reload_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntr
         runtime.suppress_reload or _connection_snapshot(entry) == runtime.config_snapshot
     ):
         return
-    if hasattr(hass.config_entries, "async_schedule_reload"):
-        hass.config_entries.async_schedule_reload(entry.entry_id)
-    else:
-        await hass.config_entries.async_reload(entry.entry_id)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry) -> bool:
@@ -312,10 +309,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry)
             return
         reauth_started = True
         entry.async_start_reauth(hass)
-        if hasattr(hass.config_entries, "async_schedule_reload"):
-            hass.config_entries.async_schedule_reload(entry.entry_id)
-        else:
-            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     controller.set_auth_failed_callback(_handle_rejected_login)
 

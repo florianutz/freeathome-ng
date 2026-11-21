@@ -8,13 +8,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .api.devices.base import FahBaseDevice
-from .const import DOMAIN
-
-_SUPPORTS_VIA_DEVICE_ID = (
-    "via_device_id" in getattr(DeviceInfo, "__annotations__", {})
-    or "via_device_id" in getattr(DeviceInfo, "__optional_keys__", set())
-    or DeviceInfo is dict
-)
 
 
 class FreeAtHomeNgEntity(Entity):
@@ -36,10 +29,8 @@ class FreeAtHomeNgEntity(Entity):
         self._attr_unique_id = device.unique_id
 
         info = dict(device.device_info)
-        if _SUPPORTS_VIA_DEVICE_ID and isinstance(hub_device_id, str) and hub_device_id:
+        if hub_device_id:
             info["via_device_id"] = hub_device_id
-        elif entry_id:
-            info["via_device"] = (DOMAIN, f"hub_{entry_id}")
         self._attr_device_info = DeviceInfo(**info)
 
     @property

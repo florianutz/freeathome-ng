@@ -13,13 +13,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-
-try:
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-except ImportError:  # pragma: no cover - fallback for older HA typing
-    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
-        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
-    )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.climate import FahThermostat
@@ -97,8 +91,8 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.PRESET_MODE
-            | getattr(ClimateEntityFeature, "TURN_OFF", 0)
-            | getattr(ClimateEntityFeature, "TURN_ON", 0)
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self.thermostat_device.supports_fan_stage():
             features |= ClimateEntityFeature.FAN_MODE

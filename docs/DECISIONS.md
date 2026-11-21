@@ -27,11 +27,11 @@ Binding design decisions for `freeathome_ng`. Each record states the decision, w
 
 ## ADR-002: Minimum Home Assistant version 2026.8.0
 
-**Status:** Accepted (2026-11-21) · **Implemented in:** work package AP3
+**Status:** Implemented (2026-11-21, work package AP3)
 
 **Context.** v1.0.0 supports HA 2025.2.0 and carries capability guards and fallbacks for old APIs (`via_device`, `async_get_device`, `AddEntitiesCallback`, unit constants, `async_schedule_reload`). Each guard doubles code paths that need testing. `pytest-homeassistant-custom-component` tests against one concrete HA release.
 
-**Decision.** Raise the minimum to **2026.8.0** (`hacs.json`). `async_get_device_by_identifier` and the other registry APIs the code relies on exist in 2026.10 but not in 2026.2; confirm the exact first release before setting the version in AP3. Note that HA 2026.3+ requires Python 3.14. Remove all compatibility guards for older releases. CI tests against the current stable release and HA beta.
+**Decision.** Raise the minimum to **2026.8.0** (`hacs.json`), the first release with `dr.DeviceRegistry.async_get_device_by_identifier` (verified against the published wheels: absent in 2026.7.0, present in 2026.8.0; `UnitOfDensity`/`UnitOfRatio` arrived in 2026.7.0). HA 2026.3+ requires Python 3.14. Remove all compatibility guards for older releases. CI tests against the current stable release and HA beta.
 
 **Consequences.** Less code, a single test target, zero deprecation warnings by construction. Users on HA older than 2026.8 stay on v1.0.x.
 

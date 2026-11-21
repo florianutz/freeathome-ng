@@ -6,11 +6,11 @@ This step-by-step guide helps you migrate safely from the classic XMPP-based `fr
 
 ## 1. Before You Start (Prerequisites & Backup)
 
-1. **Home Assistant version:** `2025.2.0` or newer (fully compliant with `HA 2026.11+` / `2027.x`).
+1. **Home Assistant version:** `2026.8.0` or newer.
 2. **Create a Backup first:**
    - Go to **Settings → System → Backups → Create Backup** before running a cutover migration.
 3. **Install and set up `freeathome_ng` side by side:**
-   - Install **Busch-Jaeger / ABB free@home NG (Local API)** via **Settings → Marketplace** (`HA 2026.11+`) or **HACS** (`HA 2025.2–2026.10`) and restart Home Assistant.
+   - Install **Busch-Jaeger / ABB free@home NG (Local API)** via **Settings → Marketplace** (`HA 2026.11+`) or **HACS** (`HA 2026.8–2026.10`) and restart Home Assistant.
    - Add your SysAP under **Settings → Devices & Services → Add Integration → free@home NG**.
    - **Important:** When legacy `freeathome` is installed, `freeathome_ng` automatically pre-fills `host`, `use_room_names`, and `switch_as_x` from your legacy entry so platform domains (`light` vs. `switch`) match cleanly. Verify `switch_as_x` matches your legacy setting before running a cutover.
 4. **Recommendation for initial testing:** Set **Optional entity name prefix** (`name_prefix`) to e.g. `NG ` during parallel testing, then clear it in integration options right after cutover.

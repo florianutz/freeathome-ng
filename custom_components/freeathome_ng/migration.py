@@ -80,7 +80,7 @@ class LegacyEntityInfo:
     name: str | None = None
     icon: str | None = None
     area_id: str | None = None
-    aliases: set[Any] | None = None
+    aliases: list[Any] | None = None
     labels: set[str] = field(default_factory=set)
     disabled_by_user: bool = False
     hidden_by_user: bool = False
@@ -195,80 +195,37 @@ def _extract_entity_options(raw_options: Any) -> dict[str, dict[str, Any]]:
     return cleaned
 
 
-def _extract_aliases(raw_aliases: Any) -> set[Any] | None:
-    """Return alias set when user-defined string aliases exist, preserving markers."""
+def _extract_aliases(raw_aliases: Any) -> list[Any] | None:
+    """Return aliases (in order) when user-defined string aliases exist, keeping markers."""
     if not raw_aliases:
         return None
-    alias_items = set(raw_aliases)
+    alias_items = list(dict.fromkeys(raw_aliases))
     if any(isinstance(item, str) and item for item in alias_items):
         return alias_items
     return None
 
 
-def _iter_entity_entries(ent_reg: Any) -> list[Any]:
-    """Return all entity registry entries across real HA and test stub registries."""
-    if hasattr(ent_reg, "entities") and hasattr(ent_reg.entities, "values"):
-        return list(ent_reg.entities.values())
-    return list(getattr(ent_reg, "entries", []))
-
-
-def _iter_device_entries(dev_reg: Any) -> list[Any]:
-    """Return all device registry entries across real HA and test stub registries."""
-    devices = getattr(dev_reg, "devices", None)
-    if hasattr(devices, "values"):
-        return list(devices.values())
-    if isinstance(devices, list):
-        return list(devices)
-    return []
+def _iter_entity_entries(ent_reg: er.EntityRegistry) -> list[er.RegistryEntry]:
+    """Return all entity registry entries."""
+    return list(ent_reg.entities.values())
 
 
 def _lookup_device(
-    dev_reg: Any,
+    dev_reg: dr.DeviceRegistry,
     domain: str,
     identifier_value: str,
     *,
-    config_entry_id: str | None = None,
-    device_registry_id: str | None = None,
-) -> Any | None:
-    """Safely look up a DeviceEntry across HA 2025.2–2026.11+ without deprecated calls."""
-    if device_registry_id and hasattr(dev_reg, "async_get"):
-        direct = dev_reg.async_get(device_registry_id)
-        if direct is not None:
-            return direct
-
-    identifier = (domain, identifier_value)
-
-    # HA 2026.8+: config-entry-scoped lookup (preferred when entry_id is known).
-    if config_entry_id and hasattr(dev_reg, "async_get_device_by_identifier"):
-        return dev_reg.async_get_device_by_identifier(identifier, config_entry_id)
-
-    # HA 2026.8+: multi-entry lookup (never fall through to deprecated async_get_device).
-    if hasattr(dev_reg, "async_get_devices"):
-        matches = dev_reg.async_get_devices(identifiers={identifier}) or ()
-        if config_entry_id:
-            for dev in matches:
-                if config_entry_id in getattr(dev, "config_entries", ()):
-                    return dev
-            return None
-        return next(iter(matches), None)
-
-    # Legacy HA (< 2026.8) fallback.
-    if hasattr(dev_reg, "async_get_device"):
-        return dev_reg.async_get_device(identifiers={identifier})
-
-    for dev in _iter_device_entries(dev_reg):
-        if identifier in getattr(dev, "identifiers", set()) and (
-            not config_entry_id or config_entry_id in getattr(dev, "config_entries", ())
-        ):
-            return dev
-    return None
+    config_entry_id: str | None,
+) -> dr.DeviceEntry | None:
+    """Look up the device with `(domain, identifier_value)` owned by `config_entry_id`."""
+    if not config_entry_id:
+        return None
+    return dev_reg.async_get_device_by_identifier((domain, identifier_value), config_entry_id)
 
 
 def _legacy_config_entries(hass: Any) -> list[ConfigEntry[Any]]:
     """Return all configured legacy `freeathome` config entries."""
-    if hass is None or not hasattr(hass, "config_entries"):
-        return []
-    if not hasattr(hass.config_entries, "async_entries"):
+    if hass is None:
         return []
     return [
         entry
@@ -395,7 +352,7 @@ def _index_ng_entities(
 def _build_legacy_device_info(
     dev_entry: Any,
     serialnumber: str,
-    legacy_entry: ConfigEntry[Any] | None,
+    entry_id: str | None,
 ) -> LegacyDeviceInfo:
     """Create a `LegacyDeviceInfo` from a DeviceEntry."""
     raw_name_by_user = getattr(dev_entry, "name_by_user", None)
@@ -407,13 +364,6 @@ def _build_legacy_device_info(
     area_id = getattr(dev_entry, "area_id", None)
     labels = set(getattr(dev_entry, "labels", None) or ())
     title = str(getattr(dev_entry, "name", None) or serialnumber)
-    entry_id: str | None = None
-    if legacy_entry is not None and legacy_entry.entry_id in getattr(
-        dev_entry, "config_entries", ()
-    ):
-        entry_id = legacy_entry.entry_id
-    elif getattr(dev_entry, "config_entries", ()):
-        entry_id = next(iter(getattr(dev_entry, "config_entries", ())), None)
 
     return LegacyDeviceInfo(
         serialnumber=serialnumber,
@@ -440,11 +390,17 @@ def discover_legacy_devices(
     dev_reg = dr.async_get(hass)
     discovered: dict[str, LegacyDeviceInfo] = {}
 
-    for dev_entry in _iter_device_entries(dev_reg):
-        if legacy_entry is not None and legacy_entry.entry_id not in getattr(
-            dev_entry, "config_entries", ()
-        ):
-            continue
+    legacy_entry_ids = (
+        [legacy_entry.entry_id]
+        if legacy_entry is not None
+        else [entry.entry_id for entry in _legacy_config_entries(hass)]
+    )
+    candidates = [
+        (entry_id, dev_entry)
+        for entry_id in legacy_entry_ids
+        for dev_entry in dr.async_entries_for_config_entry(dev_reg, entry_id)
+    ]
+    for entry_id, dev_entry in candidates:
         serial = next(
             (
                 ident_val
@@ -457,22 +413,23 @@ def discover_legacy_devices(
             continue
         if serialnumbers_filter is not None and serial.upper() not in serialnumbers_filter:
             continue
-        discovered[serial] = _build_legacy_device_info(dev_entry, serial, legacy_entry)
+        discovered[serial] = _build_legacy_device_info(dev_entry, serial, entry_id)
 
-    # Supplement via entity references in case the device registry cannot enumerate `.devices`.
+    # Supplement via entity references (devices referenced only by legacy entities).
     if legacy_entities:
         for le in legacy_entities:
             if le.serialnumber in discovered:
                 continue
+            lookup_entry_id = legacy_entry.entry_id if legacy_entry else le.config_entry_id
             dev_entry = _lookup_device(
                 dev_reg,
                 LEGACY_DOMAIN,
                 le.serialnumber,
-                config_entry_id=legacy_entry.entry_id if legacy_entry else le.config_entry_id,
+                config_entry_id=lookup_entry_id,
             )
             if dev_entry is not None:
                 discovered[le.serialnumber] = _build_legacy_device_info(
-                    dev_entry, le.serialnumber, legacy_entry
+                    dev_entry, le.serialnumber, lookup_entry_id
                 )
 
     return list(discovered.values())
@@ -600,8 +557,7 @@ def _transfer_device_metadata(
         kwargs["labels"] = existing_labels | legacy.labels
     if not kwargs:
         return None
-    if hasattr(dev_reg, "async_update_device"):
-        dev_reg.async_update_device(ng_dev.id, **kwargs)
+    dev_reg.async_update_device(ng_dev.id, **kwargs)
     return {
         "serialnumber": legacy.serialnumber,
         "ng_device_id": ng_dev.id,
@@ -652,7 +608,7 @@ def _apply_entity_migration(
     original_ng_entity_id = ng_ent.entity_id
     final_entity_id = original_ng_entity_id
 
-    if kwargs and hasattr(ent_reg, "async_update_entity"):
+    if kwargs:
         try:
             updated = ent_reg.async_update_entity(original_ng_entity_id, **kwargs)
             final_entity_id = (
@@ -674,7 +630,7 @@ def _apply_entity_migration(
             else:
                 raise
 
-    if legacy_ent.options and hasattr(ent_reg, "async_update_entity_options"):
+    if legacy_ent.options:
         for opt_domain, opt_values in legacy_ent.options.items():
             ent_reg.async_update_entity_options(final_entity_id, opt_domain, opt_values)
 

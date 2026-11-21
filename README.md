@@ -42,7 +42,7 @@ If you already run the classic `freeathome` integration in Home Assistant, insta
 
 ## Prerequisites
 
-1. **Home Assistant `2025.2.0` or newer** (fully compliant with `HA 2026.11+` / `2027.x` Core APIs).
+1. **Home Assistant `2026.8.0` or newer.** Users on older Home Assistant releases stay on `freeathome_ng` 1.0.x.
 2. **System Access Point 2.0 (SysAP)** running **firmware ≥ 2.6.0**.
 3. **Enable Local API** on your SysAP:
    - In the **free@home Next App** or SysAP Web UI, navigate to *More → free@home Settings → Local API*.
@@ -74,7 +74,7 @@ Starting with **Home Assistant 2026.11**, HACS is integrated directly into Home 
 4. Install **Busch-Jaeger / ABB free@home NG (Local API)** and restart Home Assistant.
 5. Go to **Settings → Devices & Services → Add Integration** (or accept the discovered SysAP notification) and search for **free@home NG**.
 
-### Via HACS (Home Assistant 2025.2–2026.10)
+### Via HACS (Home Assistant 2026.8–2026.10)
 
 1. Open **HACS → Integrations → ⋮ → Custom repositories**.
 2. Add `https://github.com/florianutz/freeathome-ng` with category **Integration**.
