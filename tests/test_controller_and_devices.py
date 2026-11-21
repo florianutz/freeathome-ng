@@ -7,9 +7,10 @@ import os
 from unittest.mock import AsyncMock
 
 import pytest
-from freeathome_ng.api.client import FreeAtHomeLocalApiClient
-from freeathome_ng.api.controller import FreeAtHomeController
-from freeathome_ng.api.devices import (
+
+from custom_components.freeathome_ng.api.client import FreeAtHomeLocalApiClient
+from custom_components.freeathome_ng.api.controller import FreeAtHomeController
+from custom_components.freeathome_ng.api.devices import (
     FahBinarySensor,
     FahCover,
     FahFan,
@@ -22,11 +23,11 @@ from freeathome_ng.api.devices import (
     FahThermostat,
     FahTrigger,
 )
-from freeathome_ng.api.devices.binary_sensor import CYCLIC_PERIOD
-from freeathome_ng.binary_sensor import FreeAtHomeNgBinarySensor
-from freeathome_ng.climate import FreeAtHomeNgThermostat
-from freeathome_ng.const import DOMAIN
-from freeathome_ng.sensor import (
+from custom_components.freeathome_ng.api.devices.binary_sensor import CYCLIC_PERIOD
+from custom_components.freeathome_ng.binary_sensor import FreeAtHomeNgBinarySensor
+from custom_components.freeathome_ng.climate import FreeAtHomeNgThermostat
+from custom_components.freeathome_ng.const import DOMAIN
+from custom_components.freeathome_ng.sensor import (
     FreeAtHomeNgDimmingStatusSensor,
     FreeAtHomeNgSensor,
     FreeAtHomeNgThermostatTemperatureSensor,
@@ -291,7 +292,7 @@ async def test_binary_sensor_dimming_events_cyclic_filter_and_ws_updates(
 
     now = [1000.0]
     monkeypatch.setattr(
-        "freeathome_ng.api.devices.binary_sensor.time.monotonic",
+        "custom_components.freeathome_ng.api.devices.binary_sensor.time.monotonic",
         lambda: now[0],
     )
 
@@ -389,7 +390,7 @@ async def test_binary_sensor_device_classes() -> None:
             (0x000D, {0x0026: "odp0000"}, "cold"),
             (0x000C, {0x0025: "odp0000"}, "safety"),
             (0x007D, {0x02C3: "odp0000"}, "smoke"),
-            (0x007E, {0x02C4: "odp0000"}, "co"),
+            (0x007E, {0x02C4: "odp0000"}, "carbon_monoxide"),
         ):
             dev = FahBinarySensor(ctrl, {}, "SER", "ch0000", fid, "Test", datapoints=dps)
             assert FreeAtHomeNgBinarySensor(dev, object()).device_class == expected_cls  # type: ignore[arg-type]
@@ -515,9 +516,9 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
         assert rt.temperature_correction == -1.5
 
         ha_thermostat = FreeAtHomeNgThermostat(rt)
-        assert ha_thermostat._attr_native_temperature_unit == "°C"
-        assert ha_thermostat.native_current_temperature == 21.2
-        assert ha_thermostat.native_target_temperature == 21.0
+        assert ha_thermostat.temperature_unit == "°C"
+        assert ha_thermostat.current_temperature == 21.2
+        assert ha_thermostat.target_temperature == 21.0
 
         rt_temp_sensor = FreeAtHomeNgThermostatTemperatureSensor(rt)
         assert "_attr_name" not in rt_temp_sensor.__dict__

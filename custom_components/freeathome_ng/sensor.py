@@ -269,12 +269,12 @@ class FreeAtHomeNgSensor(FreeAtHomeNgEntity, SensorEntity):
         if self._attr_native_unit_of_measurement == UnitOfSpeed.KILOMETERS_PER_HOUR:
             try:
                 return round(float(raw) * 3.6, 2)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return raw
         if self._attr_device_class is not None:
             try:
                 return float(raw)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return raw
         return raw
 

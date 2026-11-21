@@ -4,11 +4,11 @@ Contributions are welcome!
 
 ## Development Setup
 
-1. Clone this repository and create a Python 3.12+ virtual environment:
+1. Clone this repository and create a Python 3.14 virtual environment (required by current Home Assistant):
    ```bash
    python -m venv .venv
    source .venv/bin/activate
-   pip install -e ".[dev]"
+   pip install -r requirements_test.txt
    ```
 2. Run the quality gate (the same checks as CI, see [AGENTS.md](AGENTS.md) section 7):
    ```bash

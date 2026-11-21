@@ -10,25 +10,26 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import yaml
-from freeathome_ng import FreeAtHomeNgRuntime
-from freeathome_ng.api.client import FreeAtHomeLocalApiClient
-from freeathome_ng.api.controller import FreeAtHomeController
-from freeathome_ng.const import (
+
+from custom_components.freeathome_ng import FreeAtHomeNgRuntime
+from custom_components.freeathome_ng.api.client import FreeAtHomeLocalApiClient
+from custom_components.freeathome_ng.api.controller import FreeAtHomeController
+from custom_components.freeathome_ng.const import (
     DOMAIN,
     EVENT_FREEATHOME_NG,
     EVENT_SCENE_TRIGGERED,
     EVENT_VIRTUAL_DEVICE_COMMAND,
 )
-from freeathome_ng.diagnostics import (
+from custom_components.freeathome_ng.diagnostics import (
     async_get_config_entry_diagnostics,
     async_get_device_diagnostics,
 )
-from freeathome_ng.fah_event import (
+from custom_components.freeathome_ng.fah_event import (
     DIMMING_STATUS_DEFAULT,
     create_event_data,
     dimming_status_sequence_from_event,
 )
-from freeathome_ng.sensor import SENSOR_TYPES
+from custom_components.freeathome_ng.sensor import SENSOR_TYPES
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 COMP_DIR = ROOT_DIR / "custom_components" / "freeathome_ng"
@@ -186,21 +187,21 @@ def test_all_platforms_and_config_flow_import() -> None:
     import importlib
 
     for module_name in (
-        "freeathome_ng",
-        "freeathome_ng.config_flow",
-        "freeathome_ng.diagnostics",
-        "freeathome_ng.entity",
-        "freeathome_ng.migration",
-        "freeathome_ng.light",
-        "freeathome_ng.switch",
-        "freeathome_ng.cover",
-        "freeathome_ng.climate",
-        "freeathome_ng.fan",
-        "freeathome_ng.sensor",
-        "freeathome_ng.binary_sensor",
-        "freeathome_ng.button",
-        "freeathome_ng.lock",
-        "freeathome_ng.scene",
+        "custom_components.freeathome_ng",
+        "custom_components.freeathome_ng.config_flow",
+        "custom_components.freeathome_ng.diagnostics",
+        "custom_components.freeathome_ng.entity",
+        "custom_components.freeathome_ng.migration",
+        "custom_components.freeathome_ng.light",
+        "custom_components.freeathome_ng.switch",
+        "custom_components.freeathome_ng.cover",
+        "custom_components.freeathome_ng.climate",
+        "custom_components.freeathome_ng.fan",
+        "custom_components.freeathome_ng.sensor",
+        "custom_components.freeathome_ng.binary_sensor",
+        "custom_components.freeathome_ng.button",
+        "custom_components.freeathome_ng.lock",
+        "custom_components.freeathome_ng.scene",
     ):
         mod = importlib.import_module(module_name)
         assert mod is not None

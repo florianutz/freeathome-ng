@@ -1,312 +1,343 @@
-"""Tests for free@home NG config, discovery, reauth, reconfigure, and options flows."""
+"""Config, reauth, reconfigure, zeroconf and options flow tests against real HA."""
 
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address
-from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from ipaddress import ip_address
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
-import freeathome_ng.config_flow as config_flow_mod
 import pytest
-from freeathome_ng.api.client import FreeAtHomeLocalApiClient
-from freeathome_ng.config_flow import (
-    FreeAtHomeNgConfigFlow,
-    FreeAtHomeNgOptionsFlow,
-)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from mock_sysap_server import MockSysApServer
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.freeathome_ng.api import (
+    FreeAtHomeApiError,
+    FreeAtHomeAuthError,
+    FreeAtHomeConnectionError,
+)
+from custom_components.freeathome_ng.config_flow import CannotConnect, InvalidAuth
+from custom_components.freeathome_ng.const import (
+    CONF_NAME_PREFIX,
+    CONF_SWITCH_AS_X,
+    CONF_USE_ROOM_NAMES,
+    DOMAIN,
+    LEGACY_DOMAIN,
+)
+
+from .conftest import PASSWORD, SYSAP_SERIAL, USERNAME, entry_data
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+VALIDATE = "custom_components.freeathome_ng.config_flow.FreeAtHomeController.validate_connection"
+FETCH_SETTINGS = (
+    "custom_components.freeathome_ng.config_flow.FreeAtHomeLocalApiClient.fetch_settings_json"
+)
+VALIDATE_INPUT = "custom_components.freeathome_ng.config_flow.validate_input"
+
+# Exceptions raised by `validate_input`, keyed by the expected form error.
+LINK_ERRORS: dict[str, Exception] = {
+    "invalid_auth": InvalidAuth(),
+    "cannot_connect": CannotConnect(),
+    "unknown": RuntimeError("unexpected"),
+}
 
 
-def _make_hass(entries: list[SimpleNamespace] | None = None) -> SimpleNamespace:
-    stored = list(entries or [])
-
-    def _async_entries(_domain: str | None = None) -> list[SimpleNamespace]:
-        return stored
-
-    def _async_get_entry(entry_id: str) -> SimpleNamespace | None:
-        return next((e for e in stored if e.entry_id == entry_id), None)
-
-    return SimpleNamespace(
-        config_entries=SimpleNamespace(
-            async_entries=_async_entries,
-            async_get_entry=_async_get_entry,
-        )
+def _zeroconf(
+    host: str = "192.168.1.50", name: str = "free@home:Living SysAP._http._tcp.local."
+) -> ZeroconfServiceInfo:
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        port=80,
+        hostname="sysap.local.",
+        type="_http._tcp.local.",
+        name=name,
+        properties={},
     )
 
 
-async def test_user_flow_success_errors_and_duplicate() -> None:
-    """Verify manual setup happy path, username resolution, errors, and duplicate abort."""
-    server = MockSysApServer(port=0)
-    await server.start()
-    try:
-        hass = _make_hass()
-        flow = FreeAtHomeNgConfigFlow()
-        flow.hass = hass
+async def test_user_flow_success(hass: HomeAssistant, mock_sysap: MockSysApServer) -> None:
+    """A valid manual setup creates an entry keyed by the SysAP serial."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-        initial = await flow.async_step_user()
-        assert initial["type"] == "form"
-        assert initial["step_id"] == "user"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**entry_data(mock_sysap), CONF_NAME_PREFIX: "NG "}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test SysAP"
+    assert result["data"][CONF_HOST] == mock_sysap.host_port
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_NAME_PREFIX] == "NG "
+    assert result["result"].unique_id == SYSAP_SERIAL
 
-        bad_auth = await flow.async_step_user(
-            {
-                CONF_HOST: server.host_port,
-                CONF_USERNAME: "apiuser",
-                CONF_PASSWORD: "wrong",
-            }
+
+async def test_user_flow_resolves_display_username(
+    hass: HomeAssistant, mock_sysap: MockSysApServer
+) -> None:
+    """A SysAP display name is resolved to the JID localpart via /settings.json."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], entry_data(mock_sysap, **{CONF_USERNAME: "installer"})
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == USERNAME
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (FreeAtHomeAuthError("bad"), "invalid_auth"),
+        (FreeAtHomeConnectionError("down"), "cannot_connect"),
+        (FreeAtHomeApiError("boom"), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+)
+async def test_user_flow_errors_recover(
+    hass: HomeAssistant, mock_sysap: MockSysApServer, side_effect: Exception, error: str
+) -> None:
+    """Each failure shows its error and the flow can still complete afterwards."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    with patch(VALIDATE, side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], entry_data(mock_sysap)
         )
-        assert bad_auth["type"] == "form"
-        assert bad_auth["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
-        cannot_connect = await flow.async_step_user(
-            {
-                CONF_HOST: "127.0.0.1:1",
-                CONF_USERNAME: "apiuser",
-                CONF_PASSWORD: "secret",
-            }
-        )
-        assert cannot_connect["type"] == "form"
-        assert cannot_connect["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], entry_data(mock_sysap)
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-        created = await flow.async_step_user(
-            {
-                CONF_HOST: server.host_port,
-                CONF_USERNAME: "installer",
-                CONF_PASSWORD: "secret",
-            }
-        )
-        assert created["type"] == "create_entry"
-        assert created["title"] == "Test SysAP"
-        assert created["data"][CONF_USERNAME] == "apiuser"
 
-        existing = SimpleNamespace(
-            entry_id="e1",
-            unique_id="ABB700999999",
-            data={CONF_HOST: server.host_port},
-            options={},
+async def test_user_flow_wrong_password(hass: HomeAssistant, mock_sysap: MockSysApServer) -> None:
+    """Credentials rejected by the real (mock) SysAP map to invalid_auth."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], entry_data(mock_sysap, **{CONF_PASSWORD: "wrong"})
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_sysap: MockSysApServer, mock_config_entry: MockConfigEntry
+) -> None:
+    """The same SysAP cannot be added twice."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], entry_data(mock_sysap)
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_prefills_legacy_defaults(hass: HomeAssistant) -> None:
+    """Settings of a legacy `freeathome` entry pre-fill the form without touching it."""
+    legacy = MockConfigEntry(
+        domain=LEGACY_DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.60",
+            CONF_USERNAME: "u",
+            CONF_PASSWORD: "p",
+            CONF_USE_ROOM_NAMES: True,
+            CONF_SWITCH_AS_X: True,
+        },
+    )
+    legacy.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    defaults = {
+        str(key): key.default() for key in result["data_schema"].schema if callable(key.default)
+    }
+    assert defaults[CONF_HOST] == "192.168.1.60"
+    assert defaults[CONF_USE_ROOM_NAMES] is True
+    assert defaults[CONF_SWITCH_AS_X] is True
+    assert legacy.data[CONF_HOST] == "192.168.1.60"
+
+
+async def test_zeroconf_link_flow(hass: HomeAssistant) -> None:
+    """A discovered SysAP is linked with credentials only."""
+    with patch(FETCH_SETTINGS, return_value={"flags": {"serialNumber": SYSAP_SERIAL}}):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf()
         )
-        dup_flow = FreeAtHomeNgConfigFlow()
-        dup_flow.hass = _make_hass([existing])
-        with pytest.raises(AbortFlow) as exc_info:
-            await dup_flow.async_step_user(
-                {
-                    CONF_HOST: server.host_port,
-                    CONF_USERNAME: "apiuser",
-                    CONF_PASSWORD: "secret",
-                }
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Living SysAP",
+        CONF_HOST: "192.168.1.50",
+    }
+
+    info = {"title": "Living SysAP", "serial_number": SYSAP_SERIAL, "resolved_username": USERNAME}
+    with patch(VALIDATE_INPUT, AsyncMock(side_effect=LINK_ERRORS["invalid_auth"])):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: "installer", CONF_PASSWORD: PASSWORD}
+        )
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(VALIDATE_INPUT, AsyncMock(return_value=info)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: "installer", CONF_PASSWORD: PASSWORD}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Living SysAP"
+    assert result["data"][CONF_HOST] == "192.168.1.50"
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["result"].unique_id == SYSAP_SERIAL
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [("cannot_connect", "cannot_connect"), ("unknown", "unknown")],
+)
+async def test_zeroconf_link_errors(hass: HomeAssistant, error: str, reason: str) -> None:
+    """Link step maps connection and unexpected errors."""
+    with patch(FETCH_SETTINGS, return_value={"flags": {"serialNumber": SYSAP_SERIAL}}):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf()
+        )
+    side_effect = LINK_ERRORS[error]
+    with patch(VALIDATE_INPUT, AsyncMock(side_effect=side_effect)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+    assert result["errors"] == {"base": reason}
+
+
+async def test_zeroconf_updates_host_of_existing_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Rediscovery of a known SysAP updates its host and aborts."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(FETCH_SETTINGS, return_value={"flags": {"serialNumber": SYSAP_SERIAL}}):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf("192.168.1.55")
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.55"
+
+
+@pytest.mark.parametrize(
+    ("discovery", "settings", "reason"),
+    [
+        (_zeroconf("fe80::1"), {"flags": {"serialNumber": SYSAP_SERIAL}}, "not_ipv4address"),
+        (_zeroconf(), None, "not_sysap"),
+        (_zeroconf(), {"flags": {}}, "serialNumber_not_found"),
+    ],
+)
+async def test_zeroconf_aborts(
+    hass: HomeAssistant,
+    discovery: ZeroconfServiceInfo,
+    settings: dict[str, Any] | None,
+    reason: str,
+) -> None:
+    """Non-IPv4, non-SysAP and serial-less discoveries abort."""
+    with patch(FETCH_SETTINGS, return_value=settings):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_sysap: MockSysApServer, mock_config_entry: MockConfigEntry
+) -> None:
+    """Reauth stores new credentials after showing errors for wrong ones."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_PASSWORD: "old"}
+    )
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"][CONF_HOST] == mock_sysap.host_port
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: "still-wrong"}
+    )
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    for side_effect, error in (
+        (FreeAtHomeConnectionError("down"), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ):
+        with patch(VALIDATE, side_effect=side_effect):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
             )
-        assert exc_info.value.reason == "already_configured"
-    finally:
-        await server.stop()
+        assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == PASSWORD
 
 
-async def test_zeroconf_and_link_flows(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Verify Zeroconf discovery filtering, host update abort, and link completion."""
-    flow = FreeAtHomeNgConfigFlow()
-    flow.hass = _make_hass()
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_sysap: MockSysApServer, mock_config_entry: MockConfigEntry
+) -> None:
+    """Reconfigure updates connection settings of the same SysAP."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
 
-    ipv6_res = await flow.async_step_zeroconf(
-        ZeroconfServiceInfo(
-            ip_address=IPv6Address("::1"),
-            name="free@home SysAP._http._tcp.local.",
-        )
-    )
-    assert ipv6_res["type"] == "abort"
-    assert ipv6_res["reason"] == "not_ipv4address"
-
-    monkeypatch.setattr(
-        FreeAtHomeLocalApiClient,
-        "fetch_settings_json",
-        AsyncMock(return_value=None),
-    )
-    not_sysap = await flow.async_step_zeroconf(
-        ZeroconfServiceInfo(
-            ip_address=IPv4Address("192.168.1.50"),
-            name="free@home SysAP._http._tcp.local.",
-        )
-    )
-    assert not_sysap["type"] == "abort"
-    assert not_sysap["reason"] == "not_sysap"
-
-    monkeypatch.setattr(
-        FreeAtHomeLocalApiClient,
-        "fetch_settings_json",
-        AsyncMock(return_value={"flags": {}}),
-    )
-    no_serial = await flow.async_step_zeroconf(
-        ZeroconfServiceInfo(
-            ip_address=IPv4Address("192.168.1.50"),
-            name="free@home SysAP._http._tcp.local.",
-        )
-    )
-    assert no_serial["type"] == "abort"
-    assert no_serial["reason"] == "serialNumber_not_found"
-
-    monkeypatch.setattr(
-        FreeAtHomeLocalApiClient,
-        "fetch_settings_json",
-        AsyncMock(return_value={"flags": {"serialNumber": "ABB700999999"}}),
-    )
-    link_form = await flow.async_step_zeroconf(
-        ZeroconfServiceInfo(
-            ip_address=IPv4Address("192.168.1.50"),
-            name="Busch-Jaeger:Living SysAP._http._tcp.local.",
-        )
-    )
-    assert link_form["type"] == "form"
-    assert link_form["step_id"] == "link"
-
-    monkeypatch.setattr(
-        config_flow_mod,
-        "validate_input",
-        AsyncMock(
-            return_value={
-                "title": "Living SysAP",
-                "serial_number": "ABB700999999",
-                "sysap_uuid": "00000000-0000-0000-0000-000000000000",
-                "resolved_username": "apiuser",
-            }
-        ),
-    )
-    created = await flow.async_step_link({CONF_USERNAME: "installer", CONF_PASSWORD: "secret"})
-    assert created["type"] == "create_entry"
-    assert created["title"] == "Living SysAP"
-    assert created["data"][CONF_HOST] == "192.168.1.50"
-    assert created["data"][CONF_USERNAME] == "apiuser"
-
-    existing = SimpleNamespace(
-        entry_id="e1",
-        unique_id="ABB700999999",
-        data={CONF_HOST: "192.168.1.10"},
-        options={},
-    )
-    dup_flow = FreeAtHomeNgConfigFlow()
-    dup_flow.hass = _make_hass([existing])
-    with pytest.raises(AbortFlow) as exc_info:
-        await dup_flow.async_step_zeroconf(
-            ZeroconfServiceInfo(
-                ip_address=IPv4Address("192.168.1.55"),
-                name="free@home SysAP._http._tcp.local.",
+    for side_effect, error in (
+        (FreeAtHomeAuthError("bad"), "invalid_auth"),
+        (FreeAtHomeConnectionError("down"), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ):
+        with patch(VALIDATE, side_effect=side_effect):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_HOST: mock_sysap.host_port}
             )
-        )
-    assert exc_info.value.reason == "already_configured"
-    assert existing.data[CONF_HOST] == "192.168.1.55"
+        assert result["errors"] == {"base": error}
 
-
-async def test_reauth_and_reconfigure_use_update_and_abort() -> None:
-    """Verify reauth and reconfigure call async_update_and_abort and guard SysAP identity."""
-    server = MockSysApServer(port=0)
-    await server.start()
-    try:
-        entry = SimpleNamespace(
-            entry_id="entry_1",
-            unique_id="ABB700999999",
-            data={
-                CONF_HOST: server.host_port,
-                CONF_USERNAME: "apiuser",
-                CONF_PASSWORD: "old",
-            },
-            options={},
-        )
-        hass = _make_hass([entry])
-
-        # Reauth flow
-        reauth_flow = FreeAtHomeNgConfigFlow()
-        reauth_flow.hass = hass
-        reauth_flow.context = {"entry_id": "entry_1"}
-
-        called_methods: list[str] = []
-        orig_update_and_abort = reauth_flow.async_update_and_abort
-
-        def _spy_update_and_abort(*args, **kwargs):
-            called_methods.append("async_update_and_abort")
-            return orig_update_and_abort(*args, **kwargs)
-
-        def _forbid_reload_and_abort(*_args, **_kwargs):
-            raise AssertionError("async_update_reload_and_abort must not be called")
-
-        reauth_flow.async_update_and_abort = _spy_update_and_abort  # type: ignore[method-assign]
-        reauth_flow.async_update_reload_and_abort = _forbid_reload_and_abort  # type: ignore[method-assign]
-
-        form = await reauth_flow.async_step_reauth(entry.data)
-        assert form["step_id"] == "reauth_confirm"
-
-        bad = await reauth_flow.async_step_reauth_confirm(
-            {CONF_USERNAME: "apiuser", CONF_PASSWORD: "wrong"}
-        )
-        assert bad["errors"] == {"base": "invalid_auth"}
-
-        ok = await reauth_flow.async_step_reauth_confirm(
-            {CONF_USERNAME: "installer", CONF_PASSWORD: "secret"}
-        )
-        assert ok["type"] == "abort"
-        assert ok["reason"] == "reauth_successful"
-        assert called_methods == ["async_update_and_abort"]
-        assert entry.data[CONF_USERNAME] == "apiuser"
-        assert entry.data[CONF_PASSWORD] == "secret"
-
-        # Reconfigure flow: mismatch serial -> other_sysap
-        entry_wrong_serial = SimpleNamespace(
-            entry_id="entry_2",
-            unique_id="ABB700OTHER",
-            data={
-                CONF_HOST: server.host_port,
-                CONF_USERNAME: "apiuser",
-                CONF_PASSWORD: "secret",
-            },
-            options={},
-        )
-        hass2 = _make_hass([entry, entry_wrong_serial])
-        reconf_flow = FreeAtHomeNgConfigFlow()
-        reconf_flow.hass = hass2
-        reconf_flow.context = {"entry_id": "entry_2"}
-        mismatch = await reconf_flow.async_step_reconfigure(
-            {CONF_HOST: server.host_port, "name_prefix": "NG "}
-        )
-        assert mismatch["type"] == "form"
-        assert mismatch["errors"] == {CONF_HOST: "other_sysap"}
-
-        # Reconfigure flow: matching serial -> async_update_and_abort
-        called_reconf: list[str] = []
-        reconf_ok_flow = FreeAtHomeNgConfigFlow()
-        reconf_ok_flow.hass = hass2
-        reconf_ok_flow.context = {"entry_id": "entry_1"}
-        orig_reconf_abort = reconf_ok_flow.async_update_and_abort
-        reconf_ok_flow.async_update_and_abort = (  # type: ignore[method-assign]
-            lambda *a, **kw: (
-                called_reconf.append("async_update_and_abort"),
-                orig_reconf_abort(*a, **kw),
-            )[1]
-        )
-        reconf_ok_flow.async_update_reload_and_abort = _forbid_reload_and_abort  # type: ignore[method-assign]
-
-        reconf_res = await reconf_ok_flow.async_step_reconfigure(
-            {CONF_HOST: server.host_port, "name_prefix": "NG "}
-        )
-        assert reconf_res["type"] == "abort"
-        assert reconf_res["reason"] == "reconfigure_successful"
-        assert called_reconf == ["async_update_and_abort"]
-        assert entry.data["name_prefix"] == "NG "
-    finally:
-        await server.stop()
-
-
-async def test_options_flow_zero_arg_init() -> None:
-    """Verify OptionsFlow initializes without arguments and reads self.config_entry."""
-    entry = SimpleNamespace(
-        entry_id="entry_1",
-        data={CONF_HOST: "192.168.1.50", "use_room_names": False},
-        options={"name_prefix": "NG "},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: mock_sysap.host_port, CONF_NAME_PREFIX: "NG "}
     )
-    options_flow = FreeAtHomeNgConfigFlow.async_get_options_flow(entry)  # type: ignore[arg-type]
-    assert isinstance(options_flow, FreeAtHomeNgOptionsFlow)
-    options_flow.config_entry = entry
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_NAME_PREFIX] == "NG "
 
-    form = await options_flow.async_step_init()
-    assert form["type"] == "form"
-    assert form["step_id"] == "init"
 
-    saved = await options_flow.async_step_init({"use_room_names": True, "name_prefix": "Test "})
-    assert saved["type"] == "create_entry"
-    assert saved["data"] == {"use_room_names": True, "name_prefix": "Test "}
+async def test_reconfigure_rejects_other_sysap(
+    hass: HomeAssistant, mock_sysap: MockSysApServer, mock_config_entry: MockConfigEntry
+) -> None:
+    """Pointing an entry at a different SysAP is refused."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="ABB700000001")
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: mock_sysap.host_port}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "other_sysap"}
+
+
+async def test_options_flow(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+    """Options are stored on the entry."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_USE_ROOM_NAMES: True, CONF_NAME_PREFIX: "Test "}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options[CONF_USE_ROOM_NAMES] is True
+    assert mock_config_entry.options[CONF_NAME_PREFIX] == "Test "

@@ -8,9 +8,7 @@ rules:
     comment: local_push integration; all state arrives via the SysAP WebSocket.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Config flow tests run against HA stubs; port to pytest-homeassistant-custom-component (AP2).
+  config-flow-test-coverage: done
   config-flow:
     status: todo
     comment: data_description missing for all config and options fields (AP3).
@@ -51,7 +49,7 @@ rules:
   reauthentication-flow: done
   test-coverage:
     status: todo
-    comment: Coverage is 77 % (line+branch) against stubs; target is >95 % against real HA (AP2, AP3).
+    comment: Coverage is 81 % (line+branch) against real HA 2026.10; target is >95 % (AP3, AP4).
 
   # Gold
   devices: done
