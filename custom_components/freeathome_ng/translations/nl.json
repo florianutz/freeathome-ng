@@ -145,6 +145,21 @@
         }
       }
     },
+    "number": {
+      "temperature_correction": {
+        "name": "Temperatuurcorrectie"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "name": "Gedwongen positie",
+        "state": {
+          "none": "Geen",
+          "open": "Open gehouden",
+          "closed": "Gesloten gehouden"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Dimmerstatus",
@@ -212,6 +227,17 @@
       },
       "self_sufficiency": {
         "name": "Zelfvoorzienendheid"
+      },
+      "valve": {
+        "name": "Klep"
+      },
+      "window_position": {
+        "name": "Raamstand",
+        "state": {
+          "closed": "Gesloten",
+          "tilted": "Gekanteld",
+          "open": "Open"
+        }
       }
     }
   },
@@ -404,7 +430,7 @@
     },
     "cover_force_position": {
       "name": "Dwangpositie voor zonwering instellen",
-      "description": "Dwingt een rolluik, jaloezie of zonnescherm in een vaste positie (open, closed of none).",
+      "description": "Dwingt een rolluik, jaloezie of zonnescherm in een vaste positie (open, closed of none). Verouderd: gebruik in plaats daarvan de entiteit Gedwongen positie.",
       "fields": {
         "forced_position": {
           "name": "Dwangpositie",
@@ -414,7 +440,7 @@
     },
     "thermostat_temperature_correction": {
       "name": "Temperatuurcorrectie thermostaat instellen",
-      "description": "Wijzigt de temperatuurcorrectie-parameter van een kamerthermostaat.",
+      "description": "Wijzigt de temperatuurcorrectie-parameter van een kamerthermostaat. Verouderd: gebruik in plaats daarvan de entiteit Temperatuurcorrectie.",
       "fields": {
         "temperature_correction": {
           "name": "Temperatuurcorrectie",
@@ -489,6 +515,12 @@
     },
     "request_failed": {
       "message": "De SysAP op {host} heeft het verzoek niet geaccepteerd: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_action": {
+      "title": "Actie {action} is verouderd",
+      "description": "De actie `{action}` wordt in een toekomstige versie verwijderd. Gebruik in plaats daarvan de entiteit {replacement} van het apparaat en pas automatiseringen en scripts aan die de actie gebruiken."
     }
   }
 }

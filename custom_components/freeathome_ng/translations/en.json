@@ -145,6 +145,21 @@
         }
       }
     },
+    "number": {
+      "temperature_correction": {
+        "name": "Temperature correction"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "name": "Forced position",
+        "state": {
+          "none": "None",
+          "open": "Held open",
+          "closed": "Held closed"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Dimmer status",
@@ -212,6 +227,17 @@
       },
       "self_sufficiency": {
         "name": "Self-sufficiency"
+      },
+      "valve": {
+        "name": "Valve"
+      },
+      "window_position": {
+        "name": "Window position",
+        "state": {
+          "closed": "Closed",
+          "tilted": "Tilted",
+          "open": "Open"
+        }
       }
     }
   },
@@ -404,7 +430,7 @@
     },
     "cover_force_position": {
       "name": "Force cover position",
-      "description": "Force a cover into a specific position (open, closed, or none).",
+      "description": "Force a cover into a specific position (open, closed, or none). Deprecated: use the Forced position entity instead.",
       "fields": {
         "forced_position": {
           "name": "Forced position",
@@ -414,7 +440,7 @@
     },
     "thermostat_temperature_correction": {
       "name": "Set thermostat temperature correction",
-      "description": "Change the temperature correction offset parameter of a thermostat.",
+      "description": "Change the temperature correction offset parameter of a thermostat. Deprecated: use the Temperature correction entity instead.",
       "fields": {
         "temperature_correction": {
           "name": "Temperature correction",
@@ -489,6 +515,12 @@
     },
     "request_failed": {
       "message": "The SysAP at {host} did not accept the request: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_action": {
+      "title": "Action {action} is deprecated",
+      "description": "The action `{action}` will be removed in a future release. Use the {replacement} entity of the device instead and update the automations and scripts that use the action."
     }
   }
 }

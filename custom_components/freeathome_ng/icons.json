@@ -10,6 +10,19 @@
         "default": "mdi:gesture-tap-button"
       }
     },
+    "number": {
+      "temperature_correction": {
+        "default": "mdi:thermometer-plus"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "default": "mdi:lock-outline",
+        "state": {
+          "none": "mdi:lock-open-variant-outline"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "default": "mdi:gesture-tap-button",
@@ -49,6 +62,16 @@
       },
       "self_sufficiency": {
         "default": "mdi:home-percent"
+      },
+      "valve": {
+        "default": "mdi:valve"
+      },
+      "window_position": {
+        "default": "mdi:window-closed-variant",
+        "state": {
+          "tilted": "mdi:window-open-variant",
+          "open": "mdi:window-open"
+        }
       }
     }
   },

@@ -145,6 +145,21 @@
         }
       }
     },
+    "number": {
+      "temperature_correction": {
+        "name": "Korekta temperatury"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "name": "Pozycja wymuszona",
+        "state": {
+          "none": "Brak",
+          "open": "Utrzymywane otwarte",
+          "closed": "Utrzymywane zamknięte"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Status ściemniacza",
@@ -212,6 +227,17 @@
       },
       "self_sufficiency": {
         "name": "Samowystarczalność"
+      },
+      "valve": {
+        "name": "Zawór"
+      },
+      "window_position": {
+        "name": "Położenie okna",
+        "state": {
+          "closed": "Zamknięte",
+          "tilted": "Uchylone",
+          "open": "Otwarte"
+        }
       }
     }
   },
@@ -404,7 +430,7 @@
     },
     "cover_force_position": {
       "name": "Wymuś pozycję rolety",
-      "description": "Wymusza określoną pozycję osłony (open, closed lub none).",
+      "description": "Wymusza określoną pozycję osłony (open, closed lub none). Przestarzała: zamiast niej użyj encji Pozycja wymuszona.",
       "fields": {
         "forced_position": {
           "name": "Wymuszona pozycja",
@@ -414,7 +440,7 @@
     },
     "thermostat_temperature_correction": {
       "name": "Ustaw korektę temperatury termostatu",
-      "description": "Zmienia parametr korekty temperatury termostatu.",
+      "description": "Zmienia parametr korekty temperatury termostatu. Przestarzała: zamiast niej użyj encji Korekta temperatury.",
       "fields": {
         "temperature_correction": {
           "name": "Korekta temperatury",
@@ -489,6 +515,12 @@
     },
     "request_failed": {
       "message": "SysAP pod adresem {host} nie przyjął żądania: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_action": {
+      "title": "Akcja {action} jest przestarzała",
+      "description": "Akcja `{action}` zostanie usunięta w przyszłej wersji. Zamiast niej użyj encji {replacement} urządzenia i zaktualizuj automatyzacje oraz skrypty, które jej używają."
     }
   }
 }

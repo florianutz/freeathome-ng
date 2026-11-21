@@ -42,7 +42,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
   - Availability follows both the WebSocket connection and the device's own reachability.
 - **Errors:** user-facing exceptions (`HomeAssistantError`, `ServiceValidationError`, `ConfigEntryNotReady`, `ConfigEntryAuthFailed`) use `translation_domain=DOMAIN` + `translation_key`; texts live in `strings.json` → `exceptions`. Catch `api/` exceptions at the HA boundary and re-raise as HA exceptions: entity actions use the `@api_action` decorator (`entity.py`), domain actions `_api_errors` (`services.py`).
 - **Config flow:** unique ID = SysAP serial; every field has `data_description`; specific errors (`cannot_connect`, `invalid_auth`, `unknown`); reauth and reconfigure use `async_update_reload_and_abort` / `async_update_and_abort`.
-- **Repairs:** use `issue_registry` for actionable problems the user must fix (not for transient errors).
+- **Repairs:** use `issue_registry` for actionable problems the user must fix (not for transient errors). A deprecated entity action calls `async_report_deprecated_action` (`entity.py`) to point users to its replacing entity.
 - **Diagnostics:** everything through `async_redact_data`; redact credentials, serials, JIDs, UUIDs, host and geo data.
 - **Style:** `ruff check` and `ruff format` (config in `pyproject.toml`). Docstrings on public functions. Log with `%s` formatting, never f-strings.
 - **Names from the SysAP:** `.strip()` all room, device and channel names. Keep the 840 s keep-alive filter for binary sensors; never suppress `PID_FIRE_ALARM_ACTIVE` / `PID_CO_ALARM_ACTIVE`.

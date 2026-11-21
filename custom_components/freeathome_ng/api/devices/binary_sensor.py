@@ -40,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 CYCLIC_PERIOD = 840.0
 CYCLIC_TOLERANCE = 2.0
 
+WINDOW_POSITION_STATES = {"0": "closed", "33": "tilted", "100": "open"}
+
 
 class FahBinarySensor(FahBaseDevice):
     """free@home binary sensor & rocker/button event model."""
@@ -239,6 +241,15 @@ class FahBinarySensor(FahBaseDevice):
             or PID_WINDOW_DOOR in self._datapoints
             or PID_WINDOW_DOOR_POSITION in self._datapoints
         )
+
+    def supports_window_position(self) -> bool:
+        """Return True if the sensor reports the window position (closed/tilted/open)."""
+        return PID_WINDOW_DOOR_POSITION in self._datapoints
+
+    @property
+    def window_position_state(self) -> str | None:
+        """Return the window position as `closed`, `tilted` or `open`, if known."""
+        return WINDOW_POSITION_STATES.get(self.window_position or "")
 
     def is_motion_sensor(self) -> bool:
         """Return True for motion and presence detectors."""

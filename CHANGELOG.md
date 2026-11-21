@@ -13,12 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thermostats now use the HVAC mode `heat` instead of `heat_cool`, because free@home room temperature controllers heat towards one target temperature. Automations that set or check `heat_cool` need to use `heat`.
 
 ### Added
+- New entities replace state attributes and special actions: a valve sensor and a temperature correction number (configuration) for thermostats, a window position sensor (closed, tilted, open) for window contacts, and a forced position select for covers.
 - Thermostats report their current action (heating, idle or off), based on the valve demand.
 - Event entities for wall rockers and push buttons (`press_up`, `press_down`, and for dimming rockers `hold_up`, `hold_down`, `release`), usable as triggers in the automation editor. The `freeathome_ng_event` bus event is unchanged.
 - All actions accept a `config_entry_id` field with a SysAP picker in the UI.
 - Every setup and options field now has a help text, in all 7 languages.
 
 ### Changed
+- Deprecated: the actions `cover_force_position` and `thermostat_temperature_correction` and the state attributes `valve`, `temperature_correction`, `forced_position` and `window_position`. They keep working for now; using a deprecated action shows a repair issue that names the replacing entity.
 - Binary sensors are described with entity descriptions like in Home Assistant core; the doorbell icon comes from icon translations, and doorbells get the translated name "Doorbell" as fallback.
 - The README documents every setup field and option, how data is updated, use cases, known limitations, troubleshooting and removal. The help text of "Include room names" now says correctly that the room is added in brackets after the channel name.
 - Every free@home channel is now its own device below its physical device, named like the channel. A channel in another room than its actuator (for example one gang of a multi-gang switch actuator) gets that room as its area; channels in the same room keep using the area of the physical device, including areas you assigned yourself. Scenes, groups and timer programs stay single devices.

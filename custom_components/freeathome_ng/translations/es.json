@@ -145,6 +145,21 @@
         }
       }
     },
+    "number": {
+      "temperature_correction": {
+        "name": "Corrección de temperatura"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "name": "Posición forzada",
+        "state": {
+          "none": "Ninguna",
+          "open": "Mantenida abierta",
+          "closed": "Mantenida cerrada"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Estado regulador",
@@ -212,6 +227,17 @@
       },
       "self_sufficiency": {
         "name": "Autosuficiencia"
+      },
+      "valve": {
+        "name": "Válvula"
+      },
+      "window_position": {
+        "name": "Posición de la ventana",
+        "state": {
+          "closed": "Cerrada",
+          "tilted": "Abatida",
+          "open": "Abierta"
+        }
       }
     }
   },
@@ -404,7 +430,7 @@
     },
     "cover_force_position": {
       "name": "Forzar posición de persiana",
-      "description": "Fuerza una persiana/toldo a una posición fija (open, closed o none).",
+      "description": "Fuerza una persiana/toldo a una posición fija (open, closed o none). Obsoleta: usa en su lugar la entidad Posición forzada.",
       "fields": {
         "forced_position": {
           "name": "Posición forzada",
@@ -414,7 +440,7 @@
     },
     "thermostat_temperature_correction": {
       "name": "Ajustar corrección de temperatura",
-      "description": "Cambia el parámetro de corrección de temperatura del termostato.",
+      "description": "Cambia el parámetro de corrección de temperatura del termostato. Obsoleta: usa en su lugar la entidad Corrección de temperatura.",
       "fields": {
         "temperature_correction": {
           "name": "Corrección de temperatura",
@@ -489,6 +515,12 @@
     },
     "request_failed": {
       "message": "El SysAP en {host} no aceptó la solicitud: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_action": {
+      "title": "La acción {action} está obsoleta",
+      "description": "La acción `{action}` se eliminará en una versión futura. Usa en su lugar la entidad {replacement} del dispositivo y actualiza las automatizaciones y scripts que usan la acción."
     }
   }
 }

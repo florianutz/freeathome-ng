@@ -10,6 +10,7 @@ import pytest
 from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from mock_sysap_server import MockSysApServer
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -27,6 +28,8 @@ THERMOSTAT = ("climate", "ABB700D10004/ch0000")
 SHUTTER = ("cover", "ABB700D10003/ch0000")
 FAN = ("fan", "ABB700D10005/ch0000")
 LOCK = ("lock", "ABB700D10010/ch0000")
+FORCED_POSITION = ("select", "ABB700D10003/ch0000/forced_position")
+TEMPERATURE_CORRECTION = ("number", "ABB700D10004/ch0000/temperature_correction")
 
 # Entities are looked up by unique ID: generated entity IDs differ between HA releases.
 
@@ -63,6 +66,8 @@ def _writes(server: MockSysApServer, prefix: str) -> list[tuple[str, str]]:
         ("fan", "turn_off", FAN, {}, "ABB700D10005.ch0000."),
         ("lock", "unlock", LOCK, {}, "ABB700D10010.ch0000."),
         ("lock", "lock", LOCK, {}, "ABB700D10010.ch0000."),
+        ("select", "select_option", FORCED_POSITION, {"option": "closed"}, "ABB700D10003."),
+        ("number", "set_value", TEMPERATURE_CORRECTION, {"value": 1.5}, "ABB700D10004."),
         (DOMAIN, "cover_force_position", SHUTTER, {"forced_position": "closed"}, "ABB700D10003."),
         (
             DOMAIN,
@@ -190,3 +195,51 @@ async def _wait_for_attribute(hass: HomeAssistant, entity_id: str, name: str, va
             return
         await asyncio.sleep(0.02)
     assert hass.states.get(entity_id).attributes.get(name) == value
+
+
+@pytest.mark.parametrize(
+    ("service", "entity", "data", "replacement"),
+    [
+        ("cover_force_position", SHUTTER, {"forced_position": "open"}, FORCED_POSITION),
+        (
+            "thermostat_temperature_correction",
+            THERMOSTAT,
+            {"temperature_correction": 1.0},
+            TEMPERATURE_CORRECTION,
+        ),
+    ],
+)
+async def test_deprecated_actions_raise_repair_issue(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    service: str,
+    entity: tuple[str, str],
+    data: dict[str, Any],
+    replacement: tuple[str, str],
+) -> None:
+    """The deprecated entity actions still work and point to the replacing entity."""
+    await hass.services.async_call(
+        DOMAIN, service, {"entity_id": entity_id_for(hass, *entity), **data}, blocking=True
+    )
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "action": f"{DOMAIN}.{service}",
+        "replacement": entity_id_for(hass, *replacement),
+    }
+
+
+async def test_config_entities_follow_sysap(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_sysap: MockSysApServer
+) -> None:
+    """Forced position, window position and valve entities follow WebSocket updates."""
+    await _broadcast_dp(mock_sysap, "ABB700D10003/ch0000/odp0003", "3")
+    await _wait_for_state(hass, entity_id_for(hass, *FORCED_POSITION), "closed")
+    await _broadcast_dp(mock_sysap, "ABB700D10008/ch0000/odp0001", "100")
+    await _wait_for_state(
+        hass, entity_id_for(hass, "sensor", "ABB700D10008/ch0000/window_position"), "open"
+    )
+    await _broadcast_dp(mock_sysap, "ABB700D10004/ch0000/odp0004", "7")
+    await _wait_for_state(hass, entity_id_for(hass, "sensor", "ABB700D10004/ch0000/valve"), "7.0")

@@ -145,6 +145,21 @@
         }
       }
     },
+    "number": {
+      "temperature_correction": {
+        "name": "Correction de température"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "name": "Position forcée",
+        "state": {
+          "none": "Aucune",
+          "open": "Maintenue ouverte",
+          "closed": "Maintenue fermée"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "État variateur",
@@ -212,6 +227,17 @@
       },
       "self_sufficiency": {
         "name": "Autonomie"
+      },
+      "valve": {
+        "name": "Vanne"
+      },
+      "window_position": {
+        "name": "Position de la fenêtre",
+        "state": {
+          "closed": "Fermée",
+          "tilted": "Basculée",
+          "open": "Ouverte"
+        }
       }
     }
   },
@@ -404,7 +430,7 @@
     },
     "cover_force_position": {
       "name": "Forcer la position du volet",
-      "description": "Force un volet/store dans une position (open, closed ou none).",
+      "description": "Force un volet/store dans une position (open, closed ou none). Obsolète : utilisez plutôt l'entité Position forcée.",
       "fields": {
         "forced_position": {
           "name": "Position forcée",
@@ -414,7 +440,7 @@
     },
     "thermostat_temperature_correction": {
       "name": "Définir la correction de température",
-      "description": "Modifie le décalage de température du thermostat.",
+      "description": "Modifie le décalage de température du thermostat. Obsolète : utilisez plutôt l'entité Correction de température.",
       "fields": {
         "temperature_correction": {
           "name": "Correction de température",
@@ -489,6 +515,12 @@
     },
     "request_failed": {
       "message": "Le SysAP à l'adresse {host} n'a pas accepté la requête : {error}"
+    }
+  },
+  "issues": {
+    "deprecated_action": {
+      "title": "L'action {action} est obsolète",
+      "description": "L'action `{action}` sera supprimée dans une version future. Utilisez plutôt l'entité {replacement} de l'appareil et mettez à jour les automatisations et scripts qui utilisent l'action."
     }
   }
 }

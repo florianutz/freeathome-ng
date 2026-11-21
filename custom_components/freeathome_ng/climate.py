@@ -129,7 +129,7 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return valve demand and temperature correction offset."""
+        """Return valve demand and temperature correction (deprecated, see their entities)."""
         return {
             "valve": self.thermostat_device.current_actuator,
             "temperature_correction": self.thermostat_device.temperature_correction,
@@ -165,7 +165,10 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
 
     @api_action
     async def async_set_temperature_correction(self, temperature_correction: float) -> None:
-        """Update temperature correction offset parameter."""
+        """Update temperature correction offset parameter (deprecated action)."""
+        self.async_report_deprecated_action(
+            "thermostat_temperature_correction", "number", "temperature_correction"
+        )
         await self.thermostat_device.set_temperature_correction(temperature_correction)
 
     @api_action

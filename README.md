@@ -129,16 +129,19 @@ You can migrate cleanly from the classic `freeathome` integration—preserving *
 
 - **Light (`light`):** Switching lights (when `switch_as_x` is `false`), Dimmers, Color Temperature lights (Kelvin), RGB lights, Light & Dimming Groups (`0x4000`, `0x4002`).
 - **Switch (`switch`):** Switching Actuators (`0x0007`, when `switch_as_x` is `true`), Timer Program Switches (`0x4A00`), SysAP Day/Night Switchover (`0x0025`), and Door Entry / Touch-Panel switches (`0x001D` Call Level, `0x0020` Automatic Door Opener, `0x0021` Corridor Light).
-- **Cover (`cover`):** Roller Blinds, Shutters (with slat tilt position), Attic Windows, Awnings, Shutter Groups (`0x4001`), and Forced Position (`freeathome_ng.cover_force_position`).
-- **Climate (`climate`):** Room Temperature Controllers (with and without fan speed), Eco Mode preset, Heating/Cooling demand valve attribute, and Temperature Correction (`freeathome_ng.thermostat_temperature_correction`).
+- **Cover (`cover`):** Roller Blinds, Shutters (with slat tilt position), Attic Windows, Awnings, and Shutter Groups (`0x4001`).
+- **Climate (`climate`):** Room Temperature Controllers (with and without fan speed), HVAC modes `heat` and `off`, current action (heating, idle, off) and Eco Mode preset.
+- **Number (`number`):** Temperature correction of each thermostat (configuration entity, -10 to 10 °C).
+- **Select (`select`):** Forced position of covers (`none`, `open`, `closed`).
 - **Fan (`fan`):** Ceiling Fan Actuators (`0x00A8`) with percentage speed control.
 - **Sensor (`sensor`):**
   - Weather station (Outdoor Temperature, Brightness/Lux, Wind Speed, Wind Force, Rain)
   - Air Quality (Humidity, CO₂, VOC)
-  - Heating/Cooling valve flow & Thermostat current temperature
+  - Heating/Cooling valve flow, thermostat valve demand & thermostat current temperature
+  - Window position of window contacts (`closed`, `tilted`, `open`)
   - Energy Management (PV Power, Battery Power, Battery SoC, Grid Power, Home Power Consumption, Consumed/Injected Energy, Self-Consumption, Self-Sufficiency)
   - Dimmer rocker status enum sensor (`not_pressed`, `pressed_up`, `pressed_down`, `held_up`, `held_down`)
-- **Binary Sensor (`binary_sensor`):** Wall switches/rockers, pushbuttons, motion/presence detectors (with 840 s cyclic keep-alive filter), window/door contacts (with `window_position` attribute `closed`/`tilted`/`open`), smoke/CO detectors, door call sensors (with momentary auto-reset), weather alarms.
+- **Binary Sensor (`binary_sensor`):** Wall switches/rockers, pushbuttons, motion/presence detectors (with 840 s cyclic keep-alive filter), window/door contacts, smoke/CO detectors, door call sensors (with momentary auto-reset), weather alarms.
 - **Button (`button`):** Momentary timed triggers (`0x0045`).
 - **Event (`event`):** One event entity per wall rocker or push button channel with the event types `press_up`, `press_down` and, for dimming rockers, `hold_up`, `hold_down` and `release`. Use them as triggers in the automation editor; the `freeathome_ng_event` bus event below keeps working.
 - **Lock (`lock`):** Door opener actuators (`0x001A`, `0x0020`).
@@ -193,8 +196,8 @@ trigger:
 | `freeathome_ng.send_notification` | Push a notification message to the SysAP (`POST /fhapi/v1/api/rest/notifications`). |
 | `freeathome_ng.dump_config` | Export the full JSON configuration model (`freeathome_ng_dump_<host>_<timestamp>.json`) to `<config>/`. |
 | `freeathome_ng.monitor` | Record raw WebSocket JSON frames (`freeathome_ng_monitor_<host>_<timestamp>.jsonl`) for debugging. |
-| `freeathome_ng.cover_force_position` | Entity service to force a cover `open`, `closed`, or `none`. |
-| `freeathome_ng.thermostat_temperature_correction` | Entity service to update a thermostat's temperature offset. |
+| `freeathome_ng.cover_force_position` | Deprecated: use the cover's forced position select. Forces a cover `open`, `closed`, or `none`. |
+| `freeathome_ng.thermostat_temperature_correction` | Deprecated: use the thermostat's temperature correction number. Updates a thermostat's temperature offset. |
 | `freeathome_ng.migrate_from_legacy` | Preview (`dry_run: true`) or migrate device names, areas, entity metadata, Assist options, and Recorder history (`cutover: true`) from legacy `freeathome`. |
 
 > **Diagnostics:** Download redacted Hub or per-device diagnostic snapshots directly from the Home Assistant UI via **Settings → Devices & Services → free@home NG → ⋮ → Download diagnostics** (or from any individual device page).

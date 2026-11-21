@@ -148,15 +148,11 @@ class FreeAtHomeNgBinarySensor(FreeAtHomeNgEntity, BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return window tilt/open position when available."""
-        pos = self.binary_device.window_position
-        if pos == "0":
-            return {"window_position": "closed"}
-        if pos == "33":
-            return {"window_position": "tilted"}
-        if pos == "100":
-            return {"window_position": "open"}
-        return {}
+        """Return the window position (deprecated, see the window position sensor)."""
+        # Deprecated: the window position sensor replaces this attribute.
+        if (position := self.binary_device.window_position_state) is None:
+            return {}
+        return {"window_position": position}
 
     async def _async_auto_reset(self) -> None:
         """Reset door call sensor state after a 2-second pulse."""
