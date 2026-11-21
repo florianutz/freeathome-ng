@@ -10,11 +10,13 @@ Contributions are welcome!
    source .venv/bin/activate
    pip install -e ".[dev]"
    ```
-2. Run linting, tests, and bytecode verification:
+2. Run the quality gate (the same checks as CI, see [AGENTS.md](AGENTS.md) section 7):
    ```bash
-   ruff check custom_components tests
-   pytest
-   python3 -m compileall -q custom_components/freeathome_ng tests
+   ruff check custom_components tests scripts
+   ruff format --check custom_components tests scripts
+   mypy
+   pytest --cov --cov-report=term
+   python3 scripts/check_translations.py
    ```
 
 ## Architecture Guidelines
@@ -23,4 +25,4 @@ Contributions are welcome!
 - Never reuse the legacy `freeathome` domain, event names, services, or device registry identifiers—everything in this integration must stay isolated under `freeathome_ng`.
 - Keep `strings.json`, `services.yaml`, and all 7 `translations/*.json` files in sync (`en`, `de`, `nl`, `fr`, `it`, `es`, `pl`).
 - Add unit tests in `tests/` for any new `functionID`, `pairingID`, config flow step, or API endpoint support.
-- See [AGENTS.md](AGENTS.md) and [HA Integration Engineering Standards](docs/HA_INTEGRATION_STANDARDS.md) for the complete architecture, compatibility, and quality gates.
+- See [AGENTS.md](AGENTS.md) (binding rules), [docs/DECISIONS.md](docs/DECISIONS.md) (design decisions) and [docs/HA_INTEGRATION_STANDARDS.md](docs/HA_INTEGRATION_STANDARDS.md) (patterns) for architecture and quality gates.
