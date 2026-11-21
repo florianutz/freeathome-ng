@@ -25,6 +25,7 @@ from homeassistant.helpers import event as ha_event
 from homeassistant.helpers import service
 
 from .api import FreeAtHomeApiError, FreeAtHomeController
+from .api.const import VIRTUAL_DEVICE_TYPES
 from .const import (
     CONF_VIRTUAL_DEVICES,
     DOMAIN,
@@ -38,7 +39,6 @@ from .const import (
     SERVICE_THERMOSTAT_TEMPERATURE_CORRECTION,
     SERVICE_TRIGGER_PROXY_DEVICE,
     SERVICE_UNREGISTER_VIRTUAL_DEVICE,
-    VIRTUAL_DEVICE_TYPES,
 )
 from .migration import async_migrate_from_legacy, parse_serialnumbers_text
 

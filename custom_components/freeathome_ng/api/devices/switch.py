@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ...const import (
+from ..const import (
     FUNCTION_IDS_SWITCHING_ACTUATOR,
     FUNCTION_IDS_SYSTEM_SWITCH,
     FUNCTION_IDS_TIMER_PROFILE,

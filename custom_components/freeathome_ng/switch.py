@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
+from .api.const import FUNCTION_IDS_TIMER_PROFILE
 from .api.devices.switch import FahSwitch
-from .const import FUNCTION_IDS_TIMER_PROFILE
 from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0

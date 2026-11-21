@@ -6,7 +6,7 @@ import logging
 import time
 from typing import Any
 
-from ...const import (
+from ..const import (
     FUNCTION_IDS_BINARY_SENSOR,
     FUNCTION_IDS_CONTROL_ELEMENT,
     FUNCTION_IDS_DIMMING_STATUS,

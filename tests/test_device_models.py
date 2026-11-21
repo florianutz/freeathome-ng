@@ -7,15 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.freeathome_ng.api.devices import (
-    FahCover,
-    FahFan,
-    FahLight,
-    FahLightGroup,
-    FahSensor,
-)
-from custom_components.freeathome_ng.api.devices.base import FahBaseDevice
-from custom_components.freeathome_ng.const import (
+from custom_components.freeathome_ng.api.const import (
     FUNCTION_IDS_ATTIC_WINDOW_ACTUATOR,
     FUNCTION_IDS_AWNING_ACTUATOR,
     FUNCTION_IDS_BLIND_ACTUATOR,
@@ -37,6 +29,14 @@ from custom_components.freeathome_ng.const import (
     PID_SYSAP_INFO_ON_OFF,
     PID_WIND_FORCE,
 )
+from custom_components.freeathome_ng.api.devices import (
+    FahCover,
+    FahFan,
+    FahLight,
+    FahLightGroup,
+    FahSensor,
+)
+from custom_components.freeathome_ng.api.devices.base import FahBaseDevice
 
 
 def _controller() -> Any:

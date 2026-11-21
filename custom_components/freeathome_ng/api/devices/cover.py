@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 from typing import Any
 
-from ...const import (
+from ..const import (
     FUNCTION_IDS_ATTIC_WINDOW_ACTUATOR,
     FUNCTION_IDS_AWNING_ACTUATOR,
     FUNCTION_IDS_BLIND_ACTUATOR,

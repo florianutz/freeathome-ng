@@ -7,9 +7,13 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from ..const import (
+from .client import (
+    FreeAtHomeAuthError,
+    FreeAtHomeLocalApiClient,
+    resolve_username_candidates,
+)
+from .const import (
     DEVICE_ID_TO_MODEL,
-    DOMAIN,
     FUNCTION_IDS_AIR_QUALITY_SENSOR,
     FUNCTION_IDS_ENERGY,
     FUNCTION_IDS_SYSTEM_SWITCH,
@@ -26,11 +30,6 @@ from ..const import (
     VIRTUAL_SERIAL_PREFIX,
     parse_hex_id,
     parse_pairing_id,
-)
-from .client import (
-    FreeAtHomeAuthError,
-    FreeAtHomeLocalApiClient,
-    resolve_username_candidates,
 )
 from .devices import (
     FahBaseDevice,
@@ -402,7 +401,6 @@ class FreeAtHomeController:
             device_label = device_display_name or raw_device_id or serialnumber
 
             device_info: dict[str, Any] = {
-                "identifiers": {(DOMAIN, f"{sysap_uuid}_{serialnumber}")},
                 "name": f"{self.name_prefix}{device_label}",
                 "serial_number": serialnumber,
                 "manufacturer": "ABB / Busch-Jaeger",

@@ -7,7 +7,7 @@ import logging
 import re
 from typing import Any
 
-from ...const import (
+from ..const import (
     FUNCTION_IDS_COLOR_ACTUATOR,
     FUNCTION_IDS_COLOR_TEMP_ACTUATOR,
     FUNCTION_IDS_DIMMING_ACTUATOR,

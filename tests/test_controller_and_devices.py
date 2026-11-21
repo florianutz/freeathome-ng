@@ -26,7 +26,6 @@ from custom_components.freeathome_ng.api.devices import (
 from custom_components.freeathome_ng.api.devices.binary_sensor import CYCLIC_PERIOD
 from custom_components.freeathome_ng.binary_sensor import FreeAtHomeNgBinarySensor
 from custom_components.freeathome_ng.climate import FreeAtHomeNgThermostat
-from custom_components.freeathome_ng.const import DOMAIN
 from custom_components.freeathome_ng.sensor import (
     FreeAtHomeNgDimmingStatusSensor,
     FreeAtHomeNgSensor,
@@ -84,7 +83,7 @@ async def test_discovery_room_names_prefix_and_filtering() -> None:
             if dev.serialnumber == "ABB700D10001" and dev.channel_id == "ch0003"
         )
         assert ceiling_switch.name == "NG Ceiling Lamp (Living Room)"
-        assert ceiling_switch.device_info["identifiers"] == {(DOMAIN, f"{SYSAP_UUID}_ABB700D10001")}
+        assert ceiling_switch.physical_device_key == f"{SYSAP_UUID}_ABB700D10001"
         assert ceiling_switch.device_info["model"] == "Sensor/switch actuator 1/1-gang"
         assert ceiling_switch.device_info["suggested_area"] == "Living Room"
         assert ceiling_switch.unique_id == f"{SYSAP_UUID}/ABB700D10001/ch0003"

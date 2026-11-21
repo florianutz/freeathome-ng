@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ...const import FUNCTION_IDS_DOOR_OPENER, PID_INFO_ON_OFF, PID_TIMED_START_STOP
+from ..const import FUNCTION_IDS_DOOR_OPENER, PID_INFO_ON_OFF, PID_TIMED_START_STOP
 from .base import FahBaseDevice
 
 

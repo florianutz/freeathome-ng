@@ -12,8 +12,8 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 
 ## 2. Repository layout
 
-- `custom_components/freeathome_ng/api/` — HA-free library: REST/WebSocket client (`client.py`), configuration and event controller (`controller.py`), device models (`devices/*.py`).
-- `custom_components/freeathome_ng/` — HA layer: setup and services (`__init__.py`), flows (`config_flow.py`), legacy takeover (`migration.py`), entity base (`entity.py`), one module per platform, `diagnostics.py`, `const.py`, `manifest.json`, `services.yaml`, `strings.json`, `translations/` (7 locales), `quality_scale.yaml`, `brand/`.
+- `custom_components/freeathome_ng/api/` — HA-free library: REST/WebSocket client (`client.py`), configuration and event controller (`controller.py`), protocol constants such as Function and Pairing IDs (`const.py`), device models (`devices/*.py`).
+- `custom_components/freeathome_ng/` — HA layer: setup and services (`__init__.py`), flows (`config_flow.py`), legacy takeover (`migration.py`), entity base (`entity.py`), one module per platform, `diagnostics.py`, `const.py` (HA constants only: domain, options, events, actions), `manifest.json`, `services.yaml`, `strings.json`, `translations/` (7 locales), `quality_scale.yaml`, `brand/`.
 - `tests/` — test suite, `mock_sysap_server.py` (SysAP double), `fixtures/configuration.json`.
 - `scripts/` — developer tooling (`check_translations.py`).
 - `docs/` — decisions, standards, user migration guide.
@@ -21,7 +21,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 
 ## 3. Architecture
 
-1. **Two layers, one direction.** `api/` is written as if it were its own PyPI package: stdlib + `aiohttp` only, never `homeassistant` (an AST test enforces this), fully typed, raises its own exceptions (`FreeAtHomeAuthError`, connection errors). The HA layer depends on `api/`, never the reverse.
+1. **Two layers, one direction.** `api/` is written as if it were its own PyPI package: stdlib + `aiohttp` only, never `homeassistant` and never the HA layer (an AST test enforces both), fully typed, raises its own exceptions (`FreeAtHomeAuthError`, connection errors). The HA layer depends on `api/`, never the reverse.
 2. **Data flow.** `client` (REST + WebSocket) → `controller` (configuration model, datapoint routing, `devicesAdded`/`devicesRemoved`) → device models → callbacks → HA entities. Entities never call REST directly; they call device-model methods.
 3. **One config entry per SysAP** (`integration_type: hub`), typed `entry.runtime_data` (`FreeAtHomeNgConfigEntry = ConfigEntry[FreeAtHomeNgRuntime]`). No state in `hass.data`.
 4. **Device model** ([ADR-001](docs/DECISIONS.md)): SysAP hub device → physical device → one channel device (HA child device) per free@home channel; SysAP functions (`FFFF…`) stay single devices. The layout lives in `device_layout.py`. Devices are discovered from the SysAP; never add manual subentries for bus devices.

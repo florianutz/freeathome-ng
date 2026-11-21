@@ -12,7 +12,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from mock_sysap_server import MockSysApServer
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.freeathome_ng.const import parse_hex_id, parse_pairing_id
+from custom_components.freeathome_ng.api.const import parse_hex_id, parse_pairing_id
 from custom_components.freeathome_ng.fah_event import (
     dimming_status_from_event,
     dimming_status_sequence_from_event,

@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 from typing import Any
 
-from ...const import (
+from ..const import (
     FUNCTION_IDS_CEILING_FAN,
     PID_ABSOLUTE_SET_VALUE,
     PID_FAN_SPEED,
