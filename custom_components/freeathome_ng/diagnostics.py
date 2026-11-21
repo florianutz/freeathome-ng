@@ -1,18 +1,28 @@
-"""Diagnostics support for free@home NG."""
+"""Diagnostics support for free@home NG.
+
+Diagnostics are the supported way for users to share their setup. They keep
+device, channel and room names (useful to match a report to the user's UI), but
+redact credentials, the host, the SysAP name, and replace SysAP UUIDs and device
+serials consistently via `api.anonymize`. Virtual devices (`6000...`) keep their
+serial, because users need it to address their own virtual devices.
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
+from .api.anonymize import Anonymizer
+from .api.controller import FreeAtHomeController
 from .const import DOMAIN
 
 TO_REDACT = {
+    CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
     "password",
@@ -21,6 +31,45 @@ TO_REDACT = {
     "serialNumber",
     "sysap_serial",
 }
+VIRTUAL_DEVICE_PREFIX = "6000"
+PLATFORMS = (
+    "binary_sensor",
+    "button",
+    "climate",
+    "cover",
+    "fan",
+    "light",
+    "lock",
+    "scene",
+    "sensor",
+    "switch",
+)
+
+
+def _anonymized(ctrl: FreeAtHomeController) -> tuple[Anonymizer, dict[str, Any]]:
+    """Return the anonymiser and the anonymised SysAP configuration."""
+    anonymizer = Anonymizer(keep_names=True, keep_serial_prefixes=(VIRTUAL_DEVICE_PREFIX,))
+    return anonymizer, anonymizer.run(ctrl.raw_configuration)
+
+
+def _entry_info(entry: ConfigEntry[Any]) -> dict[str, Any]:
+    return {
+        "entry_id": entry.entry_id,
+        "title": REDACTED,
+        "data": async_redact_data(dict(entry.data), TO_REDACT),
+        "options": dict(entry.options),
+    }
+
+
+def _controller_info(ctrl: FreeAtHomeController, anonymizer: Anonymizer) -> dict[str, Any]:
+    return {
+        "host": REDACTED,
+        "use_https": ctrl.client.use_https,
+        "ws_connected": ctrl.ws_connected,
+        "sysap_uuids": [anonymizer.uuid(uuid) for uuid in ctrl.sysap_uuids],
+        "sysap_version": ctrl.sysap_version,
+        "sysap_serial": REDACTED if ctrl.sysap_serial else None,
+    }
 
 
 async def async_get_config_entry_diagnostics(
@@ -29,52 +78,18 @@ async def async_get_config_entry_diagnostics(
     """Return redacted diagnostics for a free@home NG config entry."""
     runtime = getattr(entry, "runtime_data", None)
     if runtime is None:
-        return {
-            "entry": {
-                "entry_id": entry.entry_id,
-                "title": entry.title,
-                "data": async_redact_data(dict(entry.data), TO_REDACT),
-                "options": dict(entry.options),
-            },
-            "status": "not_loaded",
-        }
+        return {"entry": _entry_info(entry), "status": "not_loaded"}
 
-    ctrl = runtime.controller
-    platform_counts = {
-        platform: len(ctrl.get_devices(platform))
-        for platform in (
-            "binary_sensor",
-            "button",
-            "climate",
-            "cover",
-            "fan",
-            "light",
-            "lock",
-            "scene",
-            "sensor",
-            "switch",
-        )
-    }
-
+    ctrl: FreeAtHomeController = runtime.controller
+    anonymizer, configuration = _anonymized(ctrl)
     return {
-        "entry": {
-            "entry_id": entry.entry_id,
-            "title": entry.title,
-            "data": async_redact_data(dict(entry.data), TO_REDACT),
-            "options": dict(entry.options),
-        },
+        "entry": _entry_info(entry),
         "controller": {
-            "host": ctrl.client.host,
-            "use_https": ctrl.client.use_https,
-            "ws_connected": ctrl.ws_connected,
-            "sysap_uuids": ctrl.sysap_uuids,
-            "sysap_names": ctrl.sysap_names,
-            "sysap_version": ctrl.sysap_version,
-            "sysap_serial": "**REDACTED**" if ctrl.sysap_serial else None,
+            **_controller_info(ctrl, anonymizer),
             "total_devices": len(ctrl.devices),
-            "platform_counts": platform_counts,
+            "platform_counts": {p: len(ctrl.get_devices(p)) for p in PLATFORMS},
         },
-        "raw_configuration": async_redact_data(ctrl.raw_configuration, TO_REDACT),
+        "raw_configuration": configuration,
     }
 
 
@@ -95,39 +110,28 @@ async def async_get_device_diagnostics(
 
     runtime = getattr(entry, "runtime_data", None)
     if runtime is None:
-        return {
-            "entry_id": entry.entry_id,
-            "device_identifiers": [list(item) for item in sorted(device.identifiers)],
-            "status": "not_loaded",
-        }
+        return {"entry_id": entry.entry_id, "status": "not_loaded"}
 
-    ctrl = runtime.controller
+    ctrl: FreeAtHomeController = runtime.controller
+    anonymizer, configuration = _anonymized(ctrl)
+    sysap_uuid = anonymizer.uuid(target_sysap_uuid)
+    serial = anonymizer.serial(target_serial)
     matching_devices = [
         dev
         for dev in ctrl.devices
         if dev.sysap_uuid == target_sysap_uuid and dev.serialnumber == target_serial
     ]
-    raw_device_config = (
-        (ctrl.raw_configuration.get(target_sysap_uuid) or {}).get("devices", {}).get(target_serial)
-    )
+    first = matching_devices[0].device_info if matching_devices else {}
 
     return {
         "device": {
-            "sysap_uuid": target_sysap_uuid,
-            "serialnumber": target_serial,
-            "model": (matching_devices[0].device_info.get("model") if matching_devices else None),
-            "suggested_area": (
-                matching_devices[0].device_info.get("suggested_area") if matching_devices else None
-            ),
-            "sw_version": (
-                matching_devices[0].device_info.get("sw_version") if matching_devices else None
-            ),
+            "sysap_uuid": sysap_uuid,
+            "serialnumber": serial,
+            "model": first.get("model"),
+            "suggested_area": first.get("suggested_area"),
+            "sw_version": first.get("sw_version"),
         },
-        "controller": {
-            "host": ctrl.client.host,
-            "use_https": ctrl.client.use_https,
-            "ws_connected": ctrl.ws_connected,
-        },
+        "controller": _controller_info(ctrl, anonymizer),
         "channels": [
             {
                 "channel_id": dev.channel_id,
@@ -141,9 +145,5 @@ async def async_get_device_diagnostics(
             }
             for dev in matching_devices
         ],
-        "raw_device_config": (
-            async_redact_data(raw_device_config, TO_REDACT)
-            if raw_device_config is not None
-            else None
-        ),
+        "raw_device_config": (configuration.get(sysap_uuid) or {}).get("devices", {}).get(serial),
     }
