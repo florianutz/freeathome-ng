@@ -54,7 +54,7 @@ Binding design decisions for `freeathome_ng`. Each record states the decision, w
 
 ## ADR-004: Native `event` entities in addition to the bus event
 
-**Status:** Accepted (2026-11-21) · **Implemented in:** work package AP5
+**Status:** Implemented (2026-11-21, work package AP5): `event.py`, event types `press_up`, `press_down` and, for controls that report long presses, `hold_up`, `hold_down`, `release`; unique ID `{sysap_uuid}/{serial}/{channel_id}/event`
 
 **Decision.** Rockers and push buttons get `event` platform entities (with `event_types` and translations), so automations can use the UI. `freeathome_ng_event` on the event bus stays unchanged for backwards compatibility.
 

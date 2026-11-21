@@ -160,6 +160,24 @@ FUNCTION_IDS_BINARY_SENSOR = [
     0x105B,  # FID_FORCE_ON_OFF_SENSOR_PUSHBUTTON_TYPE3
 ]
 
+# Wall rockers, push buttons and panel buttons: user-operated controls whose presses
+# are exposed as `event` entities (ADR-004).
+FUNCTION_IDS_CONTROL_ELEMENT = [
+    0x0000,
+    0x0001,
+    0x0003,
+    0x0004,
+    0x0005,
+    0x0006,
+    0x0030,
+    0x0031,
+    0x0033,
+    0x0034,
+    0x0035,
+    0x00D4,
+    *(fid for fid in FUNCTION_IDS_BINARY_SENSOR if 0x1000 <= fid <= 0x105B),
+]
+
 FUNCTION_IDS_DIMMING_STATUS = [
     0x0001,  # Dimming sensor
     0x0031,  # FID_PANEL_DIMMING_SENSOR

@@ -548,6 +548,7 @@ class FreeAtHomeController:
             "scene": (FahScene,),
             "cover": (FahCover,),
             "binary_sensor": (FahBinarySensor,),
+            "event": (FahBinarySensor,),
             "thermostat": (FahThermostat,),
             "climate": (FahThermostat,),
             "fan": (FahFan,),

@@ -192,6 +192,22 @@
       "self_sufficiency": {
         "name": "Zelfvoorzienendheid"
       }
+    },
+    "event": {
+      "control": {
+        "name": "Knop",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_up": "Bovenkant ingedrukt",
+              "press_down": "Onderkant ingedrukt",
+              "hold_up": "Bovenkant vastgehouden",
+              "hold_down": "Onderkant vastgehouden",
+              "release": "Losgelaten"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

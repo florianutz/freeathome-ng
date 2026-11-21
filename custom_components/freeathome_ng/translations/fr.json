@@ -192,6 +192,22 @@
       "self_sufficiency": {
         "name": "Autonomie"
       }
+    },
+    "event": {
+      "control": {
+        "name": "Bouton",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_up": "Côté supérieur appuyé",
+              "press_down": "Côté inférieur appuyé",
+              "hold_up": "Côté supérieur maintenu",
+              "hold_down": "Côté inférieur maintenu",
+              "release": "Relâché"
+            }
+          }
+        }
+      }
     }
   },
   "services": {
