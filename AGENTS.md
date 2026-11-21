@@ -100,9 +100,9 @@ CI (`.github/workflows/validate.yml`) additionally runs the tests on the minimum
 - `/sync-translations` — reconcile `strings.json` with all 7 locales.
 - `/release` — prepare a release.
 
-## 10. Current gaps
+## 10. Quality scale status
 
-The code does not yet meet every rule above; open items are tracked as `todo` in `quality_scale.yaml` with their work package (AP2–AP7). When touching code in a `todo` area, move it toward the rule; never add new code that violates it.
+Every Bronze, Silver, Gold and Platinum rule in `quality_scale.yaml` is `done` or `exempt` (with a reason). A change that would break a rule must either fix it in the same PR or set the rule back to `todo` with a comment; never let the file and the code drift apart.
 
 ## 11. References
 

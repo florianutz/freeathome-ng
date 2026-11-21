@@ -19,7 +19,7 @@
           "host": "IP-Adresse oder Hostname des System Access Point, optional mit Port.",
           "username": "Benutzer der Lokalen API, zu finden in der free@home App unter Einstellungen > Lokale API.",
           "password": "Passwort des Benutzers der Lokalen API.",
-          "use_room_names": "Stellt den free@home Raumnamen vor die Entitätsnamen.",
+          "use_room_names": "Hängt den free@home Raumnamen in Klammern an Kanalnamen an, zum Beispiel „Deckenlampe (Küche)“.",
           "switch_as_x": "Zeigt Schaltaktoren als Schalter-Entitäten. Ausschalten, um sie als Lichter zu zeigen.",
           "name_prefix": "Text vor jedem Entitätsnamen, zum Beispiel \"NG \", solange die klassische Integration noch läuft.",
           "use_https": "Verbindet per HTTPS und WSS statt HTTP und WS.",
@@ -43,7 +43,7 @@
         "data_description": {
           "username": "Benutzer der Lokalen API, zu finden in der free@home App unter Einstellungen > Lokale API.",
           "password": "Passwort des Benutzers der Lokalen API.",
-          "use_room_names": "Stellt den free@home Raumnamen vor die Entitätsnamen.",
+          "use_room_names": "Hängt den free@home Raumnamen in Klammern an Kanalnamen an, zum Beispiel „Deckenlampe (Küche)“.",
           "switch_as_x": "Zeigt Schaltaktoren als Schalter-Entitäten. Ausschalten, um sie als Lichter zu zeigen.",
           "name_prefix": "Text vor jedem Entitätsnamen, zum Beispiel \"NG \", solange die klassische Integration noch läuft.",
           "use_https": "Verbindet per HTTPS und WSS statt HTTP und WS.",
@@ -76,7 +76,7 @@
         },
         "data_description": {
           "host": "IP-Adresse oder Hostname des System Access Point, optional mit Port.",
-          "use_room_names": "Stellt den free@home Raumnamen vor die Entitätsnamen.",
+          "use_room_names": "Hängt den free@home Raumnamen in Klammern an Kanalnamen an, zum Beispiel „Deckenlampe (Küche)“.",
           "switch_as_x": "Zeigt Schaltaktoren als Schalter-Entitäten. Ausschalten, um sie als Lichter zu zeigen.",
           "name_prefix": "Text vor jedem Entitätsnamen, zum Beispiel \"NG \", solange die klassische Integration noch läuft.",
           "use_https": "Verbindet per HTTPS und WSS statt HTTP und WS.",
@@ -113,7 +113,7 @@
           "include_orphan_channels": "Kanäle ohne Raumzuordnung einbeziehen"
         },
         "data_description": {
-          "use_room_names": "Stellt den free@home Raumnamen vor die Entitätsnamen.",
+          "use_room_names": "Hängt den free@home Raumnamen in Klammern an Kanalnamen an, zum Beispiel „Deckenlampe (Küche)“.",
           "switch_as_x": "Zeigt Schaltaktoren als Schalter-Entitäten. Ausschalten, um sie als Lichter zu zeigen.",
           "name_prefix": "Text vor jedem Entitätsnamen, zum Beispiel \"NG \", solange die klassische Integration noch läuft.",
           "use_https": "Verbindet per HTTPS und WSS statt HTTP und WS.",

@@ -13,8 +13,8 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions:
-    status: todo
-    comment: README has no removal section (AP7).
+    status: done
+    comment: README "Removal", including virtual devices.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -27,11 +27,11 @@ rules:
   action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
-    status: todo
-    comment: Options are mentioned but not documented as a parameter list (AP7).
+    status: done
+    comment: README "Configuration → Options" lists every option with its default.
   docs-installation-parameters:
-    status: todo
-    comment: Setup fields not documented individually (AP7).
+    status: done
+    comment: README "Configuration → Setup fields".
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -47,20 +47,20 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update:
-    status: todo
-    comment: AP7.
+    status: done
+    comment: README "How data is updated" (local push, reconnect and resync).
   docs-examples: done
   docs-known-limitations:
-    status: todo
-    comment: AP7.
+    status: done
+    comment: README "Known limitations".
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting:
-    status: todo
-    comment: AP7.
+    status: done
+    comment: README "Troubleshooting" (symptoms, diagnostics, debug logging, raw data).
   docs-use-cases:
-    status: todo
-    comment: AP7.
+    status: done
+    comment: README "Use cases".
   dynamic-devices: done
   entity-category:
     status: done

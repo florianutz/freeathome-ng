@@ -19,7 +19,7 @@
           "host": "IP-adres of hostnaam van het System Access Point, eventueel met poort.",
           "username": "Gebruiker van de lokale API, te vinden in de free@home-app onder Instellingen > Lokale API.",
           "password": "Wachtwoord van de gebruiker van de lokale API.",
-          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "use_room_names": "Voegt de free@home-ruimtenaam tussen haakjes toe achter kanaalnamen, bijvoorbeeld \"Plafondlamp (Keuken)\".",
           "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
           "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
           "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
@@ -43,7 +43,7 @@
         "data_description": {
           "username": "Gebruiker van de lokale API, te vinden in de free@home-app onder Instellingen > Lokale API.",
           "password": "Wachtwoord van de gebruiker van de lokale API.",
-          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "use_room_names": "Voegt de free@home-ruimtenaam tussen haakjes toe achter kanaalnamen, bijvoorbeeld \"Plafondlamp (Keuken)\".",
           "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
           "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
           "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
@@ -76,7 +76,7 @@
         },
         "data_description": {
           "host": "IP-adres of hostnaam van het System Access Point, eventueel met poort.",
-          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "use_room_names": "Voegt de free@home-ruimtenaam tussen haakjes toe achter kanaalnamen, bijvoorbeeld \"Plafondlamp (Keuken)\".",
           "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
           "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
           "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
@@ -113,7 +113,7 @@
           "include_orphan_channels": "Kanalen zonder kamer meenemen"
         },
         "data_description": {
-          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "use_room_names": "Voegt de free@home-ruimtenaam tussen haakjes toe achter kanaalnamen, bijvoorbeeld \"Plafondlamp (Keuken)\".",
           "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
           "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
           "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
