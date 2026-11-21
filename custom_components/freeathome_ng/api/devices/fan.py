@@ -65,10 +65,7 @@ class FahFan(FahBaseDevice):
 
     def supports_percentage(self) -> bool:
         """Return True if variable speed percentage is available."""
-        return (
-            PID_ABSOLUTE_SET_VALUE in self._datapoints
-            or PID_FAN_SPEED in self._datapoints
-        )
+        return PID_ABSOLUTE_SET_VALUE in self._datapoints or PID_FAN_SPEED in self._datapoints
 
     async def turn_on(self, percentage: int | None = None) -> None:
         """Turn the fan on and optionally set speed percentage."""
@@ -96,9 +93,7 @@ class FahFan(FahBaseDevice):
         self.percentage = clamped
         self.state = True
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update fan state and speed percentage."""
         if self._datapoints.get(PID_INFO_ON_OFF) == dp:
             self.state = value == "1"

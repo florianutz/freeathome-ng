@@ -105,9 +105,7 @@ class FakeDeviceRegistry:
         self.lookup_calls.append("async_get_devices")
         if not identifiers:
             return []
-        return [
-            dev for dev in self.devices.values() if dev.identifiers & identifiers
-        ]
+        return [dev for dev in self.devices.values() if dev.identifiers & identifiers]
 
     def async_get_device(
         self,
@@ -126,9 +124,7 @@ class FakeDeviceRegistry:
 
     def async_get_or_create(self, **kwargs: Any) -> FakeDevice:
         ident = next(iter(kwargs["identifiers"]))
-        existing = self.async_get_device_by_identifier(
-            ident, kwargs.get("config_entry_id")
-        )
+        existing = self.async_get_device_by_identifier(ident, kwargs.get("config_entry_id"))
         if existing is not None:
             return existing
         dev = FakeDevice(
@@ -229,11 +225,7 @@ def _make_fake_hass(
         removed_entries.append(entry_id)
         all_entries[:] = [e for e in all_entries if e.entry_id != entry_id]
         # Emulate HA cascading removal of entities & devices bound to removed entry.
-        for eid in [
-            k
-            for k, v in ent_reg.entities.items()
-            if v.config_entry_id == entry_id
-        ]:
+        for eid in [k for k, v in ent_reg.entities.items() if v.config_entry_id == entry_id]:
             del ent_reg.entities[eid]
         for dev in dev_reg.devices.values():
             dev.config_entries.discard(entry_id)
@@ -255,7 +247,14 @@ def _build_fixture_env(
     ng_switch_as_x: bool = True,
     legacy_switch_as_x: bool = True,
     name_prefix: str = "",
-) -> tuple[SimpleNamespace, SimpleNamespace, SimpleNamespace, FakeDeviceRegistry, FakeEntityRegistry, list[str]]:
+) -> tuple[
+    SimpleNamespace,
+    SimpleNamespace,
+    SimpleNamespace,
+    FakeDeviceRegistry,
+    FakeEntityRegistry,
+    list[str],
+]:
     dev_reg = FakeDeviceRegistry()
     ent_reg = FakeEntityRegistry()
 
@@ -491,9 +490,7 @@ def test_parse_legacy_unique_id_formats() -> None:
     assert parse_legacy_unique_id("ABB700DA1DDF/ch0006") == ParsedLegacyUniqueId(
         serialnumber="ABB700DA1DDF", channel_id="ch0006", suffix=""
     )
-    assert parse_legacy_unique_id(
-        "ABB700DA1DDF/ch0000/dimming_status"
-    ) == ParsedLegacyUniqueId(
+    assert parse_legacy_unique_id("ABB700DA1DDF/ch0000/dimming_status") == ParsedLegacyUniqueId(
         serialnumber="ABB700DA1DDF",
         channel_id="ch0000",
         suffix="/dimming_status",
@@ -505,16 +502,12 @@ def test_parse_legacy_unique_id_formats() -> None:
         channel_id="ch0000",
         suffix="/current_temperature",
     )
-    assert parse_legacy_unique_id(
-        "ABB700D10007/ch0000/odp0001"
-    ) == ParsedLegacyUniqueId(
+    assert parse_legacy_unique_id("ABB700D10007/ch0000/odp0001") == ParsedLegacyUniqueId(
         serialnumber="ABB700D10007",
         channel_id="ch0000",
         suffix="/odp0001",
     )
-    assert parse_legacy_unique_id(
-        "ABB700D86147/FFFF48000002/ch0000"
-    ) == ParsedLegacyUniqueId(
+    assert parse_legacy_unique_id("ABB700D86147/FFFF48000002/ch0000") == ParsedLegacyUniqueId(
         serialnumber="FFFF48000002",
         channel_id="ch0000",
         suffix="",
@@ -545,9 +538,7 @@ async def test_dry_run_preview_non_destructive() -> None:
         )
     )
 
-    result = await async_migrate_from_legacy(
-        hass, hub_entry, dry_run=True, cutover=True
-    )
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=True, cutover=True)
 
     assert result["success"] is True
     assert result["dry_run"] is True
@@ -576,9 +567,7 @@ async def test_side_by_side_metadata_sync() -> None:
     """Verify cutover=False transfers metadata and Assist options while preserving legacy."""
     hass, hub_entry, legacy_entry, dev_reg, ent_reg, removed = _build_fixture_env()
 
-    result = await async_migrate_from_legacy(
-        hass, hub_entry, dry_run=False, cutover=False
-    )
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=False)
 
     assert result["success"] is True
     assert removed == []
@@ -649,9 +638,7 @@ async def test_full_cutover_preserves_entity_ids_history_and_helpers() -> None:
 
     hass.config_entries.async_remove = _remove_with_reclaim
 
-    result = await async_migrate_from_legacy(
-        hass, hub_entry, dry_run=False, cutover=True
-    )
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=True)
 
     assert result["success"] is True
     assert removed == ["leg_entry_1"]
@@ -664,16 +651,12 @@ async def test_full_cutover_preserves_entity_ids_history_and_helpers() -> None:
 
     assert "scene.abdunkeln" in ent_reg.entities
     assert ent_reg.entities["scene.abdunkeln"].platform == DOMAIN
-    assert ent_reg.entities["scene.abdunkeln"].options == {
-        "conversation": {"should_expose": True}
-    }
+    assert ent_reg.entities["scene.abdunkeln"].options == {"conversation": {"should_expose": True}}
 
     # Conflicting sensor.bad_rt_temp kept NG entity_id while still receiving options
     assert result["summary"]["conflicts"] == 1
     assert result["conflicts"][0]["entity_id"] == "sensor.bad_rt_temp"
-    assert ent_reg.entities["sensor.ng_bad_rt_temp"].options["sensor"] == {
-        "display_precision": 2
-    }
+    assert ent_reg.entities["sensor.ng_bad_rt_temp"].options["sensor"] == {"display_precision": 2}
 
     # Verify options update happened AFTER rename onto final_entity_id
     sw_ops = [op for op in ent_reg.operations if op[1] == "switch.bad_deckenlicht"]
@@ -694,9 +677,7 @@ async def test_cutover_aborts_safely_when_no_matching_ng_entities() -> None:
     for eid in [k for k, v in ent_reg.entities.items() if v.platform == DOMAIN]:
         del ent_reg.entities[eid]
 
-    result = await async_migrate_from_legacy(
-        hass, hub_entry, dry_run=False, cutover=True
-    )
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=True)
 
     assert result["success"] is False
     assert removed == []
@@ -746,9 +727,7 @@ async def test_device_lookup_avoids_deprecated_async_get_device() -> None:
     """Verify HA 2026.8+ lookup uses async_get_device_by_identifier and HA < 2026.8 fallback works."""
     hass, hub_entry, _, dev_reg, _, _ = _build_fixture_env()
 
-    result = await async_migrate_from_legacy(
-        hass, hub_entry, dry_run=False, cutover=False
-    )
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=False)
     assert result["summary"]["device_metadata_updates"] == 2
     assert "async_get_device_by_identifier" in dev_reg.lookup_calls
 
@@ -758,9 +737,7 @@ async def test_device_lookup_avoids_deprecated_async_get_device() -> None:
     legacy_only_reg._devices[1].area_id = None
     hass.device_registry = legacy_only_reg
 
-    fallback_res = await async_migrate_from_legacy(
-        hass, hub_entry, dry_run=False, cutover=False
-    )
+    fallback_res = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=False)
     assert fallback_res["summary"]["device_metadata_updates"] == 2
     assert len(legacy_only_reg.updated_calls) == 2
 
@@ -802,7 +779,7 @@ async def test_migrate_service_multi_hub_and_legacy_flow_defaults() -> None:
             options={},
             runtime_data=None,
             async_on_unload=lambda _cb: None,
-            add_update_listener=lambda _cb: (lambda: None),
+            add_update_listener=lambda _cb: lambda: None,
             async_start_reauth=lambda _h: None,
         )
 
@@ -813,7 +790,9 @@ async def test_migrate_service_multi_hub_and_legacy_flow_defaults() -> None:
             config_entries=SimpleNamespace(
                 async_entries=lambda d=None: [legacy_entry] if d == LEGACY_DOMAIN else [],
                 async_forward_entry_setups=lambda *_a, **_kw: __import__("asyncio").sleep(0),
-                async_unload_platforms=lambda *_a, **_kw: __import__("asyncio").sleep(0, result=True),
+                async_unload_platforms=lambda *_a, **_kw: __import__("asyncio").sleep(
+                    0, result=True
+                ),
                 async_schedule_reload=lambda _id: None,
                 async_update_entry=lambda *_a, **_kw: None,
             ),
@@ -823,7 +802,7 @@ async def test_migrate_service_multi_hub_and_legacy_flow_defaults() -> None:
                 async_remove=lambda dom, name: registered_services.pop(f"{dom}.{name}", None),
             ),
             bus=SimpleNamespace(
-                async_listen_once=lambda *_a, **_kw: (lambda: None),
+                async_listen_once=lambda *_a, **_kw: lambda: None,
                 async_fire=lambda *_a, **_kw: None,
             ),
             config=SimpleNamespace(path=lambda p: p),
@@ -853,9 +832,7 @@ async def test_migrate_service_multi_hub_and_legacy_flow_defaults() -> None:
         with pytest.raises(ServiceValidationError):
             await handler(SimpleNamespace(data={"dry_run": True}))
 
-        res = await handler(
-            SimpleNamespace(data={"entry_id": "entry_1", "dry_run": True})
-        )
+        res = await handler(SimpleNamespace(data={"entry_id": "entry_1", "dry_run": True}))
         assert res["success"] is True
         assert res["hub_entry_id"] == "entry_1"
 

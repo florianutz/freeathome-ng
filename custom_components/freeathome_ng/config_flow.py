@@ -48,9 +48,7 @@ class InvalidAuth(exceptions.HomeAssistantError):
     """Error indicating invalid Local API credentials."""
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, Any]:
+async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate that credentials and host can reach the Local API."""
     use_https = bool(data.get(CONF_USE_HTTPS, DEFAULT_USE_HTTPS))
     verify_ssl = bool(data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL))
@@ -106,9 +104,7 @@ def _shared_options_schema(defaults: dict[str, Any]) -> dict[Any, Any]:
         ): bool,
         vol.Optional(
             CONF_INCLUDE_ORPHAN_CHANNELS,
-            default=defaults.get(
-                CONF_INCLUDE_ORPHAN_CHANNELS, DEFAULT_INCLUDE_ORPHAN_CHANNELS
-            ),
+            default=defaults.get(CONF_INCLUDE_ORPHAN_CHANNELS, DEFAULT_INCLUDE_ORPHAN_CHANNELS),
         ): bool,
     }
 
@@ -251,11 +247,7 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=saved_data)
 
-        defaults = (
-            user_input
-            if user_input is not None
-            else get_legacy_setup_defaults(self.hass)
-        )
+        defaults = user_input if user_input is not None else get_legacy_setup_defaults(self.hass)
         return self.async_show_form(
             step_id="user",
             data_schema=_user_schema(defaults),
@@ -295,9 +287,7 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if info.get("resolved_username"):
                     data[CONF_USERNAME] = info["resolved_username"]
                 if hasattr(self, "async_update_and_abort"):
-                    return self.async_update_and_abort(
-                        entry, data=data, reason="reauth_successful"
-                    )
+                    return self.async_update_and_abort(entry, data=data, reason="reauth_successful")
                 return self.async_update_reload_and_abort(
                     entry, data=data, reason="reauth_successful"
                 )
@@ -306,9 +296,7 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")
-                    ): str,
+                    vol.Required(CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -341,11 +329,7 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 new_unique = info.get("serial_number") or data[CONF_HOST]
-                if (
-                    entry.unique_id
-                    and info.get("serial_number")
-                    and new_unique != entry.unique_id
-                ):
+                if entry.unique_id and info.get("serial_number") and new_unique != entry.unique_id:
                     errors[CONF_HOST] = "other_sysap"
                 elif hasattr(self, "async_update_and_abort"):
                     return self.async_update_and_abort(

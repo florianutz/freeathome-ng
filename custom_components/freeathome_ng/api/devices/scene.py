@@ -53,9 +53,7 @@ class FahScene(FahBaseDevice):
         """Trigger scene activation (`"1"`)."""
         await self.set_datapoint(PID_SCENE_CONTROL, "1")
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update last scene activation payload."""
         if self._datapoints.get(PID_SCENE_CONTROL) == dp:
             self.state = value

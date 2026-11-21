@@ -55,9 +55,7 @@ class FreeAtHomeNgEntity(Entity):
             self.async_write_ha_state()
 
         self.fah_device.register_device_updated_cb(_after_update)
-        self.async_on_remove(
-            lambda: self.fah_device.unregister_device_updated_cb(_after_update)
-        )
+        self.async_on_remove(lambda: self.fah_device.unregister_device_updated_cb(_after_update))
         self._sync_from_device()
 
     def _sync_from_device(self) -> None:

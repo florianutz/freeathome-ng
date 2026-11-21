@@ -169,9 +169,7 @@ async def test_zeroconf_and_link_flows(monkeypatch: pytest.MonkeyPatch) -> None:
             }
         ),
     )
-    created = await flow.async_step_link(
-        {CONF_USERNAME: "installer", CONF_PASSWORD: "secret"}
-    )
+    created = await flow.async_step_link({CONF_USERNAME: "installer", CONF_PASSWORD: "secret"})
     assert created["type"] == "create_entry"
     assert created["title"] == "Living SysAP"
     assert created["data"][CONF_HOST] == "192.168.1.50"
@@ -309,8 +307,6 @@ async def test_options_flow_zero_arg_init() -> None:
     assert form["type"] == "form"
     assert form["step_id"] == "init"
 
-    saved = await options_flow.async_step_init(
-        {"use_room_names": True, "name_prefix": "Test "}
-    )
+    saved = await options_flow.async_step_init({"use_room_names": True, "name_prefix": "Test "})
     assert saved["type"] == "create_entry"
     assert saved["data"] == {"use_room_names": True, "name_prefix": "Test "}

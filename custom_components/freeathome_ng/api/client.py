@@ -31,9 +31,7 @@ class FreeAtHomeConnectionError(FreeAtHomeApiError):
     """Raised when the SysAP cannot be reached."""
 
 
-def resolve_username_candidates(
-    settings: dict[str, Any] | None, username: str
-) -> list[str]:
+def resolve_username_candidates(settings: dict[str, Any] | None, username: str) -> list[str]:
     """Return ordered auth username candidates derived from `/settings.json`."""
     candidates: list[str] = []
     if settings and isinstance(settings.get("users"), list):
@@ -158,23 +156,17 @@ class FreeAtHomeLocalApiClient:
         try:
             async with session.request(method, url, **kwargs) as resp:
                 if resp.status in (401, 403):
-                    raise FreeAtHomeAuthError(
-                        f"Authentication failed ({resp.status}) at {url}"
-                    )
+                    raise FreeAtHomeAuthError(f"Authentication failed ({resp.status}) at {url}")
                 if resp.status >= 400:
                     body = await resp.text()
-                    raise FreeAtHomeApiError(
-                        f"HTTP {resp.status} for {method} {url}: {body}"
-                    )
+                    raise FreeAtHomeApiError(f"HTTP {resp.status} for {method} {url}: {body}")
                 if resp.status == 204:
                     return None
                 raw_text = await resp.text()
                 if not raw_text:
                     return None
                 content_type = resp.headers.get("Content-Type", "")
-                if "application/json" in content_type or raw_text.lstrip().startswith(
-                    ("{", "[")
-                ):
+                if "application/json" in content_type or raw_text.lstrip().startswith(("{", "[")):
                     return json.loads(raw_text)
                 return raw_text
         except (FreeAtHomeAuthError, FreeAtHomeApiError):
@@ -209,22 +201,15 @@ class FreeAtHomeLocalApiClient:
         """Fetch the lightweight device list per SysAP."""
         data = await self._request("GET", f"{self.base_api_url}/devicelist")
         if not isinstance(data, dict):
-            raise FreeAtHomeApiError(
-                f"Unexpected devicelist response type: {type(data).__name__}"
-            )
+            raise FreeAtHomeApiError(f"Unexpected devicelist response type: {type(data).__name__}")
         return data
 
     async def get_device(self, sysap_uuid: str, serial: str) -> dict[str, Any]:
         """Fetch a single device definition."""
-        url = (
-            f"{self.base_api_url}/device/"
-            f"{quote(sysap_uuid, safe='')}/{quote(serial, safe='')}"
-        )
+        url = f"{self.base_api_url}/device/{quote(sysap_uuid, safe='')}/{quote(serial, safe='')}"
         data = await self._request("GET", url)
         if not isinstance(data, dict):
-            raise FreeAtHomeApiError(
-                f"Unexpected device response type: {type(data).__name__}"
-            )
+            raise FreeAtHomeApiError(f"Unexpected device response type: {type(data).__name__}")
         return data
 
     async def get_datapoint(
@@ -233,8 +218,7 @@ class FreeAtHomeLocalApiClient:
         """Read the current value of a datapoint."""
         dp_path = f"{serial}.{channel}.{datapoint}"
         url = (
-            f"{self.base_api_url}/datapoint/"
-            f"{quote(sysap_uuid, safe='')}/{quote(dp_path, safe='.')}"
+            f"{self.base_api_url}/datapoint/{quote(sysap_uuid, safe='')}/{quote(dp_path, safe='.')}"
         )
         return await self._request("GET", url)
 
@@ -249,8 +233,7 @@ class FreeAtHomeLocalApiClient:
         """Write a datapoint value to the SysAP."""
         dp_path = f"{serial}.{channel}.{datapoint}"
         url = (
-            f"{self.base_api_url}/datapoint/"
-            f"{quote(sysap_uuid, safe='')}/{quote(dp_path, safe='.')}"
+            f"{self.base_api_url}/datapoint/{quote(sysap_uuid, safe='')}/{quote(dp_path, safe='.')}"
         )
         _LOGGER.debug("PUT datapoint %s = %s", dp_path, value)
         return await self._request("PUT", url, text_body=str(value))
@@ -319,9 +302,7 @@ class FreeAtHomeLocalApiClient:
 
         return result
 
-    async def _virtual_device_heartbeat(
-        self, sysap_uuid: str, native_id: str, ttl: int
-    ) -> None:
+    async def _virtual_device_heartbeat(self, sysap_uuid: str, native_id: str, ttl: int) -> None:
         """Keep a registered virtual device alive by refreshing its TTL."""
         interval = max(10.0, ttl * 0.6)
         url = (
@@ -339,13 +320,9 @@ class FreeAtHomeLocalApiClient:
         except asyncio.CancelledError:
             return
         except FreeAtHomeApiError as err:
-            _LOGGER.warning(
-                "Virtual device TTL refresh failed for %s: %s", native_id, err
-            )
+            _LOGGER.warning("Virtual device TTL refresh failed for %s: %s", native_id, err)
 
-    async def unregister_virtual_device(
-        self, sysap_uuid: str, native_id: str
-    ) -> Any:
+    async def unregister_virtual_device(self, sysap_uuid: str, native_id: str) -> Any:
         """Stop TTL renewal and mark a virtual device unresponsive (`ttl=0`)."""
         key = (sysap_uuid, native_id)
         task = self._virtual_device_tasks.pop(key, None)

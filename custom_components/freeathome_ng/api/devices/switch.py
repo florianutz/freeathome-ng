@@ -102,9 +102,7 @@ class FahSwitch(FahBaseDevice):
         """Return True when the switch is on."""
         return self.state
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update switch state from output datapoint."""
         if dp in (
             self._datapoints.get(PID_INFO_ON_OFF),

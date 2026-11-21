@@ -116,15 +116,11 @@ def _match_datapoints(
     return matched, initial_values
 
 
-def _clean_channel_display_name(
-    device_display_name: str, channel_display_name: str
-) -> str:
+def _clean_channel_display_name(device_display_name: str, channel_display_name: str) -> str:
     """Strip redundant device displayName prefix from SysAP 3.x channel names."""
     device_display_name = device_display_name.strip()
     channel_display_name = channel_display_name.strip()
-    if device_display_name and channel_display_name.startswith(
-        f"{device_display_name} "
-    ):
+    if device_display_name and channel_display_name.startswith(f"{device_display_name} "):
         remainder = channel_display_name[len(device_display_name) :].strip()
         if remainder.lower() == "rocker":
             return device_display_name
@@ -204,15 +200,9 @@ class FreeAtHomeController:
         self._settings_data: dict[str, Any] | None = None
 
         self._ws_frame_listeners: list[Callable[[dict[str, Any]], None]] = []
-        self._scene_triggered_cbs: list[
-            Callable[[str, dict[str, Any]], Awaitable[None]]
-        ] = []
-        self._virtual_cmd_cbs: list[
-            Callable[[str, str, str, str, str], Awaitable[None]]
-        ] = []
-        self._devices_added_cbs: list[
-            Callable[[list[FahBaseDevice]], Awaitable[None]]
-        ] = []
+        self._scene_triggered_cbs: list[Callable[[str, dict[str, Any]], Awaitable[None]]] = []
+        self._virtual_cmd_cbs: list[Callable[[str, str, str, str, str], Awaitable[None]]] = []
+        self._devices_added_cbs: list[Callable[[list[FahBaseDevice]], Awaitable[None]]] = []
         self._auth_failed_cb: Callable[[], None] | None = None
         self._settings_loaded: bool = False
 
@@ -225,9 +215,7 @@ class FreeAtHomeController:
         if listener not in self._ws_frame_listeners:
             self._ws_frame_listeners.append(listener)
 
-    def remove_ws_frame_listener(
-        self, listener: Callable[[dict[str, Any]], None]
-    ) -> None:
+    def remove_ws_frame_listener(self, listener: Callable[[dict[str, Any]], None]) -> None:
         """Unsubscribe from raw WebSocket JSON frames."""
         if listener in self._ws_frame_listeners:
             self._ws_frame_listeners.remove(listener)
@@ -307,9 +295,7 @@ class FreeAtHomeController:
             if not isinstance(sysap_data, dict):
                 continue
             self.sysap_uuids.append(sysap_uuid)
-            self.sysap_names[sysap_uuid] = str(
-                sysap_data.get("sysapName", "SysAP")
-            ).strip()
+            self.sysap_names[sysap_uuid] = str(sysap_data.get("sysapName", "SysAP")).strip()
             floorplan = _extract_floorplan(sysap_data)
             devices_dict = sysap_data.get("devices") or {}
             created.extend(
@@ -366,9 +352,7 @@ class FreeAtHomeController:
             device_room = str(device_data.get("room") or "")
             raw_device_id = str(device_data.get("deviceId") or "")
             model_name = (
-                DEVICE_ID_TO_MODEL.get(raw_device_id.upper())
-                or raw_device_id
-                or "free@home Device"
+                DEVICE_ID_TO_MODEL.get(raw_device_id.upper()) or raw_device_id or "free@home Device"
             )
             device_label = device_display_name or raw_device_id or serialnumber
 
@@ -382,9 +366,9 @@ class FreeAtHomeController:
             suggested_area = floorplan.get(device_floor, {}).get(device_room)
             if not suggested_area:
                 channel_rooms = {
-                    floorplan.get(
-                        str(ch.get("floor") or device_floor or ""), {}
-                    ).get(str(ch.get("room") or device_room or ""))
+                    floorplan.get(str(ch.get("floor") or device_floor or ""), {}).get(
+                        str(ch.get("room") or device_room or "")
+                    )
                     for ch in channels.values()
                     if isinstance(ch, dict)
                 }
@@ -437,9 +421,7 @@ class FreeAtHomeController:
                     device_display_name, raw_channel_name
                 )
                 base_name = (
-                    channel_display_name
-                    or device_display_name
-                    or f"{serialnumber}/{channel_id}"
+                    channel_display_name or device_display_name or f"{serialnumber}/{channel_id}"
                 )
 
                 room_suffix = ""
@@ -450,9 +432,7 @@ class FreeAtHomeController:
 
                 name_id = parse_hex_id(channel_data.get("nameId"))
                 position_suffix = (
-                    NAME_IDS_TO_BINARY_SENSOR_SUFFIX.get(name_id, "")
-                    if name_id is not None
-                    else ""
+                    NAME_IDS_TO_BINARY_SENSOR_SUFFIX.get(name_id, "") if name_id is not None else ""
                 )
                 full_name = f"{self.name_prefix}{base_name}{position_suffix}{room_suffix}"
 
@@ -510,14 +490,8 @@ class FreeAtHomeController:
             )
             matched_params, param_values = _match_parameters(channel_data, param_spec)
 
-            split_per_datapoint = (
-                device_cls is FahSensor
-                and function_id
-                in (
-                    FUNCTION_IDS_AIR_QUALITY_SENSOR
-                    + FUNCTION_IDS_WEATHER_STATION
-                    + FUNCTION_IDS_ENERGY
-                )
+            split_per_datapoint = device_cls is FahSensor and function_id in (
+                FUNCTION_IDS_AIR_QUALITY_SENSOR + FUNCTION_IDS_WEATHER_STATION + FUNCTION_IDS_ENERGY
             )
 
             dp_groups: list[dict[int, str]]
@@ -554,9 +528,7 @@ class FreeAtHomeController:
                         (sysap_uuid, f"{serialnumber}/{channel_id}/{dp_id}")
                     ] = device
                     if dp_id in dp_values:
-                        device.update_datapoint(
-                            dp_id, dp_values[dp_id], initializing=initializing
-                        )
+                        device.update_datapoint(dp_id, dp_values[dp_id], initializing=initializing)
 
                 for param_id in matched_params.values():
                     self.monitored_parameters[
@@ -645,9 +617,7 @@ class FreeAtHomeController:
                                 updated_devices.add(device)
                     for param_id, param_info in (ch_data.get("parameters") or {}).items():
                         val = (
-                            param_info.get("value")
-                            if isinstance(param_info, dict)
-                            else param_info
+                            param_info.get("value") if isinstance(param_info, dict) else param_info
                         )
                         if val is None or str(val) == "":
                             continue
@@ -715,9 +685,7 @@ class FreeAtHomeController:
             dev.update_datapoint(odp_id, value, initializing=False)
             updated_devices.add(dev)
             try:
-                await self.client.set_datapoint(
-                    sysap_uuid, serial, channel_id, odp_id, value
-                )
+                await self.client.set_datapoint(sysap_uuid, serial, channel_id, odp_id, value)
             except Exception as err:
                 _LOGGER.debug(
                     "Virtual device feedback write failed for %s/%s/%s: %s",
@@ -773,11 +741,7 @@ class FreeAtHomeController:
 
             # 2. Parameters
             for param_path, raw_value in (frame.get("parameters") or {}).items():
-                extracted = (
-                    raw_value.get("value")
-                    if isinstance(raw_value, dict)
-                    else raw_value
-                )
+                extracted = raw_value.get("value") if isinstance(raw_value, dict) else raw_value
                 if extracted is None:
                     continue
                 value = str(extracted)
@@ -804,18 +768,14 @@ class FreeAtHomeController:
                         fetched = await self.client.get_device(sysap_uuid, added_serial)
                         sysap_entry = fetched.get(sysap_uuid, {})
                         devices_block = (
-                            sysap_entry.get("devices")
-                            if isinstance(sysap_entry, dict)
-                            else None
+                            sysap_entry.get("devices") if isinstance(sysap_entry, dict) else None
                         )
                         if isinstance(devices_block, dict) and added_serial in devices_block:
                             added_devices_payload[added_serial] = devices_block[added_serial]
                         elif isinstance(fetched.get(added_serial), dict):
                             added_devices_payload[added_serial] = fetched[added_serial]
                     except Exception as err:
-                        _LOGGER.debug(
-                            "Could not fetch added device %s: %s", added_serial, err
-                        )
+                        _LOGGER.debug("Could not fetch added device %s: %s", added_serial, err)
 
             if added_devices_payload:
                 newly_created = self._register_devices_from_dict(
@@ -844,9 +804,7 @@ class FreeAtHomeController:
             raise FreeAtHomeAuthError("Empty configuration returned by SysAP")
         first_uuid = next(iter(config))
         sysap_name = (
-            config[first_uuid].get("sysapName")
-            if isinstance(config[first_uuid], dict)
-            else None
+            config[first_uuid].get("sysapName") if isinstance(config[first_uuid], dict) else None
         )
         return str(sysap_name or self.sysap_serial or self.client.host)
 

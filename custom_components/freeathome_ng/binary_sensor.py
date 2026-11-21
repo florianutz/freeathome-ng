@@ -142,23 +142,16 @@ class FreeAtHomeNgBinarySensor(FreeAtHomeNgEntity, BinarySensorEntity):
 
         async def _after_update(_dev: Any) -> None:
             target_hass = self.hass or self._fallback_hass
-            if (
-                self.binary_device.is_door_call_sensor()
-                and self.binary_device.state == "1"
-            ):
+            if self.binary_device.is_door_call_sensor() and self.binary_device.state == "1":
                 self.async_write_ha_state()
                 if self._reset_task and not self._reset_task.done():
                     self._reset_task.cancel()
                 if target_hass is not None:
-                    self._reset_task = target_hass.async_create_task(
-                        self._async_auto_reset()
-                    )
+                    self._reset_task = target_hass.async_create_task(self._async_auto_reset())
             else:
                 self.async_write_ha_state()
 
-        async def _on_dp_event(
-            device: FahBinarySensor, event: dict[str, Any]
-        ) -> None:
+        async def _on_dp_event(device: FahBinarySensor, event: dict[str, Any]) -> None:
             target_hass = self.hass or self._fallback_hass
             if target_hass is None:
                 return
@@ -172,9 +165,7 @@ class FreeAtHomeNgBinarySensor(FreeAtHomeNgEntity, BinarySensorEntity):
 
         self.binary_device.register_device_updated_cb(_after_update)
         self.binary_device.register_datapoint_updated_cb(_on_dp_event)
-        self.async_on_remove(
-            lambda: self.binary_device.unregister_device_updated_cb(_after_update)
-        )
+        self.async_on_remove(lambda: self.binary_device.unregister_device_updated_cb(_after_update))
         self.async_on_remove(
             lambda: self.binary_device.unregister_datapoint_updated_cb(_on_dp_event)
         )

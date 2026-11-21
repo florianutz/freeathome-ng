@@ -112,9 +112,7 @@ class LegacyEntityInfo:
                 and current_ng_entity_id != self.entity_id
             ),
             "history_preserved": bool(
-                cutover
-                and not self.domain_changed
-                and target_entity_id == self.entity_id
+                cutover and not self.domain_changed and target_entity_id == self.entity_id
             ),
             "domain_changed": self.domain_changed,
             "name": self.name,
@@ -260,8 +258,7 @@ def _lookup_device(
 
     for dev in _iter_device_entries(dev_reg):
         if identifier in getattr(dev, "identifiers", set()) and (
-            not config_entry_id
-            or config_entry_id in getattr(dev, "config_entries", ())
+            not config_entry_id or config_entry_id in getattr(dev, "config_entries", ())
         ):
             return dev
     return None
@@ -280,20 +277,22 @@ def _legacy_config_entries(hass: Any) -> list[ConfigEntry[Any]]:
     ]
 
 
-def find_matching_legacy_entry(
-    hass: Any, hub_entry: ConfigEntry[Any]
-) -> ConfigEntry[Any] | None:
+def find_matching_legacy_entry(hass: Any, hub_entry: ConfigEntry[Any]) -> ConfigEntry[Any] | None:
     """Match the legacy `freeathome` config entry corresponding to `hub_entry`."""
     legacy_entries = _legacy_config_entries(hass)
     if not legacy_entries:
         return None
 
     runtime: FreeAtHomeNgRuntime | None = getattr(hub_entry, "runtime_data", None)
-    hub_serial = str(
-        getattr(hub_entry, "unique_id", None)
-        or (getattr(runtime.controller, "sysap_serial", None) if runtime else None)
-        or ""
-    ).strip().upper()
+    hub_serial = (
+        str(
+            getattr(hub_entry, "unique_id", None)
+            or (getattr(runtime.controller, "sysap_serial", None) if runtime else None)
+            or ""
+        )
+        .strip()
+        .upper()
+    )
     hub_host = str(hub_entry.data.get(CONF_HOST, "")).strip().lower()
 
     if hub_serial:
@@ -334,8 +333,7 @@ def get_legacy_setup_defaults(
             (
                 entry
                 for entry in legacy_entries
-                if str(getattr(entry, "unique_id", None) or "").strip().upper()
-                == target_serial
+                if str(getattr(entry, "unique_id", None) or "").strip().upper() == target_serial
             ),
             None,
         )
@@ -533,9 +531,7 @@ def collect_legacy_entities(
         matched_ng = None
 
         for sysap_uuid in candidate_uuids:
-            candidate_uid = (
-                f"{sysap_uuid}/{parsed.serialnumber}/{parsed.channel_id}{parsed.suffix}"
-            )
+            candidate_uid = f"{sysap_uuid}/{parsed.serialnumber}/{parsed.channel_id}{parsed.suffix}"
             if (legacy_domain, candidate_uid) in ng_by_domain_uid:
                 matched_ng = ng_by_domain_uid[(legacy_domain, candidate_uid)]
                 ng_domain = legacy_domain
@@ -552,11 +548,7 @@ def collect_legacy_entities(
                     matched_eid = str(getattr(matched_ng, "entity_id", ""))
                     ng_domain = str(
                         getattr(matched_ng, "domain", None)
-                        or (
-                            matched_eid.split(".", 1)[0]
-                            if "." in matched_eid
-                            else legacy_domain
-                        )
+                        or (matched_eid.split(".", 1)[0] if "." in matched_eid else legacy_domain)
                     )
                     ng_unique_id = candidate_uid
                     break
@@ -675,16 +667,10 @@ def _apply_entity_migration(
                     "ng_entity_id": original_ng_entity_id,
                     "reason": str(err),
                 }
-                fallback_kwargs = {
-                    k: v for k, v in kwargs.items() if k != "new_entity_id"
-                }
+                fallback_kwargs = {k: v for k, v in kwargs.items() if k != "new_entity_id"}
                 if fallback_kwargs:
-                    updated = ent_reg.async_update_entity(
-                        original_ng_entity_id, **fallback_kwargs
-                    )
-                    final_entity_id = (
-                        getattr(updated, "entity_id", None) or original_ng_entity_id
-                    )
+                    updated = ent_reg.async_update_entity(original_ng_entity_id, **fallback_kwargs)
+                    final_entity_id = getattr(updated, "entity_id", None) or original_ng_entity_id
             else:
                 raise
 
@@ -713,9 +699,7 @@ async def async_migrate_from_legacy(
     """Preview or execute migration from legacy `freeathome` to `freeathome_ng`."""
     runtime: FreeAtHomeNgRuntime | None = getattr(hub_entry, "runtime_data", None)
     if runtime is None:
-        raise ServiceValidationError(
-            f"free@home NG hub entry '{hub_entry.entry_id}' is not loaded"
-        )
+        raise ServiceValidationError(f"free@home NG hub entry '{hub_entry.entry_id}' is not loaded")
 
     filter_serials = (
         {s.strip().upper() for s in serialnumbers_filter if s.strip()}
@@ -963,9 +947,7 @@ async def async_migrate_from_legacy(
                 )
 
             # Remove any orphaned/YAML legacy entities holding target same-domain entity_ids.
-            post_remove_by_eid = {
-                str(e.entity_id): e for e in _iter_entity_entries(ent_reg)
-            }
+            post_remove_by_eid = {str(e.entity_id): e for e in _iter_entity_entries(ent_reg)}
             for le in legacy_entities:
                 if le.domain_changed:
                     continue

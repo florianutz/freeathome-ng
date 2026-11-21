@@ -19,6 +19,7 @@ def _install_stubs_if_missing() -> None:
     """Install lightweight `homeassistant` / `voluptuous` stubs when absent."""
     try:
         import homeassistant  # noqa: F401
+
         return
     except ImportError:
         pass
@@ -30,7 +31,7 @@ def _install_stubs_if_missing() -> None:
         vol.Optional = lambda key, default=None: key
         vol.All = lambda *args: args
         vol.Coerce = lambda typ: typ
-        vol.Range = lambda **kwargs: (lambda x: x)
+        vol.Range = lambda **kwargs: lambda x: x
         vol.In = lambda choices: choices
         vol.ALLOW_EXTRA = object()
         sys.modules["voluptuous"] = vol
@@ -87,9 +88,7 @@ def _install_stubs_if_missing() -> None:
     exceptions = _make_mod("homeassistant.exceptions")
     HomeAssistantError = type("HomeAssistantError", (Exception,), {})
     exceptions.HomeAssistantError = HomeAssistantError
-    exceptions.ServiceValidationError = type(
-        "ServiceValidationError", (HomeAssistantError,), {}
-    )
+    exceptions.ServiceValidationError = type("ServiceValidationError", (HomeAssistantError,), {})
     exceptions.ConfigEntryAuthFailed = type("ConfigEntryAuthFailed", (Exception,), {})
     exceptions.ConfigEntryNotReady = type("ConfigEntryNotReady", (Exception,), {})
 
@@ -264,8 +263,8 @@ def _install_stubs_if_missing() -> None:
     helpers_cv.string = str
     helpers_cv.boolean = bool
     _make_mod("homeassistant.helpers.event").async_call_later = lambda *a, **kw: None
-    _make_mod("homeassistant.helpers.aiohttp_client").async_get_clientsession = (
-        lambda *a, **kw: None
+    _make_mod("homeassistant.helpers.aiohttp_client").async_get_clientsession = lambda *a, **kw: (
+        None
     )
 
     dr = _make_mod("homeassistant.helpers.device_registry")
@@ -278,9 +277,7 @@ def _install_stubs_if_missing() -> None:
         types.SimpleNamespace(
             devices={},
             async_get=lambda _id: None,
-            async_get_or_create=lambda **kw: types.SimpleNamespace(
-                id="hub_dev_id", **kw
-            ),
+            async_get_or_create=lambda **kw: types.SimpleNamespace(id="hub_dev_id", **kw),
             async_get_device_by_identifier=lambda _ident, _entry_id=None: None,
             async_get_devices=lambda **kw: [],
             async_get_device=lambda **kw: None,
@@ -377,9 +374,9 @@ def _install_stubs_if_missing() -> None:
             self.ip_address = ip_address
             self.properties = properties or {}
 
-    _make_mod("homeassistant.helpers.service_info.zeroconf").ZeroconfServiceInfo = (
-        ZeroconfServiceInfo
-    )
+    _make_mod(
+        "homeassistant.helpers.service_info.zeroconf"
+    ).ZeroconfServiceInfo = ZeroconfServiceInfo
 
     _make_mod("homeassistant.components")
 
@@ -414,9 +411,7 @@ def _install_stubs_if_missing() -> None:
     climate_mod.ClimateEntity = type("ClimateEntity", (), {})
 
     fan_mod = _make_mod("homeassistant.components.fan")
-    fan_mod.FanEntityFeature = types.SimpleNamespace(
-        SET_SPEED=1, TURN_OFF=16, TURN_ON=32
-    )
+    fan_mod.FanEntityFeature = types.SimpleNamespace(SET_SPEED=1, TURN_OFF=16, TURN_ON=32)
     fan_mod.FanEntity = type("FanEntity", (), {})
 
     sensor_mod = _make_mod("homeassistant.components.sensor")

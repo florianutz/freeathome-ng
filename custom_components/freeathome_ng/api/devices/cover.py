@@ -166,9 +166,7 @@ class FahCover(FahBaseDevice):
 
     async def set_cover_position(self, position: int) -> None:
         """Move cover to target HA position (0..100)."""
-        await self.set_datapoint(
-            PID_SET_ABSOLUTE_POSITION_BLINDS, str(abs(100 - int(position)))
-        )
+        await self.set_datapoint(PID_SET_ABSOLUTE_POSITION_BLINDS, str(abs(100 - int(position))))
 
     async def set_cover_tilt_position(self, tilt_position: int) -> None:
         """Adjust slat tilt to target HA position (0..100)."""
@@ -221,9 +219,7 @@ class FahCover(FahBaseDevice):
             return "shutter"
         return "blind"
 
-    def update_datapoint(
-        self, dp: str, value: str, *, initializing: bool = False
-    ) -> None:
+    def update_datapoint(self, dp: str, value: str, *, initializing: bool = False) -> None:
         """Update cover state from incoming datapoint."""
         if dp in (
             self._datapoints.get(PID_INFO_MOVE_UP_DOWN),
