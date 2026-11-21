@@ -73,7 +73,7 @@ async def async_setup_entry(
 class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
     """Representation of a free@home NG thermostat."""
 
-    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_preset_modes = ["none", "eco"]
@@ -105,12 +105,12 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
         return features
 
     @property
-    def native_current_temperature(self) -> float | None:
+    def current_temperature(self) -> float | None:
         """Return current room temperature."""
         return self.thermostat_device.current_temperature
 
     @property
-    def native_target_temperature(self) -> float | None:
+    def target_temperature(self) -> float | None:
         """Return target temperature when active."""
         if self.hvac_mode == HVACMode.OFF:
             return None
