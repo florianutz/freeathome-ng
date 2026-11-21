@@ -25,13 +25,17 @@ show_missing = true
 skip_covered = true
 
 [tool.mypy]
-# Strict typing is enforced for the HA-free `api/` layer now (Platinum: strict-typing).
-# The HA layer joins once real Home Assistant is installed in the test env (work package AP2/AP6).
+# Strict typing for the whole integration, HA layer included (Platinum: strict-typing).
 python_version = "3.14"
-files = ["custom_components/freeathome_ng/api"]
+files = ["custom_components/freeathome_ng"]
 strict = true
 follow_imports = "silent"
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# Home Assistant re-exports platform names (for example `ColorMode`) without `__all__`.
+module = ["homeassistant.*"]
+implicit_reexport = true
 
 [tool.ruff]
 target-version = "py314"

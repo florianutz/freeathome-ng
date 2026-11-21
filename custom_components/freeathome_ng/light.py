@@ -105,12 +105,12 @@ class FreeAtHomeNgLight(FreeAtHomeNgEntity, LightEntity):
         return self.light_device.get_color_temp()
 
     @property
-    def min_color_temp_kelvin(self) -> int | None:
+    def min_color_temp_kelvin(self) -> int:
         """Return minimum supported color temperature in Kelvin."""
         return self.light_device.min_color_temp
 
     @property
-    def max_color_temp_kelvin(self) -> int | None:
+    def max_color_temp_kelvin(self) -> int:
         """Return maximum supported color temperature in Kelvin."""
         return self.light_device.max_color_temp
 

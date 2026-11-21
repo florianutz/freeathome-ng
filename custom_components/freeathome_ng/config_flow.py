@@ -6,7 +6,7 @@ import logging
 from ipaddress import IPv4Address
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -82,52 +82,52 @@ async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict
 def _shared_options_schema(defaults: dict[str, Any]) -> dict[Any, Any]:
     """Return shared setup/options fields."""
     return {
-        vol.Optional(
+        probatio.Optional(
             CONF_USE_ROOM_NAMES,
             default=defaults.get(CONF_USE_ROOM_NAMES, DEFAULT_USE_ROOM_NAMES),
         ): bool,
-        vol.Optional(
+        probatio.Optional(
             CONF_SWITCH_AS_X,
             default=defaults.get(CONF_SWITCH_AS_X, DEFAULT_SWITCH_AS_X),
         ): bool,
-        vol.Optional(
+        probatio.Optional(
             CONF_NAME_PREFIX,
             default=defaults.get(CONF_NAME_PREFIX, DEFAULT_NAME_PREFIX),
         ): str,
-        vol.Optional(
+        probatio.Optional(
             CONF_USE_HTTPS,
             default=defaults.get(CONF_USE_HTTPS, DEFAULT_USE_HTTPS),
         ): bool,
-        vol.Optional(
+        probatio.Optional(
             CONF_VERIFY_SSL,
             default=defaults.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         ): bool,
-        vol.Optional(
+        probatio.Optional(
             CONF_INCLUDE_ORPHAN_CHANNELS,
             default=defaults.get(CONF_INCLUDE_ORPHAN_CHANNELS, DEFAULT_INCLUDE_ORPHAN_CHANNELS),
         ): bool,
     }
 
 
-def _user_schema(defaults: dict[str, Any]) -> vol.Schema:
+def _user_schema(defaults: dict[str, Any]) -> probatio.Schema:
     """Return user setup form schema."""
     schema: dict[Any, Any] = {
-        vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
-        vol.Required(CONF_USERNAME, default=defaults.get(CONF_USERNAME, "")): str,
-        vol.Required(CONF_PASSWORD, default=defaults.get(CONF_PASSWORD, "")): str,
+        probatio.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
+        probatio.Required(CONF_USERNAME, default=defaults.get(CONF_USERNAME, "")): str,
+        probatio.Required(CONF_PASSWORD, default=defaults.get(CONF_PASSWORD, "")): str,
     }
     schema.update(_shared_options_schema(defaults))
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
-def _discovery_schema(defaults: dict[str, Any]) -> vol.Schema:
+def _discovery_schema(defaults: dict[str, Any]) -> probatio.Schema:
     """Return Zeroconf link form schema (host already known)."""
     schema: dict[Any, Any] = {
-        vol.Required(CONF_USERNAME, default=defaults.get(CONF_USERNAME, "")): str,
-        vol.Required(CONF_PASSWORD, default=defaults.get(CONF_PASSWORD, "")): str,
+        probatio.Required(CONF_USERNAME, default=defaults.get(CONF_USERNAME, "")): str,
+        probatio.Required(CONF_PASSWORD, default=defaults.get(CONF_PASSWORD, "")): str,
     }
     schema.update(_shared_options_schema(defaults))
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
 class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -285,10 +285,12 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(
+                        CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")
+                    ): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -324,12 +326,12 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         defaults = {**entry.data, **entry.options}
         schema: dict[Any, Any] = {
-            vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
+            probatio.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
         }
         schema.update(_shared_options_schema(defaults))
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors=errors,
         )
 
@@ -347,5 +349,5 @@ class FreeAtHomeNgOptionsFlow(config_entries.OptionsFlow):
         current = {**self.config_entry.data, **self.config_entry.options}
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(_shared_options_schema(current)),
+            data_schema=probatio.Schema(_shared_options_schema(current)),
         )

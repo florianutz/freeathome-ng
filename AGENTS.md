@@ -30,7 +30,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 
 ## 4. Coding standards
 
-- **Python 3.14 (required by Home Assistant), typed.** `mypy --strict` must pass (today for `api/`; the HA layer joins in AP6). No new `Any` in public signatures, no bare `# type: ignore` (always with error code).
+- **Python 3.14 (required by Home Assistant), typed.** `mypy --strict` must pass for the whole integration (`api/` and HA layer). No new `Any` in public signatures, no bare `# type: ignore` (always with error code).
 - **Async:** no blocking I/O in the event loop (no `requests`, `time.sleep`, sync file I/O; use `hass.async_add_executor_job` if unavoidable). Use HA's shared `aiohttp` session via `async_get_clientsession`. Never create unmanaged tasks; use `entry.async_create_background_task`.
 - **Entities:**
   - `_attr_has_entity_name = True` on every entity; names come from the device (primary entity, `name=None`) or from `translation_key`. No hard-coded English names.
