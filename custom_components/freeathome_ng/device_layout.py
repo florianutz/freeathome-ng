@@ -74,3 +74,45 @@ def active_identifiers(entry_id: str, devices: list[FahBaseDevice]) -> set[tuple
         if not device.is_sysap_function:
             identifiers.add(channel_identifier(device))
     return identifiers
+
+
+@callback
+def async_remove_physical_device(
+    hass: HomeAssistant, entry_id: str, sysap_uuid: str, serialnumber: str
+) -> None:
+    """Remove a device the SysAP no longer has, with its channel devices and entities."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, f"{sysap_uuid}_{serialnumber}"), entry_id
+    )
+    if device is not None:
+        dev_reg.async_remove_device(device.id)
+
+
+@callback
+def async_remove_stale_devices(hass: HomeAssistant, entry_id: str, configured: set[str]) -> int:
+    """Remove devices and channel devices that are gone from the SysAP configuration.
+
+    `configured` holds the keys of every device and channel the SysAP reports
+    (`FreeAtHomeController.configured_device_keys`). Devices that are only filtered
+    out by options (for example channels without a room) are kept. Returns the number
+    of removed registry entries.
+    """
+    dev_reg = dr.async_get(hass)
+    keep = {hub_identifier(entry_id), *((DOMAIN, key) for key in configured)}
+    stale: list[str] = []
+    candidates: list[dr.DeviceEntry | dr.ChildDeviceEntry] = [
+        *dr.async_entries_for_config_entry(dev_reg, entry_id),
+        *dr.async_child_entries_for_config_entry(dev_reg, entry_id),
+    ]
+    for device in candidates:
+        own = {ident for ident in device.identifiers if ident[0] == DOMAIN}
+        if own and not own & keep:
+            stale.append(device.id)
+    removed = 0
+    for device_id in stale:
+        # A parent removed earlier in the loop already took its channel devices along.
+        if dev_reg.async_get(device_id) is not None:
+            dev_reg.async_remove_device(device_id)
+            removed += 1
+    return removed

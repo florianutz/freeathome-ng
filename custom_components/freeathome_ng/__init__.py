@@ -51,7 +51,11 @@ from .const import (
     EVENT_SCENE_TRIGGERED,
     EVENT_VIRTUAL_DEVICE_COMMAND,
 )
-from .device_layout import active_identifiers
+from .device_layout import (
+    active_identifiers,
+    async_remove_physical_device,
+    async_remove_stale_devices,
+)
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -273,6 +277,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry)
     controller.register_virtual_device_command_cb(_on_virtual_command)
     controller.register_devices_added_cb(_on_devices_added)
 
+    async def _on_device_removed(sysap_uuid: str, serialnumber: str) -> None:
+        async_remove_physical_device(hass, entry.entry_id, sysap_uuid, serialnumber)
+
+    controller.register_devices_removed_cb(_on_device_removed)
+
     entry.async_create_background_task(
         hass, controller.listen(), f"{DOMAIN}_websocket_{entry.entry_id}"
     )
@@ -284,6 +293,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry)
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Devices deleted on the SysAP while Home Assistant was not running.
+    if removed := async_remove_stale_devices(
+        hass, entry.entry_id, controller.configured_device_keys()
+    ):
+        _LOGGER.info("Removed %d devices that no longer exist on the SysAP", removed)
 
     return True
 

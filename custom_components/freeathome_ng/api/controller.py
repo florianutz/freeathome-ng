@@ -203,6 +203,7 @@ class FreeAtHomeController:
         self._scene_triggered_cbs: list[Callable[[str, dict[str, Any]], Awaitable[None]]] = []
         self._virtual_cmd_cbs: list[Callable[[str, str, str, str, str], Awaitable[None]]] = []
         self._devices_added_cbs: list[Callable[[list[FahBaseDevice]], Awaitable[None]]] = []
+        self._devices_removed_cbs: list[Callable[[str, str], Awaitable[None]]] = []
         self._auth_failed_cb: Callable[[], None] | None = None
         self._pending_tasks: set[asyncio.Task[None]] = set()
         self._settings_loaded: bool = False
@@ -234,6 +235,49 @@ class FreeAtHomeController:
         """Register callback for incoming commands to virtual devices."""
         if cb not in self._virtual_cmd_cbs:
             self._virtual_cmd_cbs.append(cb)
+
+    def register_devices_removed_cb(self, cb: Callable[[str, str], Awaitable[None]]) -> None:
+        """Register an async callback `(sysap_uuid, serialnumber)` for removed devices."""
+        if cb not in self._devices_removed_cbs:
+            self._devices_removed_cbs.append(cb)
+
+    def configured_device_keys(self) -> set[str]:
+        """Return the keys of all devices and channels in the SysAP configuration.
+
+        Physical devices as `{sysap_uuid}_{serial}`, channels as
+        `{sysap_uuid}_{serial}_{channel_id}`, whether or not they produce entities.
+        """
+        keys: set[str] = set()
+        for sysap_uuid, sysap_data in self.raw_configuration.items():
+            if not isinstance(sysap_data, dict):
+                continue
+            for serial, device_data in (sysap_data.get("devices") or {}).items():
+                keys.add(f"{sysap_uuid}_{serial}")
+                if isinstance(device_data, dict):
+                    for channel_id in device_data.get("channels") or {}:
+                        keys.add(f"{sysap_uuid}_{serial}_{channel_id}")
+        return keys
+
+    def _forget_device(self, sysap_uuid: str, serialnumber: str) -> list[FahBaseDevice]:
+        """Drop all models of a device the SysAP removed; return them."""
+        removed = [
+            dev
+            for dev in self.devices
+            if dev.sysap_uuid == sysap_uuid and dev.serialnumber == serialnumber
+        ]
+        if not removed:
+            return []
+        self.devices = [dev for dev in self.devices if dev not in removed]
+        for dev in removed:
+            self._device_keys.discard((sysap_uuid, dev.lookup_key))
+        for mapping in (self.monitored_datapoints, self.monitored_parameters):
+            for key in [k for k, dev in mapping.items() if dev in removed]:
+                del mapping[key]
+        self.virtual_serials.discard((sysap_uuid, serialnumber))
+        sysap_data = self.raw_configuration.get(sysap_uuid)
+        if isinstance(sysap_data, dict) and isinstance(sysap_data.get("devices"), dict):
+            sysap_data["devices"].pop(serialnumber, None)
+        return removed
 
     def register_devices_added_cb(
         self, cb: Callable[[list[FahBaseDevice]], Awaitable[None]]
@@ -800,10 +844,14 @@ class FreeAtHomeController:
 
             # 5. Runtime device removals
             for removed_serial in frame.get("devicesRemoved") or []:
-                for dev in self.devices:
-                    if dev.sysap_uuid == sysap_uuid and dev.serialnumber == removed_serial:
-                        dev.available = False
-                        updated_devices.add(dev)
+                removed = self._forget_device(sysap_uuid, removed_serial)
+                for dev in removed:
+                    dev.available = False
+                    await dev.after_update()
+                    updated_devices.discard(dev)
+                if removed:
+                    for removed_cb in list(self._devices_removed_cbs):
+                        await removed_cb(sysap_uuid, removed_serial)
 
         for device in updated_devices:
             await device.after_update()
