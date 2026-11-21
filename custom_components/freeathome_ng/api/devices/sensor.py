@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ...const import (
+from ..const import (
     FUNCTION_IDS_AIR_QUALITY_SENSOR,
     FUNCTION_IDS_COOLING_ACTOR,
     FUNCTION_IDS_ENERGY,

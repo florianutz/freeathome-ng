@@ -20,6 +20,11 @@ from custom_components.freeathome_ng.const import (
     EVENT_SCENE_TRIGGERED,
     EVENT_VIRTUAL_DEVICE_COMMAND,
 )
+from custom_components.freeathome_ng.device_layout import (
+    channel_identifier,
+    hub_identifier,
+    physical_identifier,
+)
 from custom_components.freeathome_ng.diagnostics import (
     async_get_config_entry_diagnostics,
     async_get_device_diagnostics,
@@ -125,15 +130,22 @@ def test_translations_and_services_yaml_valid() -> None:
 
 
 def test_api_layer_has_no_homeassistant_imports() -> None:
-    """Keep api/ pure Python with zero homeassistant imports."""
-    for py_file in (COMP_DIR / "api").rglob("*.py"):
+    """Keep api/ pure Python: no homeassistant imports and no imports from the HA layer."""
+    api_dir = COMP_DIR / "api"
+    for py_file in api_dir.rglob("*.py"):
         tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        # How many package levels `py_file` sits below `api/` (0 for api/*.py).
+        depth = len(py_file.relative_to(api_dir).parts) - 1
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     assert not alias.name.startswith("homeassistant"), py_file
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("homeassistant"), py_file
+                    assert not alias.name.startswith("custom_components"), py_file
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                assert not module.startswith(("homeassistant", "custom_components")), py_file
+                # A relative import may not climb out of api/ into the HA layer.
+                assert node.level <= depth + 1, f"{py_file} imports from outside api/"
 
 
 def test_agents_and_readme_governance() -> None:
@@ -171,7 +183,11 @@ async def test_no_collision_with_legacy_freeathome_integration() -> None:
         controller.load_configuration(config)
         seen_unique_ids: set[str] = set()
         for dev in controller.devices:
-            for id_domain, id_value in dev.device_info["identifiers"]:
+            for id_domain, id_value in (
+                physical_identifier(dev),
+                channel_identifier(dev),
+                hub_identifier("entry_1"),
+            ):
                 assert id_domain == "freeathome_ng"
                 assert id_domain != "freeathome"
                 assert id_value

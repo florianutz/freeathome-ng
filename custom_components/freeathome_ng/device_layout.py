@@ -37,7 +37,7 @@ def async_get_or_create_physical_device(
 ) -> dr.DeviceEntry:
     """Register (or update) the physical device of `device`, linked to the hub."""
     dev_reg = dr.async_get(hass)
-    info: dict[str, Any] = dict(device.device_info)
+    info: dict[str, Any] = {**device.device_info, "identifiers": {physical_identifier(device)}}
     hub = dev_reg.async_get_device_by_identifier(hub_identifier(entry_id), entry_id)
     if hub is not None:
         info["via_device_id"] = hub.id

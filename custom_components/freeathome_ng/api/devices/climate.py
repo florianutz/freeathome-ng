@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 from typing import Any
 
-from ...const import (
+from ..const import (
     FUNCTION_IDS_ROOM_TEMPERATURE_CONTROLLER,
     PARAM_TEMPERATURE_CORRECTION,
     PID_ABSOLUTE_SETPOINT_TEMPERATURE,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ...const import FUNCTION_IDS_SCENE, PID_SCENE_CONTROL
+from ..const import FUNCTION_IDS_SCENE, PID_SCENE_CONTROL
 from .base import FahBaseDevice
 
 

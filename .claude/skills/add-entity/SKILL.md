@@ -10,7 +10,7 @@ Ask for, or derive from the request: the free@home `functionID`(s), the relevant
 ## 1. API layer (`custom_components/freeathome_ng/api/`)
 
 1. Add or extend the device model in `api/devices/<platform>.py` (subclass of `FahBaseDevice` in `base.py`): `pairing_ids(function_id)`, optional `parameter_ids(function_id)`, state properties and async command methods that write datapoints through the client.
-2. Export it from `api/devices/__init__.py` and add it to `DEVICE_CLASSES` in `api/controller.py`; keep constants in the model module.
+2. Export it from `api/devices/__init__.py` and add it to `DEVICE_CLASSES` in `api/controller.py`; new Function, Pairing or parameter IDs go into `api/const.py`, never into the HA-layer `const.py`.
 3. No `homeassistant` imports. Run `mypy` (strict) on the change.
 4. Add the channel to `tests/fixtures/configuration.json` (anonymised serial, realistic datapoints) if no existing channel covers it.
 

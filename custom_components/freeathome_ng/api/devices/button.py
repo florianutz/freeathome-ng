@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...const import FUNCTION_IDS_TRIGGER, PID_TIMED_START_STOP
+from ..const import FUNCTION_IDS_TRIGGER, PID_TIMED_START_STOP
 from .base import FahBaseDevice
 
 
