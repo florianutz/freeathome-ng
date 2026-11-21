@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -51,8 +51,8 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_HOST = "host"
 
 TARGET_SCHEMA = {
-    vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string,
-    vol.Optional(ATTR_HOST): cv.string,
+    probatio.Optional(ATTR_CONFIG_ENTRY_ID): cv.string,
+    probatio.Optional(ATTR_HOST): cv.string,
 }
 
 
@@ -293,16 +293,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_DUMP_CONFIG,
         _handle_dump_config,
-        schema=vol.Schema(TARGET_SCHEMA),
+        schema=probatio.Schema(TARGET_SCHEMA),
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_MONITOR,
         _handle_monitor,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional("duration", default=10): vol.All(
-                    vol.Coerce(int), vol.Range(min=1, max=300)
+                probatio.Optional("duration", default=10): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=1, max=300)
                 ),
                 **TARGET_SCHEMA,
             }
@@ -312,13 +312,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_DATAPOINT,
         _handle_set_datapoint,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("serialnumber"): cv.string,
-                vol.Required("channel_id"): cv.string,
-                vol.Required("datapoint_id"): cv.string,
-                vol.Required("value"): cv.string,
-                vol.Optional("sysap_uuid"): cv.string,
+                probatio.Required("serialnumber"): cv.string,
+                probatio.Required("channel_id"): cv.string,
+                probatio.Required("datapoint_id"): cv.string,
+                probatio.Required("value"): cv.string,
+                probatio.Optional("sysap_uuid"): cv.string,
                 **TARGET_SCHEMA,
             }
         ),
@@ -327,15 +327,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REGISTER_VIRTUAL_DEVICE,
         _handle_register_virtual_device,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("native_id"): cv.string,
-                vol.Required("device_type"): vol.In(VIRTUAL_DEVICE_TYPES),
-                vol.Optional("display_name"): cv.string,
-                vol.Optional("ttl", default=180): vol.Coerce(int),
-                vol.Optional("flavor"): cv.string,
-                vol.Optional("capabilities"): list,
-                vol.Optional("sysap_uuid"): cv.string,
+                probatio.Required("native_id"): cv.string,
+                probatio.Required("device_type"): probatio.In(VIRTUAL_DEVICE_TYPES),
+                probatio.Optional("display_name"): cv.string,
+                probatio.Optional("ttl", default=180): probatio.Coerce(int),
+                probatio.Optional("flavor"): cv.string,
+                probatio.Optional("capabilities"): list,
+                probatio.Optional("sysap_uuid"): cv.string,
                 **TARGET_SCHEMA,
             }
         ),
@@ -344,10 +344,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_UNREGISTER_VIRTUAL_DEVICE,
         _handle_unregister_virtual_device,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("native_id"): cv.string,
-                vol.Optional("sysap_uuid"): cv.string,
+                probatio.Required("native_id"): cv.string,
+                probatio.Optional("sysap_uuid"): cv.string,
                 **TARGET_SCHEMA,
             }
         ),
@@ -356,12 +356,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_TRIGGER_PROXY_DEVICE,
         _handle_trigger_proxy_device,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("device_class"): cv.string,
-                vol.Required("device_id"): cv.string,
-                vol.Required("action"): cv.string,
-                vol.Optional("sysap_uuid"): cv.string,
+                probatio.Required("device_class"): cv.string,
+                probatio.Required("device_id"): cv.string,
+                probatio.Required("action"): cv.string,
+                probatio.Optional("sysap_uuid"): cv.string,
                 **TARGET_SCHEMA,
             }
         ),
@@ -370,11 +370,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SEND_NOTIFICATION,
         _handle_send_notification,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("subject"): cv.string,
-                vol.Required("body"): cv.string,
-                vol.Optional("timeout_minutes"): vol.Coerce(int),
+                probatio.Required("subject"): cv.string,
+                probatio.Required("body"): cv.string,
+                probatio.Optional("timeout_minutes"): probatio.Coerce(int),
                 **TARGET_SCHEMA,
             }
         ),
@@ -383,13 +383,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_MIGRATE_FROM_LEGACY,
         _handle_migrate_from_legacy,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional("entry_id"): cv.string,
+                probatio.Optional("entry_id"): cv.string,
                 **TARGET_SCHEMA,
-                vol.Optional("dry_run", default=True): cv.boolean,
-                vol.Optional("cutover", default=False): cv.boolean,
-                vol.Optional("serialnumbers"): cv.string,
+                probatio.Optional("dry_run", default=True): cv.boolean,
+                probatio.Optional("cutover", default=False): cv.boolean,
+                probatio.Optional("serialnumbers"): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -401,7 +401,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_COVER_FORCE_POSITION,
         entity_domain=Platform.COVER,
-        schema={vol.Required("forced_position"): cv.string},
+        schema={probatio.Required("forced_position"): cv.string},
         func="async_force_position",
     )
     service.async_register_platform_entity_service(
@@ -409,7 +409,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_THERMOSTAT_TEMPERATURE_CORRECTION,
         entity_domain=Platform.CLIMATE,
-        schema={vol.Required("temperature_correction"): vol.Coerce(float)},
+        schema={probatio.Required("temperature_correction"): probatio.Coerce(float)},
         func="async_set_temperature_correction",
     )
 

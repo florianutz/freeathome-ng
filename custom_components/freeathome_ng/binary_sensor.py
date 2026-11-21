@@ -150,7 +150,7 @@ class FreeAtHomeNgBinarySensor(FreeAtHomeNgEntity, BinarySensorEntity):
             if target_hass is None:
                 return
             payload = create_event_data(
-                self.name or device.name,
+                self.name if isinstance(self.name, str) and self.name else device.name,
                 device.serialnumber,
                 self.unique_id or device.unique_id,
                 event,

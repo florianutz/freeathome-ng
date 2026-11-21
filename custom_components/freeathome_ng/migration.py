@@ -421,15 +421,15 @@ def discover_legacy_devices(
             if le.serialnumber in discovered:
                 continue
             lookup_entry_id = legacy_entry.entry_id if legacy_entry else le.config_entry_id
-            dev_entry = _lookup_device(
+            referenced = _lookup_device(
                 dev_reg,
                 LEGACY_DOMAIN,
                 le.serialnumber,
                 config_entry_id=lookup_entry_id,
             )
-            if dev_entry is not None:
+            if referenced is not None:
                 discovered[le.serialnumber] = _build_legacy_device_info(
-                    dev_entry, le.serialnumber, lookup_entry_id
+                    referenced, le.serialnumber, lookup_entry_id
                 )
 
     return list(discovered.values())

@@ -34,7 +34,7 @@ Detailed patterns behind the rules in [AGENTS.md](../AGENTS.md). Binding decisio
 
 ## 3. API layer & WebSocket
 
-- `api/` imports only stdlib and `aiohttp`, never the HA layer: free@home protocol constants (Function IDs, Pairing IDs, parameters, model names) live in `api/const.py`, HA identifiers such as `DOMAIN` are added by `device_layout.py`; `mypy --strict` clean; exceptions are its own (`FreeAtHomeAuthError`, connection/API errors).
+- `api/` imports only stdlib and `aiohttp`, never the HA layer: free@home protocol constants (Function IDs, Pairing IDs, parameters, model names) live in `api/const.py`, HA identifiers such as `DOMAIN` are added by `device_layout.py`; `mypy --strict` clean (as is the HA layer); exceptions are its own (`FreeAtHomeAuthError`, connection/API errors).
 - `/settings.json` username resolution when users enter a display name instead of the JID localpart.
 - Reconnect: capped exponential backoff with jitter; resync full configuration after every reconnect; log once on loss (`WARNING`) and once on recovery (`INFO`), retries at `DEBUG`.
 - Normalise (`.strip()`) SysAP, device, channel and room names during configuration load.
