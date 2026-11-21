@@ -56,6 +56,7 @@ class Env:
     devices: dict[str, str]  # key -> device_id
 
 
+<<<<<<< HEAD
 def _entity(
     ent_reg: er.EntityRegistry,
     *,
@@ -75,6 +76,198 @@ def _entity(
         config_entry=config_entry,
         device_id=device_id,
         suggested_object_id=object_id,
+=======
+@dataclass
+class FakeEntity:
+    """In-memory RegistryEntry test double."""
+
+    entity_id: str
+    unique_id: str
+    platform: str
+    domain: str
+    config_entry_id: str | None = None
+    device_id: str | None = None
+    name: str | None = None
+    icon: str | None = None
+    area_id: str | None = None
+    aliases: set[Any] | None = None
+    labels: set[str] = field(default_factory=set)
+    disabled_by: Any = None
+    hidden_by: Any = None
+    options: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+
+class FakeDeviceRegistry:
+    """Device registry test double supporting HA 2026.8+ lookup APIs."""
+
+    def __init__(self, *, forbid_deprecated: bool = True) -> None:
+        self.devices: dict[str, FakeDevice] = {}
+        self.forbid_deprecated = forbid_deprecated
+        self.updated_calls: list[tuple[str, dict[str, Any]]] = []
+        self.lookup_calls: list[str] = []
+
+    def add(self, dev: FakeDevice) -> None:
+        self.devices[dev.id] = dev
+
+    def async_get(self, device_id: str) -> FakeDevice | None:
+        self.lookup_calls.append("async_get")
+        return self.devices.get(device_id)
+
+    def async_get_device_by_identifier(
+        self,
+        identifier: tuple[str, str],
+        config_entry_id: str | None = None,
+    ) -> FakeDevice | None:
+        self.lookup_calls.append("async_get_device_by_identifier")
+        for dev in self.devices.values():
+            if identifier in dev.identifiers and (
+                config_entry_id is None or config_entry_id in dev.config_entries
+            ):
+                return dev
+        return None
+
+    def async_get_devices(
+        self,
+        *,
+        identifiers: set[tuple[str, str]] | None = None,
+    ) -> list[FakeDevice]:
+        self.lookup_calls.append("async_get_devices")
+        if not identifiers:
+            return []
+        return [dev for dev in self.devices.values() if dev.identifiers & identifiers]
+
+    def async_get_device(
+        self,
+        *,
+        identifiers: set[tuple[str, str]] | None = None,
+    ) -> FakeDevice | None:
+        if self.forbid_deprecated:
+            raise AssertionError("Deprecated async_get_device must not be called")
+        self.lookup_calls.append("async_get_device")
+        if not identifiers:
+            return None
+        for dev in self.devices.values():
+            if dev.identifiers & identifiers:
+                return dev
+        return None
+
+    def async_get_or_create(self, **kwargs: Any) -> FakeDevice:
+        ident = next(iter(kwargs["identifiers"]))
+        existing = self.async_get_device_by_identifier(ident, kwargs.get("config_entry_id"))
+        if existing is not None:
+            return existing
+        dev = FakeDevice(
+            id=f"dev_{len(self.devices) + 1}",
+            identifiers=set(kwargs["identifiers"]),
+            config_entries={kwargs["config_entry_id"]},
+            name=kwargs.get("name"),
+        )
+        self.devices[dev.id] = dev
+        return dev
+
+    def async_update_device(self, device_id: str, **kwargs: Any) -> FakeDevice:
+        dev = self.devices[device_id]
+        for key, value in kwargs.items():
+            setattr(dev, key, value)
+        self.updated_calls.append((device_id, dict(kwargs)))
+        return dev
+
+
+class LegacyOnlyDeviceRegistry:
+    """Minimal HA < 2026.8 device registry stub exposing only async_get_device."""
+
+    def __init__(self, devices: list[FakeDevice]) -> None:
+        self._devices = devices
+        self.updated_calls: list[tuple[str, dict[str, Any]]] = []
+
+    def async_get_device(
+        self, *, identifiers: set[tuple[str, str]] | None = None
+    ) -> FakeDevice | None:
+        if not identifiers:
+            return None
+        return next(
+            (dev for dev in self._devices if dev.identifiers & identifiers),
+            None,
+        )
+
+    def async_update_device(self, device_id: str, **kwargs: Any) -> FakeDevice:
+        dev = next(d for d in self._devices if d.id == device_id)
+        for key, value in kwargs.items():
+            setattr(dev, key, value)
+        self.updated_calls.append((device_id, dict(kwargs)))
+        return dev
+
+
+class FakeEntityRegistry:
+    """In-memory EntityRegistry tracking call order for rename + post-rename options."""
+
+    def __init__(self) -> None:
+        self.entities: dict[str, FakeEntity] = {}
+        self.operations: list[tuple[str, str, Any]] = []
+
+    def add(self, ent: FakeEntity) -> None:
+        self.entities[ent.entity_id] = ent
+
+    def async_remove(self, entity_id: str) -> None:
+        self.entities.pop(entity_id, None)
+        self.operations.append(("remove", entity_id, None))
+
+    def async_update_entity(self, entity_id: str, **kwargs: Any) -> FakeEntity:
+        ent = self.entities[entity_id]
+        new_eid = kwargs.pop("new_entity_id", None)
+        for key, value in kwargs.items():
+            setattr(ent, key, value)
+        if new_eid and new_eid != entity_id:
+            if new_eid in self.entities:
+                raise ValueError(f"Entity id {new_eid} is already registered")
+            del self.entities[entity_id]
+            ent.entity_id = new_eid
+            self.entities[new_eid] = ent
+        self.operations.append(("update_entity", ent.entity_id, kwargs))
+        return ent
+
+    def async_update_entity_options(
+        self, entity_id: str, opt_domain: str, opt_values: dict[str, Any]
+    ) -> None:
+        if entity_id not in self.entities:
+            raise AssertionError(f"Missing entity_id {entity_id} during options update")
+        self.entities[entity_id].options[opt_domain] = dict(opt_values)
+        self.operations.append(("update_options", entity_id, opt_domain))
+
+
+def _make_fake_hass(
+    *,
+    legacy_entries: list[SimpleNamespace],
+    hub_entry: SimpleNamespace,
+    dev_reg: FakeDeviceRegistry,
+    ent_reg: FakeEntityRegistry,
+) -> tuple[SimpleNamespace, list[str]]:
+    removed_entries: list[str] = []
+    all_entries = [*legacy_entries, hub_entry]
+
+    def _async_entries(domain: str | None = None) -> list[SimpleNamespace]:
+        if domain is None:
+            return list(all_entries)
+        return [e for e in all_entries if getattr(e, "domain", None) == domain]
+
+    async def _async_remove(entry_id: str) -> None:
+        removed_entries.append(entry_id)
+        all_entries[:] = [e for e in all_entries if e.entry_id != entry_id]
+        # Emulate HA cascading removal of entities & devices bound to removed entry.
+        for eid in [k for k, v in ent_reg.entities.items() if v.config_entry_id == entry_id]:
+            del ent_reg.entities[eid]
+        for dev in dev_reg.devices.values():
+            dev.config_entries.discard(entry_id)
+
+    hass = SimpleNamespace(
+        config_entries=SimpleNamespace(
+            async_entries=_async_entries,
+            async_remove=_async_remove,
+        ),
+        device_registry=dev_reg,
+        entity_registry=ent_reg,
+        data={},
+>>>>>>> origin/claude/project-thread-02ukwt
     )
     assert entry.entity_id == entity_id
     if updates:
@@ -90,6 +283,7 @@ def _build_env(
     ng_switch_as_x: bool = True,
     legacy_switch_as_x: bool = True,
     name_prefix: str = "",
+<<<<<<< HEAD
 ) -> Env:
     """Create a legacy entry, an NG hub entry and matching registry content."""
     dev_reg = dr.async_get(hass)
@@ -99,6 +293,18 @@ def _build_env(
     area_reg.async_create("bad")
     for label in ("licht", "bad", "ng", "wichtig", "existing_ng"):
         label_reg.async_create(label)
+=======
+) -> tuple[
+    SimpleNamespace,
+    SimpleNamespace,
+    SimpleNamespace,
+    FakeDeviceRegistry,
+    FakeEntityRegistry,
+    list[str],
+]:
+    dev_reg = FakeDeviceRegistry()
+    ent_reg = FakeEntityRegistry()
+>>>>>>> origin/claude/project-thread-02ukwt
 
     legacy_entry = MockConfigEntry(
         domain=LEGACY_DOMAIN,
@@ -345,7 +551,11 @@ async def test_dry_run_preview_non_destructive(hass: HomeAssistant) -> None:
     devices_before = {d.id: d for d in env.dev_reg.devices}
     entities_before = {e.entity_id: e for e in env.ent_reg.entities.values()}
 
+<<<<<<< HEAD
     result = await async_migrate_from_legacy(hass, env.hub_entry, dry_run=True, cutover=True)
+=======
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=True, cutover=True)
+>>>>>>> origin/claude/project-thread-02ukwt
 
     assert result["success"] is True
     assert result["dry_run"] is True
@@ -374,7 +584,11 @@ async def test_side_by_side_metadata_sync(hass: HomeAssistant) -> None:
     """cutover=False transfers metadata and Assist options while preserving legacy."""
     env = _build_env(hass)
 
+<<<<<<< HEAD
     result = await async_migrate_from_legacy(hass, env.hub_entry, dry_run=False, cutover=False)
+=======
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=False)
+>>>>>>> origin/claude/project-thread-02ukwt
 
     assert result["success"] is True
     assert _legacy_entries(hass) == [env.legacy_entry.entry_id]
@@ -440,6 +654,7 @@ async def test_full_cutover_preserves_entity_ids_and_helpers(hass: HomeAssistant
     options_calls: list[str] = []
     orig_update_options = env.ent_reg.async_update_entity_options
 
+<<<<<<< HEAD
     def _spy_update_options(entity_id: str, *args: Any, **kwargs: Any) -> Any:
         options_calls.append(entity_id)
         return orig_update_options(entity_id, *args, **kwargs)
@@ -449,6 +664,9 @@ async def test_full_cutover_preserves_entity_ids_and_helpers(hass: HomeAssistant
         patch.object(env.ent_reg, "async_update_entity_options", _spy_update_options),
     ):
         result = await async_migrate_from_legacy(hass, env.hub_entry, dry_run=False, cutover=True)
+=======
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=True)
+>>>>>>> origin/claude/project-thread-02ukwt
 
     assert result["success"] is True
     assert _legacy_entries(hass) == []
@@ -459,16 +677,26 @@ async def test_full_cutover_preserves_entity_ids_and_helpers(hass: HomeAssistant
     assert switch is not None and switch.platform == DOMAIN
     assert env.ent_reg.async_get("switch.ng_bad_deckenlicht") is None
 
+<<<<<<< HEAD
     scene = env.ent_reg.async_get("scene.abdunkeln")
     assert scene is not None and scene.platform == DOMAIN
     assert scene.options.get("conversation") == {"should_expose": True}
+=======
+    assert "scene.abdunkeln" in ent_reg.entities
+    assert ent_reg.entities["scene.abdunkeln"].platform == DOMAIN
+    assert ent_reg.entities["scene.abdunkeln"].options == {"conversation": {"should_expose": True}}
+>>>>>>> origin/claude/project-thread-02ukwt
 
     # The reclaimed entity_id is a conflict: NG keeps its id but still receives options.
     assert result["summary"]["conflicts"] == 1
     assert result["conflicts"][0]["entity_id"] == "sensor.bad_rt_temp"
+<<<<<<< HEAD
     ng_temp = env.ent_reg.async_get("sensor.ng_bad_rt_temp")
     assert ng_temp is not None
     assert ng_temp.options.get("sensor") == {"display_precision": 2}
+=======
+    assert ent_reg.entities["sensor.ng_bad_rt_temp"].options["sensor"] == {"display_precision": 2}
+>>>>>>> origin/claude/project-thread-02ukwt
 
     # Options were written to the final entity_id, i.e. after the rename.
     assert "switch.bad_deckenlicht" in options_calls
@@ -489,7 +717,11 @@ async def test_cutover_aborts_safely_when_no_matching_ng_entities(hass: HomeAssi
         if entity.platform == DOMAIN:
             env.ent_reg.async_remove(entity.entity_id)
 
+<<<<<<< HEAD
     result = await async_migrate_from_legacy(hass, env.hub_entry, dry_run=False, cutover=True)
+=======
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=True)
+>>>>>>> origin/claude/project-thread-02ukwt
 
     assert result["success"] is False
     assert _legacy_entries(hass) == [env.legacy_entry.entry_id]
@@ -539,14 +771,19 @@ async def test_selective_serialnumbers_filter_and_partial_cutover_guard(
 async def test_device_metadata_updates_use_current_registry_api(hass: HomeAssistant) -> None:
     """Device metadata is transferred through the non-deprecated registry API.
 
+<<<<<<< HEAD
     Calling the deprecated `async_get_device` from integration code raises in tests,
     so a successful run proves the modern lookup path is used.
     """
     env = _build_env(hass)
     result = await async_migrate_from_legacy(hass, env.hub_entry, dry_run=False, cutover=False)
+=======
+    result = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=False)
+>>>>>>> origin/claude/project-thread-02ukwt
     assert result["summary"]["device_metadata_updates"] == 2
 
 
+<<<<<<< HEAD
 async def test_migrate_service_multi_hub_and_legacy_flow_defaults(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_sysap: MockSysApServer
 ) -> None:
@@ -565,6 +802,11 @@ async def test_migrate_service_multi_hub_and_legacy_flow_defaults(
     assert hass.services.supports_response(DOMAIN, SERVICE_MIGRATE_FROM_LEGACY) == (
         SupportsResponse.ONLY
     )
+=======
+    fallback_res = await async_migrate_from_legacy(hass, hub_entry, dry_run=False, cutover=False)
+    assert fallback_res["summary"]["device_metadata_updates"] == 2
+    assert len(legacy_only_reg.updated_calls) == 2
+>>>>>>> origin/claude/project-thread-02ukwt
 
     # A second loaded hub (another SysAP) makes an untargeted call ambiguous.
     other_config = {
@@ -581,6 +823,7 @@ async def test_migrate_service_multi_hub_and_legacy_flow_defaults(
     assert await hass.config_entries.async_setup(second.entry_id)
     await hass.async_block_till_done()
 
+<<<<<<< HEAD
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
@@ -602,3 +845,105 @@ async def test_migrate_service_multi_hub_and_legacy_flow_defaults(
 
     assert await hass.config_entries.async_unload(second.entry_id)
     await other_sysap.stop()
+=======
+async def test_migrate_service_multi_hub_and_legacy_flow_defaults() -> None:
+    """Verify service registration, multi-hub disambiguation, and config_flow defaults."""
+    server = MockSysApServer(port=0)
+    await server.start()
+    try:
+        registered_services: dict[str, dict[str, Any]] = {}
+
+        def _register_svc(domain, name, handler, schema=None, supports_response=None):
+            registered_services[f"{domain}.{name}"] = {
+                "handler": handler,
+                "schema": schema,
+                "supports_response": supports_response,
+            }
+
+        legacy_entry = SimpleNamespace(
+            entry_id="leg_1",
+            domain=LEGACY_DOMAIN,
+            unique_id="ABB700999999",
+            data={
+                CONF_HOST: "192.168.8.23",
+                CONF_USE_ROOM_NAMES: True,
+                CONF_SWITCH_AS_X: False,
+            },
+        )
+        entry1 = SimpleNamespace(
+            entry_id="entry_1",
+            domain=DOMAIN,
+            title="SysAP 1",
+            unique_id="ABB700999999",
+            data={
+                CONF_HOST: server.host_port,
+                CONF_USERNAME: "apiuser",
+                CONF_PASSWORD: "secret",
+            },
+            options={},
+            runtime_data=None,
+            async_on_unload=lambda _cb: None,
+            add_update_listener=lambda _cb: lambda: None,
+            async_start_reauth=lambda _h: None,
+        )
+
+        hass = SimpleNamespace(
+            data={},
+            device_registry=FakeDeviceRegistry(),
+            entity_registry=FakeEntityRegistry(),
+            config_entries=SimpleNamespace(
+                async_entries=lambda d=None: [legacy_entry] if d == LEGACY_DOMAIN else [],
+                async_forward_entry_setups=lambda *_a, **_kw: __import__("asyncio").sleep(0),
+                async_unload_platforms=lambda *_a, **_kw: __import__("asyncio").sleep(
+                    0, result=True
+                ),
+                async_schedule_reload=lambda _id: None,
+                async_update_entry=lambda *_a, **_kw: None,
+            ),
+            services=SimpleNamespace(
+                async_register=_register_svc,
+                has_service=lambda dom, name: f"{dom}.{name}" in registered_services,
+                async_remove=lambda dom, name: registered_services.pop(f"{dom}.{name}", None),
+            ),
+            bus=SimpleNamespace(
+                async_listen_once=lambda *_a, **_kw: lambda: None,
+                async_fire=lambda *_a, **_kw: None,
+            ),
+            config=SimpleNamespace(path=lambda p: p),
+        )
+
+        assert get_legacy_setup_defaults(hass) == {
+            CONF_HOST: "192.168.8.23",
+            CONF_USE_ROOM_NAMES: True,
+            CONF_SWITCH_AS_X: False,
+        }
+
+        await async_setup_entry(hass, entry1)  # type: ignore[arg-type]
+        svc_key = f"{DOMAIN}.{SERVICE_MIGRATE_FROM_LEGACY}"
+        assert svc_key in registered_services
+        assert registered_services[svc_key]["supports_response"] == SupportsResponse.ONLY
+
+        # Simulate a second loaded hub -> omitting entry_id/host must raise ServiceValidationError
+        entry2 = SimpleNamespace(
+            entry_id="entry_2",
+            runtime_data=SimpleNamespace(
+                controller=SimpleNamespace(client=SimpleNamespace(host="10.0.0.2"))
+            ),
+        )
+        hass.data[DOMAIN]["loaded_entries"]["entry_2"] = entry2
+
+        handler = registered_services[svc_key]["handler"]
+        with pytest.raises(ServiceValidationError):
+            await handler(SimpleNamespace(data={"dry_run": True}))
+
+        res = await handler(SimpleNamespace(data={"entry_id": "entry_1", "dry_run": True}))
+        assert res["success"] is True
+        assert res["hub_entry_id"] == "entry_1"
+
+        hass.data[DOMAIN]["loaded_entries"].pop("entry_2", None)
+        assert await async_unload_entry(hass, entry1) is True  # type: ignore[arg-type]
+        assert svc_key not in registered_services
+        assert freeathome_ng.PLATFORMS
+    finally:
+        await server.stop()
+>>>>>>> origin/claude/project-thread-02ukwt

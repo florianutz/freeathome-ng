@@ -9,6 +9,18 @@ dependencies = [
     "aiohttp>=3.9.0",
 ]
 
+<<<<<<< HEAD
+=======
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "pyyaml>=6.0",
+    "ruff>=0.6.0",
+    "mypy>=1.11",
+]
+>>>>>>> origin/claude/project-thread-02ukwt
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -27,6 +39,23 @@ skip_covered = true
 # Strict typing is enforced for the HA-free `api/` layer now (Platinum: strict-typing).
 # The HA layer joins once real Home Assistant is installed in the test env (work package AP2/AP6).
 python_version = "3.14"
+files = ["custom_components/freeathome_ng/api"]
+strict = true
+follow_imports = "silent"
+warn_unreachable = true
+
+[tool.coverage.run]
+source = ["custom_components/freeathome_ng"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.mypy]
+# Strict typing is enforced for the HA-free `api/` layer now (Platinum: strict-typing).
+# The HA layer joins once real Home Assistant is installed in the test env (work package AP2/AP6).
+python_version = "3.12"
 files = ["custom_components/freeathome_ng/api"]
 strict = true
 follow_imports = "silent"

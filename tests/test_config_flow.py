@@ -295,6 +295,7 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
+<<<<<<< HEAD
     for side_effect, error in (
         (FreeAtHomeAuthError("bad"), "invalid_auth"),
         (FreeAtHomeConnectionError("down"), "cannot_connect"),
@@ -303,6 +304,90 @@ async def test_reconfigure_flow(
         with patch(VALIDATE, side_effect=side_effect):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_HOST: mock_sysap.host_port}
+=======
+    ipv6_res = await flow.async_step_zeroconf(
+        ZeroconfServiceInfo(
+            ip_address=IPv6Address("::1"),
+            name="free@home SysAP._http._tcp.local.",
+        )
+    )
+    assert ipv6_res["type"] == "abort"
+    assert ipv6_res["reason"] == "not_ipv4address"
+
+    monkeypatch.setattr(
+        FreeAtHomeLocalApiClient,
+        "fetch_settings_json",
+        AsyncMock(return_value=None),
+    )
+    not_sysap = await flow.async_step_zeroconf(
+        ZeroconfServiceInfo(
+            ip_address=IPv4Address("192.168.1.50"),
+            name="free@home SysAP._http._tcp.local.",
+        )
+    )
+    assert not_sysap["type"] == "abort"
+    assert not_sysap["reason"] == "not_sysap"
+
+    monkeypatch.setattr(
+        FreeAtHomeLocalApiClient,
+        "fetch_settings_json",
+        AsyncMock(return_value={"flags": {}}),
+    )
+    no_serial = await flow.async_step_zeroconf(
+        ZeroconfServiceInfo(
+            ip_address=IPv4Address("192.168.1.50"),
+            name="free@home SysAP._http._tcp.local.",
+        )
+    )
+    assert no_serial["type"] == "abort"
+    assert no_serial["reason"] == "serialNumber_not_found"
+
+    monkeypatch.setattr(
+        FreeAtHomeLocalApiClient,
+        "fetch_settings_json",
+        AsyncMock(return_value={"flags": {"serialNumber": "ABB700999999"}}),
+    )
+    link_form = await flow.async_step_zeroconf(
+        ZeroconfServiceInfo(
+            ip_address=IPv4Address("192.168.1.50"),
+            name="Busch-Jaeger:Living SysAP._http._tcp.local.",
+        )
+    )
+    assert link_form["type"] == "form"
+    assert link_form["step_id"] == "link"
+
+    monkeypatch.setattr(
+        config_flow_mod,
+        "validate_input",
+        AsyncMock(
+            return_value={
+                "title": "Living SysAP",
+                "serial_number": "ABB700999999",
+                "sysap_uuid": "00000000-0000-0000-0000-000000000000",
+                "resolved_username": "apiuser",
+            }
+        ),
+    )
+    created = await flow.async_step_link({CONF_USERNAME: "installer", CONF_PASSWORD: "secret"})
+    assert created["type"] == "create_entry"
+    assert created["title"] == "Living SysAP"
+    assert created["data"][CONF_HOST] == "192.168.1.50"
+    assert created["data"][CONF_USERNAME] == "apiuser"
+
+    existing = SimpleNamespace(
+        entry_id="e1",
+        unique_id="ABB700999999",
+        data={CONF_HOST: "192.168.1.10"},
+        options={},
+    )
+    dup_flow = FreeAtHomeNgConfigFlow()
+    dup_flow.hass = _make_hass([existing])
+    with pytest.raises(AbortFlow) as exc_info:
+        await dup_flow.async_step_zeroconf(
+            ZeroconfServiceInfo(
+                ip_address=IPv4Address("192.168.1.55"),
+                name="free@home SysAP._http._tcp.local.",
+>>>>>>> origin/claude/project-thread-02ukwt
             )
         assert result["errors"] == {"base": error}
 
@@ -314,6 +399,7 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_NAME_PREFIX] == "NG "
 
 
+<<<<<<< HEAD
 async def test_reconfigure_rejects_other_sysap(
     hass: HomeAssistant, mock_sysap: MockSysApServer, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -341,3 +427,8 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry: MockConfigEn
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options[CONF_USE_ROOM_NAMES] is True
     assert mock_config_entry.options[CONF_NAME_PREFIX] == "Test "
+=======
+    saved = await options_flow.async_step_init({"use_room_names": True, "name_prefix": "Test "})
+    assert saved["type"] == "create_entry"
+    assert saved["data"] == {"use_room_names": True, "name_prefix": "Test "}
+>>>>>>> origin/claude/project-thread-02ukwt

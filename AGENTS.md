@@ -30,7 +30,11 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 
 ## 4. Coding standards
 
+<<<<<<< HEAD
 - **Python 3.14 (required by Home Assistant), typed.** `mypy --strict` must pass (today for `api/`; the HA layer joins in AP6). No new `Any` in public signatures, no bare `# type: ignore` (always with error code).
+=======
+- **Python 3.12, typed.** `mypy --strict` must pass (today for `api/`; the HA layer joins in AP6). No new `Any` in public signatures, no bare `# type: ignore` (always with error code).
+>>>>>>> origin/claude/project-thread-02ukwt
 - **Async:** no blocking I/O in the event loop (no `requests`, `time.sleep`, sync file I/O; use `hass.async_add_executor_job` if unavoidable). Use HA's shared `aiohttp` session via `async_get_clientsession`. Never create unmanaged tasks; use `entry.async_create_background_task`.
 - **Entities:**
   - `_attr_has_entity_name = True` on every entity; names come from the device (primary entity, `name=None`) or from `translation_key`. No hard-coded English names.
@@ -60,16 +64,25 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 ## 6. Testing
 
 ```bash
+<<<<<<< HEAD
 pip install -r requirements_test.txt   # Python 3.14; pins HA core, pytest, syrupy
+=======
+pip install -e ".[dev]"
+>>>>>>> origin/claude/project-thread-02ukwt
 pytest                                   # whole suite
 pytest tests/test_migration.py tests/test_coexistence.py   # guard suites
 pytest --cov --cov-report=term-missing   # coverage
 ```
 
 - Every feature or bug fix comes with a test. Config flow: every step and every error path. Platforms: setup, state updates via WebSocket frames, actions, unavailability.
+<<<<<<< HEAD
 - Tests run against real Home Assistant (`pytest-homeassistant-custom-component`). Fixtures in `tests/conftest.py`: `mock_sysap` (mock SysAP on a free localhost port), `mock_config_entry`, `init_integration` (entry set up end to end), `mock_setup_entry`, `entity_registry_enabled_by_default`. Import the integration as `custom_components.freeathome_ng`, never as `freeathome_ng`.
 - Use `tests/mock_sysap_server.py` and `tests/fixtures/configuration.json` for SysAP behaviour; extend the fixture rather than mocking internals.
 - **Snapshots (syrupy):** `tests/snapshots/` holds entity and device registry snapshots per platform. Regenerate only intentionally with `pytest --snapshot-update`, and review the `.ambr` diff in the PR like code. Bumping `pytest-homeassistant-custom-component` (and with it HA core) may change snapshots; regenerate and review them in the same PR.
+=======
+- Use `tests/mock_sysap_server.py` and `tests/fixtures/configuration.json` for SysAP behaviour; extend the fixture rather than mocking internals.
+- **Snapshots (syrupy, from AP2):** entity and device registry snapshots per platform. Regenerate only intentionally with `pytest --snapshot-update`, and review the `.ambr` diff in the PR like code.
+>>>>>>> origin/claude/project-thread-02ukwt
 - Target: > 95 % coverage for the integration package ([ADR-003](docs/DECISIONS.md)).
 
 ## 7. Quality gate
