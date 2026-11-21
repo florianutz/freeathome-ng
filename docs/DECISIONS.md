@@ -31,11 +31,7 @@ Binding design decisions for `freeathome_ng`. Each record states the decision, w
 
 **Context.** v1.0.0 supports HA 2025.2.0 and carries capability guards and fallbacks for old APIs (`via_device`, `async_get_device`, `AddEntitiesCallback`, unit constants, `async_schedule_reload`). Each guard doubles code paths that need testing. `pytest-homeassistant-custom-component` tests against one concrete HA release.
 
-<<<<<<< HEAD
 **Decision.** Raise the minimum to **2026.8.0** (`hacs.json`). `async_get_device_by_identifier` and the other registry APIs the code relies on exist in 2026.10 but not in 2026.2; confirm the exact first release before setting the version in AP3. Note that HA 2026.3+ requires Python 3.14. Remove all compatibility guards for older releases. CI tests against the current stable release and HA beta.
-=======
-**Decision.** Raise the minimum to **2026.8.0** (`hacs.json`), the first release with `async_get_device_by_identifier`. Remove all compatibility guards for older releases. CI tests against the current stable release and HA beta.
->>>>>>> origin/claude/project-thread-02ukwt
 
 **Consequences.** Less code, a single test target, zero deprecation warnings by construction. Users on HA older than 2026.8 stay on v1.0.x.
 
@@ -43,15 +39,9 @@ Binding design decisions for `freeathome_ng`. Each record states the decision, w
 
 ## ADR-003: Test against real Home Assistant, not stubs
 
-<<<<<<< HEAD
 **Status:** Implemented (2026-11-21, work package AP2)
 
 **Decision.** Tests use `pytest-homeassistant-custom-component` (real HA core, `hass` fixture, `MockConfigEntry`) and `syrupy` snapshots for entity and device registries per platform. `tests/mock_sysap_server.py` remains the SysAP double. The hand-written HA stubs are retired. Home Assistant 2026.3+ requires Python 3.14, so the test stack and CI use Python 3.14; `requirements_test.txt` pins the HA version under test. Coverage target: > 95 % for the integration package.
-=======
-**Status:** Accepted (2026-11-21) · **Implemented in:** work package AP2
-
-**Decision.** Tests use `pytest-homeassistant-custom-component` (real HA core, `hass` fixture, `MockConfigEntry`) and `syrupy` snapshots for entity and device registries per platform. `tests/mock_sysap_server.py` remains the SysAP double. The hand-written HA stubs in `tests/conftest.py` are retired once all tests are ported. Coverage target: > 95 % for the integration package.
->>>>>>> origin/claude/project-thread-02ukwt
 
 ---
 

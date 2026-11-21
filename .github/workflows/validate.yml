@@ -20,11 +20,7 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-<<<<<<< HEAD
           pip install -r requirements_test.txt
-=======
-          pip install aiohttp pytest pytest-asyncio pytest-cov pyyaml ruff mypy
->>>>>>> origin/claude/project-thread-02ukwt
       - name: Lint with ruff
         run: ruff check custom_components tests scripts
       - name: Check formatting with ruff
