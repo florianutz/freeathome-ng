@@ -19,10 +19,11 @@ from custom_components.freeathome_ng.fah_event import (
     event_type_from_event,
 )
 
+from .conftest import entity_id_for
 from .test_platforms import _broadcast_dp
 
-WINDOW = "binary_sensor.living_room_window_contact_terrace_door"
-DOORBELL = "binary_sensor.living_room_entrance_access_doorbell"
+WINDOW = ("binary_sensor", "ABB700D10008/ch0000")
+DOORBELL = ("binary_sensor", "ABB700D10010/ch0001")
 
 
 @pytest.mark.parametrize(
@@ -79,31 +80,33 @@ async def test_window_position_attribute(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_sysap: MockSysApServer
 ) -> None:
     """The window position datapoint is shown as a readable attribute."""
-    assert hass.states.get(WINDOW).attributes["window_position"] == "tilted"
+    window = entity_id_for(hass, *WINDOW)
+    assert hass.states.get(window).attributes["window_position"] == "tilted"
     for raw, expected in (("100", "open"), ("0", "closed")):
         await _broadcast_dp(mock_sysap, "ABB700D10008/ch0000/odp0001", raw)
         await _broadcast_dp(mock_sysap, "ABB700D10008/ch0000/odp0000", "1" if raw != "0" else "0")
         for _ in range(50):
             await hass.async_block_till_done()
-            if hass.states.get(WINDOW).attributes.get("window_position") == expected:
+            if hass.states.get(window).attributes.get("window_position") == expected:
                 break
             await asyncio.sleep(0.02)
-        assert hass.states.get(WINDOW).attributes["window_position"] == expected
+        assert hass.states.get(window).attributes["window_position"] == expected
     await _broadcast_dp(mock_sysap, "ABB700D10008/ch0000/odp0001", "50")
     await _broadcast_dp(mock_sysap, "ABB700D10008/ch0000/odp0000", "1")
     for _ in range(50):
         await hass.async_block_till_done()
-        if "window_position" not in hass.states.get(WINDOW).attributes:
+        if "window_position" not in hass.states.get(window).attributes:
             break
         await asyncio.sleep(0.02)
-    assert "window_position" not in hass.states.get(WINDOW).attributes
+    assert "window_position" not in hass.states.get(window).attributes
 
 
 async def test_doorbell_resets_after_pulse(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_sysap: MockSysApServer
 ) -> None:
     """A ring turns the doorbell on; it resets on its own after the pulse."""
-    assert hass.states.get(DOORBELL).state == "off"
+    doorbell = entity_id_for(hass, *DOORBELL)
+    assert hass.states.get(doorbell).state == "off"
     seen: list[str] = []
 
     @callback
@@ -111,7 +114,7 @@ async def test_doorbell_resets_after_pulse(
         if (new_state := event.data["new_state"]) is not None:
             seen.append(new_state.state)
 
-    async_track_state_change_event(hass, DOORBELL, _record)
+    async_track_state_change_event(hass, doorbell, _record)
     real_sleep = asyncio.sleep
 
     async def _short_pulse(delay: float) -> None:

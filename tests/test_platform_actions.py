@@ -15,16 +15,19 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.freeathome_ng.api import FreeAtHomeApiError
 from custom_components.freeathome_ng.const import DOMAIN
 
+from .conftest import entity_id_for
 from .test_platforms import _broadcast_dp, _wait_for_state
 
-DIMMER = "light.kitchen_kitchen_lights_kitchen_dimmer"
-TUNABLE = "light.kitchen_kitchen_lights_kitchen_tunable"
-RGB = "light.living_room_kitchen_rgb_strip"
-GROUP = "light.living_room_all_lights"
-THERMOSTAT = "climate.living_room_living_thermostat_room_thermostat"
-SHUTTER = "cover.living_room_living_shutter_main_shutter"
-FAN = "fan.living_room_ceiling_fan_living_fan"
-LOCK = "lock.living_room_entrance_access_door_opener"
+DIMMER = ("light", "ABB700D10002/ch0000")
+TUNABLE = ("light", "ABB700D10002/ch0001")
+RGB = ("light", "ABB700D10002/ch0002")
+GROUP = ("light", "FFFF40000001/ch0000")
+THERMOSTAT = ("climate", "ABB700D10004/ch0000")
+SHUTTER = ("cover", "ABB700D10003/ch0000")
+FAN = ("fan", "ABB700D10005/ch0000")
+LOCK = ("lock", "ABB700D10010/ch0000")
+
+# Entities are looked up by unique ID: generated entity IDs differ between HA releases.
 
 
 def _writes(server: MockSysApServer, prefix: str) -> list[tuple[str, str]]:
@@ -37,7 +40,7 @@ def _writes(server: MockSysApServer, prefix: str) -> list[tuple[str, str]]:
 
 
 @pytest.mark.parametrize(
-    ("domain", "service", "entity_id", "data", "prefix"),
+    ("domain", "service", "entity", "data", "prefix"),
     [
         ("light", "turn_on", DIMMER, {"brightness": 128}, "ABB700D10002.ch0000."),
         ("light", "turn_on", DIMMER, {"brightness": 0}, "ABB700D10002.ch0000."),
@@ -75,11 +78,12 @@ async def test_entity_action_writes_to_sysap(
     mock_sysap: MockSysApServer,
     domain: str,
     service: str,
-    entity_id: str,
+    entity: tuple[str, str],
     data: dict[str, Any],
     prefix: str,
 ) -> None:
     """Every entity action results in a write to the matching channel."""
+    entity_id = entity_id_for(hass, *entity)
     assert hass.states.get(entity_id) is not None
     mock_sysap.recorded.clear()
     await hass.services.async_call(domain, service, {"entity_id": entity_id, **data}, blocking=True)
@@ -89,15 +93,15 @@ async def test_entity_action_writes_to_sysap(
 
 async def test_light_attributes(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
     """Dimmer, tunable and RGB lights expose their color modes and values."""
-    dimmer = hass.states.get(DIMMER)
+    dimmer = hass.states.get(entity_id_for(hass, *DIMMER))
     assert dimmer.attributes["color_mode"] == "brightness"
     assert dimmer.attributes["brightness"] == 153
-    tunable = hass.states.get(TUNABLE)
+    tunable = hass.states.get(entity_id_for(hass, *TUNABLE))
     assert tunable.attributes["color_mode"] == "color_temp"
     assert tunable.attributes["color_temp_kelvin"] == 4600
     assert tunable.attributes["min_color_temp_kelvin"] == 2700
     assert tunable.attributes["max_color_temp_kelvin"] == 6500
-    rgb = hass.states.get(RGB)
+    rgb = hass.states.get(entity_id_for(hass, *RGB))
     assert rgb.attributes["color_mode"] == "rgb"
     assert rgb.attributes["rgb_color"] == (255, 128, 0)
 
@@ -106,17 +110,22 @@ async def test_climate_and_cover_attributes(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_sysap: MockSysApServer
 ) -> None:
     """Thermostat and cover expose their state attributes; off hides the target."""
-    climate = hass.states.get(THERMOSTAT)
+    climate = hass.states.get(entity_id_for(hass, *THERMOSTAT))
     assert climate.state == HVACMode.HEAT_COOL
     assert "valve" in climate.attributes
     assert "temperature_correction" in climate.attributes
     await hass.services.async_call(
-        "climate", "set_hvac_mode", {"entity_id": THERMOSTAT, "hvac_mode": "off"}, blocking=True
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id_for(hass, *THERMOSTAT), "hvac_mode": "off"},
+        blocking=True,
     )
     await hass.async_block_till_done()
-    await hass.services.async_call("climate", "turn_on", {"entity_id": THERMOSTAT}, blocking=True)
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": entity_id_for(hass, *THERMOSTAT)}, blocking=True
+    )
     await hass.async_block_till_done()
-    cover = hass.states.get(SHUTTER)
+    cover = hass.states.get(entity_id_for(hass, *SHUTTER))
     assert "forced_position" in cover.attributes
     assert cover.attributes["device_class"] == "shutter"
 
@@ -132,9 +141,11 @@ async def test_entity_action_api_error_is_translated(
         ),
         pytest.raises(HomeAssistantError) as err,
     ):
-        await hass.services.async_call("lock", "unlock", {"entity_id": LOCK}, blocking=True)
+        await hass.services.async_call(
+            "lock", "unlock", {"entity_id": entity_id_for(hass, *LOCK)}, blocking=True
+        )
     assert err.value.translation_key == "action_failed"
-    assert err.value.translation_placeholders["entity_id"] == LOCK
+    assert err.value.translation_placeholders["entity_id"] == entity_id_for(hass, *LOCK)
 
 
 async def test_cover_stop_only_while_moving(
@@ -142,13 +153,17 @@ async def test_cover_stop_only_while_moving(
 ) -> None:
     """Stop is sent only while the cover reports movement; movement is reflected."""
     mock_sysap.recorded.clear()
-    await hass.services.async_call("cover", "stop_cover", {"entity_id": SHUTTER}, blocking=True)
+    await hass.services.async_call(
+        "cover", "stop_cover", {"entity_id": entity_id_for(hass, *SHUTTER)}, blocking=True
+    )
     assert not _writes(mock_sysap, "ABB700D10003.")
 
     await _broadcast_dp(mock_sysap, "ABB700D10003/ch0000/odp0000", "3")
-    await _wait_for_state(hass, SHUTTER, "closing")
-    await hass.services.async_call("cover", "stop_cover", {"entity_id": SHUTTER}, blocking=True)
+    await _wait_for_state(hass, entity_id_for(hass, *SHUTTER), "closing")
+    await hass.services.async_call(
+        "cover", "stop_cover", {"entity_id": entity_id_for(hass, *SHUTTER)}, blocking=True
+    )
     assert ("ABB700D10003.ch0000.idp0001", "1") in _writes(mock_sysap, "ABB700D10003.")
 
     await _broadcast_dp(mock_sysap, "ABB700D10003/ch0000/odp0000", "2")
-    await _wait_for_state(hass, SHUTTER, "opening")
+    await _wait_for_state(hass, entity_id_for(hass, *SHUTTER), "opening")

@@ -11,6 +11,7 @@ from unittest.mock import PropertyMock, patch
 import pytest
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.syrupy import HomeAssistantSnapshotExtension
 from syrupy.assertion import SnapshotAssertion
@@ -51,6 +52,17 @@ async def mock_sysap() -> AsyncGenerator[MockSysApServer]:
         yield server
     finally:
         await server.stop()
+
+
+def entity_id_for(hass: HomeAssistant, platform: str, uid_tail: str) -> str:
+    """Return the entity ID of `{SYSAP_UUID}/{uid_tail}` on `platform`.
+
+    Tests look entities up by unique ID, because Home Assistant releases generate
+    entity IDs for child devices differently.
+    """
+    entity_id = er.async_get(hass).async_get_entity_id(platform, DOMAIN, f"{SYSAP_UUID}/{uid_tail}")
+    assert entity_id is not None, f"no {platform} entity for {uid_tail}"
+    return entity_id
 
 
 def entry_data(server: MockSysApServer, **overrides: Any) -> dict[str, Any]:

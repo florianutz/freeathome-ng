@@ -18,6 +18,11 @@ Contributions are welcome!
    pytest --cov --cov-report=term
    python3 scripts/check_translations.py
    ```
+3. Optional but recommended: run the same checks on every commit with pre-commit:
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
 
 ## Architecture Guidelines
 

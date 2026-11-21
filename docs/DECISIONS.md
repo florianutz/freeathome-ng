@@ -66,7 +66,7 @@ Binding design decisions for `freeathome_ng`. Each record states the decision, w
 
 **Context.** ADR-001 needs channel devices that inherit the area of their physical device. Home Assistant 2026.9 added child devices for exactly this (`ChildDeviceInfo`, `DeviceRegistry.async_get_or_create_child`); verified against the published wheels: absent in 2026.8.0, present in 2026.9.0. Emulating them with `via_device_id` main devices would lose area inheritance and need our own name composition.
 
-**Decision.** Raise the minimum to **2026.9.0** (`hacs.json`). Everything else from ADR-002 stays: no compatibility guards, Python 3.14, CI against current stable and beta.
+**Decision.** Raise the minimum to **2026.9.0** (`hacs.json`). Everything else from ADR-002 stays: no compatibility guards, Python 3.14, CI against current stable and beta. CI also runs the test suite against the minimum release itself (`requirements_test_min_ha.txt`); registry snapshots are pinned to the current stable release, because HA 2026.9 generates other entity IDs for new child-device entities.
 
 **Consequences.** Users on HA 2026.8 stay on v1.0.x until they update Home Assistant.
 
