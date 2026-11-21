@@ -1,7 +1,7 @@
 ---
 name: reproduce-from-dump
-description: Turn a user's free@home configuration dump (dump_config output, from an issue or a file) into an anonymised test fixture and a failing test that reproduces the reported bug. Use for bug reports about wrong, missing or broken entities, before fixing anything.
-argument-hint: "<path to dump.json | issue number>"
+description: Turn a user's free@home diagnostics download or configuration dump (from an issue or a file) into an anonymised test fixture and a failing test that reproduces the reported bug. Use for bug reports about wrong, missing or broken entities, before fixing anything.
+argument-hint: "<path to diagnostics/dump JSON | issue number>"
 allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
@@ -9,14 +9,14 @@ allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 
 Goal: a test that fails today for the reason the user reported, built from their real SysAP data without any of their personal data. Fixing the bug is a separate step (normally `/add-entity` or a normal code change) and starts only once this test fails for the right reason.
 
-Input: `$ARGUMENTS` is a local dump file or a GitHub issue number. For an issue, read it with `gh api repos/{owner}/{repo}/issues/<n>` and `.../issues/<n>/comments`, and download the attached dump. If there is no dump, stop and say what the user should attach (the `freeathome_ng.dump_config` output, optionally `freeathome_ng.monitor` frames).
+Input: `$ARGUMENTS` is a local dump file or a GitHub issue number. For an issue, read it with `gh api repos/{owner}/{repo}/issues/<n>` and `.../issues/<n>/comments`, and download the attached diagnostics or dump. If there is none, stop and ask for the integration's diagnostics download (already redacted, safe to post publicly), optionally `freeathome_ng.monitor` frames for timing problems.
 
 ## 1. Anonymise first
 
 Never commit, paste or quote a raw dump, not even in a PR description or comment (AGENTS.md section 5.7).
 
 1. Keep the raw file outside the repository (scratch directory).
-2. `python3 scripts/anonymize_dump.py <raw.json> -o <scratch>/anon.json` (add `--keep-names` only when the bug is about names, and then replace the names by hand with similar but invented ones).
+2. `python3 scripts/anonymize_dump.py <raw.json> -o <scratch>/anon.json` (accepts a diagnostics download too; diagnostics still contain names, which the script replaces) (add `--keep-names` only when the bug is about names, and then replace the names by hand with similar but invented ones).
 3. Work through [references/anonymization-checklist.md](references/anonymization-checklist.md) on the output. The script's summary on stderr lists removed keys; anything unexpected there or left in the file is a reason to stop and ask.
 
 ## 2. Reduce

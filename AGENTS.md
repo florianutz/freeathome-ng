@@ -12,7 +12,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 
 ## 2. Repository layout
 
-- `custom_components/freeathome_ng/api/` — HA-free library: REST/WebSocket client (`client.py`), configuration and event controller (`controller.py`), protocol constants such as Function and Pairing IDs (`const.py`), device models (`devices/*.py`).
+- `custom_components/freeathome_ng/api/` — HA-free library: REST/WebSocket client (`client.py`), configuration and event controller (`controller.py`), protocol constants such as Function and Pairing IDs (`const.py`), device models (`devices/*.py`), anonymisation for diagnostics and fixtures (`anonymize.py`).
 - `custom_components/freeathome_ng/` — HA layer: setup and services (`__init__.py`), flows (`config_flow.py`), legacy takeover (`migration.py`), entity base (`entity.py`), one module per platform, `diagnostics.py`, `const.py` (HA constants only: domain, options, events, actions), `manifest.json`, `services.yaml`, `strings.json`, `translations/` (7 locales), `quality_scale.yaml`, `brand/`.
 - `tests/` — test suite, `mock_sysap_server.py` (SysAP double), `fixtures/configuration.json`.
 - `scripts/` — developer tooling (`check_translations.py`, `anonymize_dump.py` for turning user dumps into fixtures).
@@ -43,7 +43,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 - **Errors:** user-facing exceptions (`HomeAssistantError`, `ServiceValidationError`, `ConfigEntryNotReady`, `ConfigEntryAuthFailed`) use `translation_domain=DOMAIN` + `translation_key`; texts live in `strings.json` → `exceptions`. Catch `api/` exceptions at the HA boundary and re-raise as HA exceptions: entity actions use the `@api_action` decorator (`entity.py`), domain actions `_api_errors` (`services.py`).
 - **Config flow:** unique ID = SysAP serial; every field has `data_description`; specific errors (`cannot_connect`, `invalid_auth`, `unknown`); reauth and reconfigure use `async_update_reload_and_abort` / `async_update_and_abort`.
 - **Repairs:** use `issue_registry` for actionable problems the user must fix (not for transient errors). A deprecated entity action calls `async_report_deprecated_action` (`entity.py`) to point users to its replacing entity.
-- **Diagnostics:** everything through `async_redact_data`; redact credentials, serials, JIDs, UUIDs, host and geo data.
+- **Diagnostics:** credentials and host through `async_redact_data`; SysAP configuration through `api/anonymize.py` (UUIDs, serials, SysAP name, accounts, geo and network data). Diagnostics are the user-facing support path, `dump_config` stays unredacted for local debugging.
 - **Style:** `ruff check` and `ruff format` (config in `pyproject.toml`). Docstrings on public functions. Log with `%s` formatting, never f-strings.
 - **Names from the SysAP:** `.strip()` all room, device and channel names. Keep the 840 s keep-alive filter for binary sensors; never suppress `PID_FIRE_ALARM_ACTIVE` / `PID_CO_ALARM_ACTIVE`.
 

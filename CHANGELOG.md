@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Diagnostics now redact the host, the SysAP name and the config entry title, and replace SysAP UUIDs and device serial numbers consistently (virtual devices keep their serial). Before, these appeared in plain text despite the documentation saying otherwise. Diagnostics are now the recommended way to share a setup in an issue; the bug report template asks for them.
+
 ## [2.0.0] - 2026-11-21
 
 Requires Home Assistant 2026.9.0 or newer. Before updating, check the breaking changes below: automations that use `heat_cool` on thermostats, and setups with several SysAPs that call writing actions without a target, need a small change.

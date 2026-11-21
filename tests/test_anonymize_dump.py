@@ -129,3 +129,36 @@ async def test_anonymized_fixture_sets_up_the_same_entities(
 
     assert original
     assert sorted(anonymized) == sorted((domain, _map(tail)) for domain, tail in original)
+
+
+def test_anonymize_reads_diagnostics_download(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A diagnostics download is unwrapped to its configuration before anonymising."""
+    source = tmp_path / "diagnostics.json"
+    source.write_text(
+        json.dumps({"home_assistant": {}, "data": {"raw_configuration": _real_dump()}}),
+        encoding="utf-8",
+    )
+    assert anonymize_dump.main([str(source)]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert list(result) == ["00000000-0000-0000-0000-000000000001"]
+
+
+def test_anonymize_tolerates_unexpected_shapes() -> None:
+    """Unexpected value types are passed through instead of failing."""
+    dump = {
+        "not-a-uuid": "text",
+        REAL_UUID: {
+            "devices": {"ABB700000009": "broken", "ABB70000000A": {"channels": {"ch0000": 1}}},
+            "floorplan": {"floors": {"01": "broken", "02": {"name": "x", "rooms": {"01": 2}}}},
+            "list": [{"password": "x"}, "192.168.0.1"],
+        },
+    }
+    result = anonymize_dump.Anonymizer().run(dump)
+    sysap = result["00000000-0000-0000-0000-000000000001"]
+    assert result["not-a-uuid"] == "text"
+    assert list(sysap["devices"].values())[0] == "broken"
+    assert sysap["floorplan"]["floors"]["01"] == "broken"
+    assert sysap["floorplan"]["floors"]["02"]["rooms"]["01"] == 2
+    assert sysap["list"] == [{}, "192.0.2.1"]

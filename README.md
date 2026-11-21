@@ -200,7 +200,7 @@ trigger:
 | `freeathome_ng.thermostat_temperature_correction` | Deprecated: use the thermostat's temperature correction number. Updates a thermostat's temperature offset. |
 | `freeathome_ng.migrate_from_legacy` | Preview (`dry_run: true`) or migrate device names, areas, entity metadata, Assist options, and Recorder history (`cutover: true`) from legacy `freeathome`. |
 
-> **Diagnostics:** Download redacted Hub or per-device diagnostic snapshots directly from the Home Assistant UI via **Settings → Devices & Services → free@home NG → ⋮ → Download diagnostics** (or from any individual device page).
+> **Diagnostics:** Download Hub or per-device diagnostics from **Settings → Devices & Services → free@home NG → ⋮ → Download diagnostics** (or from any individual device page). This is the recommended way to share your setup in an issue: credentials, the host, the SysAP name, SysAP UUIDs and serial numbers are replaced; device, channel and room names stay, and virtual devices (`6000…`) keep their serial. `dump_config` and `monitor` write the **unredacted** data and are meant for your own debugging.
 
 ---
 
@@ -301,7 +301,7 @@ Afterward, periodically send your live wattage readings (for example every 10 s 
 
 For deeper analysis:
 
-- **Diagnostics:** *Settings → Devices & services → free@home NG → ⋮ → Download diagnostics*. Credentials, serial numbers and host data are redacted.
+- **Diagnostics:** *Settings → Devices & services → free@home NG → ⋮ → Download diagnostics*. Credentials, host, SysAP name, UUIDs and serial numbers are redacted; attach this file to issues.
 - **Debug logging:**
   ```yaml
   logger:

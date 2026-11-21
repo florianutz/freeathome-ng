@@ -250,7 +250,19 @@ async def test_diagnostics_redacts_secrets() -> None:
         assert diag["entry"]["data"]["password"] == "**REDACTED**"
         assert diag["entry"]["data"]["username"] == "**REDACTED**"
         assert diag["controller"]["sysap_serial"] == "**REDACTED**"
+        assert diag["controller"]["host"] == "**REDACTED**"
+        assert diag["entry"]["data"]["host"] == "**REDACTED**"
+        assert diag["entry"]["title"] == "**REDACTED**"
         assert diag["controller"]["total_devices"] == len(controller.devices)
+        text = json.dumps(diag)
+        for secret in ("192.168.1.50", "Test SysAP", controller.primary_sysap_uuid, "ABB700D10001"):
+            assert secret not in text
+        assert "Living Switch" in text  # names stay, so reports match the user's UI
+        virtual = [
+            s for s in config[controller.primary_sysap_uuid]["devices"] if s.startswith("6000")
+        ]
+        assert virtual
+        assert all(serial in text for serial in virtual)  # needed to address virtual devices
 
         sysap_uuid = controller.primary_sysap_uuid
         dev_diag = await async_get_device_diagnostics(
@@ -258,7 +270,9 @@ async def test_diagnostics_redacts_secrets() -> None:
             entry,  # type: ignore[arg-type]
             SimpleNamespace(identifiers={(DOMAIN, f"{sysap_uuid}_ABB700D10001")}),
         )
-        assert dev_diag["device"]["serialnumber"] == "ABB700D10001"
+        assert dev_diag["device"]["serialnumber"].startswith("ABB7")
+        assert dev_diag["device"]["serialnumber"] != "ABB700D10001"
+        assert dev_diag["device"]["sysap_uuid"] != sysap_uuid
         assert dev_diag["device"]["model"] == "Sensor/switch actuator 1/1-gang"
         assert len(dev_diag["channels"]) == 2
         assert dev_diag["raw_device_config"]["displayName"] == "Living Switch"
