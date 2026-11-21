@@ -297,3 +297,17 @@ def test_fah_event_helpers() -> None:
     assert dimming_status_sequence_from_event({"command": "dim_stop", "direction": "down"}) == (
         DIMMING_STATUS_DEFAULT,
     )
+
+
+def test_icons_json_matches_translations_and_services() -> None:
+    """Every icon translation targets a known entity translation key or service."""
+    icons = json.loads((COMP_DIR / "icons.json").read_text(encoding="utf-8"))
+    strings = json.loads((COMP_DIR / "strings.json").read_text(encoding="utf-8"))
+    for platform, keys in icons["entity"].items():
+        for key, spec in keys.items():
+            assert key in strings["entity"][platform], f"{platform}.{key} has no translation"
+            assert spec["default"].startswith("mdi:")
+            for state in spec.get("state", {}):
+                assert state in strings["entity"][platform][key]["state"]
+    services = yaml.safe_load((COMP_DIR / "services.yaml").read_text(encoding="utf-8"))
+    assert set(icons["services"]) == set(services)

@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.switch import FahSwitch
+from .const import FUNCTION_IDS_TIMER_PROFILE
 from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
@@ -62,6 +64,9 @@ class FreeAtHomeNgSwitch(FreeAtHomeNgEntity, SwitchEntity):
         """Initialize the switch entity."""
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.switch_device = device
+        if device.function_id in FUNCTION_IDS_TIMER_PROFILE:
+            # Enabling or disabling a free@home timer program configures the system.
+            self._attr_entity_category = EntityCategory.CONFIG
 
     @property
     def is_on(self) -> bool | None:

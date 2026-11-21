@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -41,130 +41,58 @@ VOC_CONCENTRATION_UNIT = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class SensorDescription:
-    """Metadata describing a free@home NG numeric sensor type."""
+def _measurement(
+    key: str,
+    unit: str | None,
+    device_class: SensorDeviceClass | None,
+    *,
+    state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT,
+    enabled_default: bool = True,
+) -> SensorEntityDescription:
+    """Return the description of a free@home sensor type; icons live in icons.json."""
+    return SensorEntityDescription(
+        key=key,
+        translation_key=key,
+        native_unit_of_measurement=unit,
+        device_class=device_class,
+        state_class=state_class,
+        entity_registry_enabled_default=enabled_default,
+    )
 
-    label: str
-    unit: str | None
-    icon: str | None
-    device_class: SensorDeviceClass | None
-    state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
 
-
-SENSOR_TYPES: dict[str, SensorDescription] = {
-    "temperature": SensorDescription(
-        "Temperature",
-        UnitOfTemperature.CELSIUS,
-        "mdi:thermometer",
-        SensorDeviceClass.TEMPERATURE,
-    ),
-    "windstrength": SensorDescription(
-        "Wind Strength",
-        UnitOfSpeed.KILOMETERS_PER_HOUR,
-        "mdi:weather-windy",
-        SensorDeviceClass.WIND_SPEED,
-    ),
-    "windforce": SensorDescription(
-        "Wind Force",
-        None,
-        "mdi:weather-windy-variant",
-        None,
-    ),
-    "rain": SensorDescription(
-        "Rain",
-        None,
-        "mdi:weather-rainy",
-        None,
-        None,
-    ),
-    "lux": SensorDescription(
-        "Illumination",
-        LIGHT_LUX,
-        None,
-        SensorDeviceClass.ILLUMINANCE,
-    ),
-    "valve_volume_flow": SensorDescription(
-        "Heating valve volume flow",
-        PERCENTAGE,
-        None,
-        None,
-    ),
-    "humidity": SensorDescription(
-        "Humidity",
-        PERCENTAGE,
-        None,
-        SensorDeviceClass.HUMIDITY,
-    ),
-    "co2": SensorDescription(
-        "CO2",
-        CO2_CONCENTRATION_UNIT,
-        None,
-        SensorDeviceClass.CO2,
-    ),
-    "voc": SensorDescription(
-        "VOC",
-        VOC_CONCENTRATION_UNIT,
-        None,
-        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-    ),
-    "pv_power": SensorDescription(
-        "PV Power",
-        UnitOfPower.WATT,
-        "mdi:solar-power",
-        SensorDeviceClass.POWER,
-    ),
-    "battery_power": SensorDescription(
-        "Battery Power",
-        UnitOfPower.WATT,
-        "mdi:battery-charging",
-        SensorDeviceClass.POWER,
-    ),
-    "battery_soc": SensorDescription(
-        "Battery SoC",
-        PERCENTAGE,
-        "mdi:battery",
-        SensorDeviceClass.BATTERY,
-    ),
-    "grid_power": SensorDescription(
-        "Grid Power",
-        UnitOfPower.WATT,
-        "mdi:transmission-tower",
-        SensorDeviceClass.POWER,
-    ),
-    "home_power": SensorDescription(
-        "Home Power Consumption",
-        UnitOfPower.WATT,
-        "mdi:home-lightning-bolt",
-        SensorDeviceClass.POWER,
-    ),
-    "consumed_energy": SensorDescription(
-        "Consumed Energy",
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    _measurement("temperature", UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE),
+    _measurement("windstrength", UnitOfSpeed.KILOMETERS_PER_HOUR, SensorDeviceClass.WIND_SPEED),
+    # Beaufort duplicate of the wind speed: rarely needed, so disabled by default.
+    _measurement("windforce", None, None, enabled_default=False),
+    _measurement("rain", None, None, state_class=None),
+    _measurement("lux", LIGHT_LUX, SensorDeviceClass.ILLUMINANCE),
+    _measurement("valve_volume_flow", PERCENTAGE, None),
+    _measurement("humidity", PERCENTAGE, SensorDeviceClass.HUMIDITY),
+    _measurement("co2", CO2_CONCENTRATION_UNIT, SensorDeviceClass.CO2),
+    _measurement("voc", VOC_CONCENTRATION_UNIT, SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS),
+    _measurement("pv_power", UnitOfPower.WATT, SensorDeviceClass.POWER),
+    _measurement("battery_power", UnitOfPower.WATT, SensorDeviceClass.POWER),
+    _measurement("battery_soc", PERCENTAGE, SensorDeviceClass.BATTERY),
+    _measurement("grid_power", UnitOfPower.WATT, SensorDeviceClass.POWER),
+    _measurement("home_power", UnitOfPower.WATT, SensorDeviceClass.POWER),
+    _measurement(
+        "consumed_energy",
         UnitOfEnergy.KILO_WATT_HOUR,
-        "mdi:lightning-bolt",
         SensorDeviceClass.ENERGY,
-        SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "injected_energy": SensorDescription(
-        "Injected Energy",
+    _measurement(
+        "injected_energy",
         UnitOfEnergy.KILO_WATT_HOUR,
-        "mdi:transmission-tower-export",
         SensorDeviceClass.ENERGY,
-        SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "self_consumption": SensorDescription(
-        "Self Consumption",
-        PERCENTAGE,
-        "mdi:percent",
-        None,
-    ),
-    "self_sufficiency": SensorDescription(
-        "Self Sufficiency",
-        PERCENTAGE,
-        "mdi:percent",
-        None,
-    ),
-}
+    _measurement("self_consumption", PERCENTAGE, None),
+    _measurement("self_sufficiency", PERCENTAGE, None),
+)
+
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {d.key: d for d in SENSOR_DESCRIPTIONS}
 
 
 def _build_sensor_entities(
@@ -232,16 +160,10 @@ class FreeAtHomeNgSensor(FreeAtHomeNgEntity, SensorEntity):
         entry_id: str | None = None,
     ) -> None:
         """Initialize the sensor entity."""
-        desc = SENSOR_TYPES.get(device.type or "")
-        if device.type is not None and desc is not None:
-            self._attr_translation_key = device.type
+        if (desc := SENSOR_TYPES.get(device.type or "")) is not None:
+            self.entity_description = desc
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.sensor_device = device
-        if desc is not None:
-            self._attr_native_unit_of_measurement = desc.unit
-            self._attr_icon = desc.icon
-            self._attr_device_class = desc.device_class
-            self._attr_state_class = desc.state_class
 
     @property
     def native_value(self) -> Any:
@@ -249,12 +171,12 @@ class FreeAtHomeNgSensor(FreeAtHomeNgEntity, SensorEntity):
         raw = self.sensor_device.state
         if raw is None:
             return None
-        if self._attr_native_unit_of_measurement == UnitOfSpeed.KILOMETERS_PER_HOUR:
+        if self.native_unit_of_measurement == UnitOfSpeed.KILOMETERS_PER_HOUR:
             try:
                 return round(float(raw) * 3.6, 2)
             except TypeError, ValueError:
                 return raw
-        if self._attr_device_class is not None:
+        if self.device_class is not None:
             try:
                 return float(raw)
             except TypeError, ValueError:

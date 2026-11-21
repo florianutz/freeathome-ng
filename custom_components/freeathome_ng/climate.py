@@ -62,7 +62,6 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_preset_modes = ["none", "eco"]
     _attr_fan_modes = ["auto", "low", "medium", "high"]
-    _attr_icon = "mdi:thermometer-lines"
 
     def __init__(
         self,

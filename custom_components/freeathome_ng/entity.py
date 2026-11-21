@@ -56,7 +56,7 @@ class FreeAtHomeNgEntity(Entity):
         device layout is resolved when the entity is added to Home Assistant.
         """
         self.fah_device = device
-        if not getattr(self, "_attr_translation_key", None):
+        if not self.translation_key:
             self._attr_name = None
         self._attr_unique_id = device.unique_id
 
