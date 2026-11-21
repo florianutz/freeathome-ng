@@ -7,6 +7,8 @@ from functools import wraps
 from typing import Any, cast
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -92,3 +94,25 @@ class FreeAtHomeNgEntity(Entity):
     def get_extra_attr(self, key: str, default: Any = None) -> Any:
         """Safely read an attribute from the underlying device."""
         return getattr(self.fah_device, key, default)
+
+    def async_report_deprecated_action(self, action: str, platform: str, key: str) -> None:
+        """Raise a repair issue that `action` is deprecated in favour of an entity.
+
+        `platform` and `key` name the replacing entity of this channel, whose unique ID
+        is `{unique_id}/{key}`.
+        """
+        replacement = er.async_get(self.hass).async_get_entity_id(
+            platform, DOMAIN, f"{self.fah_device.unique_id}/{key}"
+        )
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_action_{action}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_action",
+            translation_placeholders={
+                "action": f"{DOMAIN}.{action}",
+                "replacement": replacement or f"{platform}.*",
+            },
+        )

@@ -145,6 +145,21 @@
         }
       }
     },
+    "number": {
+      "temperature_correction": {
+        "name": "Temperaturkorrektur"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "name": "Zwangsposition",
+        "state": {
+          "none": "Keine",
+          "open": "Offen gehalten",
+          "closed": "Geschlossen gehalten"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Dimmer-Status",
@@ -212,6 +227,17 @@
       },
       "self_sufficiency": {
         "name": "Autarkiegrad"
+      },
+      "valve": {
+        "name": "Ventil"
+      },
+      "window_position": {
+        "name": "Fensterstellung",
+        "state": {
+          "closed": "Geschlossen",
+          "tilted": "Gekippt",
+          "open": "Offen"
+        }
       }
     }
   },
@@ -404,7 +430,7 @@
     },
     "cover_force_position": {
       "name": "Zwangsposition für Beschattung setzen",
-      "description": "Versetzt einen Rollladen, eine Jalousie oder Markise in eine Zwangsposition (open, closed oder none).",
+      "description": "Versetzt einen Rollladen, eine Jalousie oder Markise in eine Zwangsposition (open, closed oder none). Veraltet: Verwende stattdessen die Entität Zwangsposition.",
       "fields": {
         "forced_position": {
           "name": "Zwangsposition",
@@ -414,7 +440,7 @@
     },
     "thermostat_temperature_correction": {
       "name": "Temperaturkorrektur am Thermostat setzen",
-      "description": "Ändert den Temperatur-Offset-Parameter eines Raumtemperaturreglers.",
+      "description": "Ändert den Temperatur-Offset-Parameter eines Raumtemperaturreglers. Veraltet: Verwende stattdessen die Entität Temperaturkorrektur.",
       "fields": {
         "temperature_correction": {
           "name": "Temperaturkorrektur",
@@ -489,6 +515,12 @@
     },
     "request_failed": {
       "message": "Der SysAP unter {host} hat die Anfrage nicht angenommen: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_action": {
+      "title": "Aktion {action} ist veraltet",
+      "description": "Die Aktion `{action}` wird in einer künftigen Version entfernt. Verwende stattdessen die Entität {replacement} des Geräts und passe Automationen und Skripte an, die die Aktion nutzen."
     }
   }
 }

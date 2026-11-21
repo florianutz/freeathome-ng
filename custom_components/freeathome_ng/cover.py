@@ -120,7 +120,7 @@ class FreeAtHomeNgCover(FreeAtHomeNgEntity, CoverEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return forced position attribute."""
+        """Return the forced position (deprecated, see the forced position select)."""
         return {"forced_position": self.cover_device.get_forced_cover_position()}
 
     @api_action
@@ -150,5 +150,6 @@ class FreeAtHomeNgCover(FreeAtHomeNgEntity, CoverEntity):
 
     @api_action
     async def async_force_position(self, forced_position: str) -> None:
-        """Force cover open, closed, or release."""
+        """Force cover open, closed, or release (deprecated action)."""
+        self.async_report_deprecated_action("cover_force_position", "select", "forced_position")
         await self.cover_device.set_forced_cover_position(forced_position)

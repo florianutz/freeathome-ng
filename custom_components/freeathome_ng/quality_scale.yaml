@@ -74,12 +74,10 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: exempt
+    status: done
     comment: >-
-      No persistent problem the user must fix outside the existing flows. Rejected credentials
-      start reauthentication; an unreachable SysAP, a disabled Local API or firmware below 2.6
-      fail setup with a translated error and retry; the legacy entry is removed by the cutover
-      itself, and running both integrations side by side is supported.
+      Using a deprecated action raises a repair issue that names the replacing entity.
+      Connection and credential problems are handled by setup retry and reauthentication.
   stale-devices:
     status: done
     comment: >-

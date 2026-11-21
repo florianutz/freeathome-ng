@@ -145,6 +145,21 @@
         }
       }
     },
+    "number": {
+      "temperature_correction": {
+        "name": "Correzione temperatura"
+      }
+    },
+    "select": {
+      "forced_position": {
+        "name": "Posizione forzata",
+        "state": {
+          "none": "Nessuna",
+          "open": "Mantenuta aperta",
+          "closed": "Mantenuta chiusa"
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Stato dimmer",
@@ -212,6 +227,17 @@
       },
       "self_sufficiency": {
         "name": "Autosufficienza"
+      },
+      "valve": {
+        "name": "Valvola"
+      },
+      "window_position": {
+        "name": "Posizione finestra",
+        "state": {
+          "closed": "Chiusa",
+          "tilted": "A ribalta",
+          "open": "Aperta"
+        }
       }
     }
   },
@@ -404,7 +430,7 @@
     },
     "cover_force_position": {
       "name": "Forza posizione tapparella",
-      "description": "Forza una copertura in una posizione specifica (open, closed o none).",
+      "description": "Forza una copertura in una posizione specifica (open, closed o none). Deprecata: usa invece l'entità Posizione forzata.",
       "fields": {
         "forced_position": {
           "name": "Posizione forzata",
@@ -414,7 +440,7 @@
     },
     "thermostat_temperature_correction": {
       "name": "Imposta correzione temperatura",
-      "description": "Modifica il parametro di correzione temperatura del termostato.",
+      "description": "Modifica il parametro di correzione temperatura del termostato. Deprecata: usa invece l'entità Correzione temperatura.",
       "fields": {
         "temperature_correction": {
           "name": "Correzione temperatura",
@@ -489,6 +515,12 @@
     },
     "request_failed": {
       "message": "Il SysAP su {host} non ha accettato la richiesta: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_action": {
+      "title": "L'azione {action} è deprecata",
+      "description": "L'azione `{action}` verrà rimossa in una versione futura. Usa invece l'entità {replacement} del dispositivo e aggiorna le automazioni e gli script che usano l'azione."
     }
   }
 }

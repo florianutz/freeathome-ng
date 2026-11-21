@@ -112,10 +112,23 @@ def _build_sensor_entities(
                     dev, hub_device_id=hub_device_id, entry_id=entry_id
                 )
             )
-        elif isinstance(dev, FahBinarySensor) and dev.supports_dimming_status():
-            entities.append(
-                FreeAtHomeNgDimmingStatusSensor(dev, hub_device_id=hub_device_id, entry_id=entry_id)
-            )
+            if dev.supports_valve():
+                entities.append(
+                    FreeAtHomeNgValveSensor(dev, hub_device_id=hub_device_id, entry_id=entry_id)
+                )
+        elif isinstance(dev, FahBinarySensor):
+            if dev.supports_dimming_status():
+                entities.append(
+                    FreeAtHomeNgDimmingStatusSensor(
+                        dev, hub_device_id=hub_device_id, entry_id=entry_id
+                    )
+                )
+            if dev.supports_window_position():
+                entities.append(
+                    FreeAtHomeNgWindowPositionSensor(
+                        dev, hub_device_id=hub_device_id, entry_id=entry_id
+                    )
+                )
     return entities
 
 
@@ -208,6 +221,56 @@ class FreeAtHomeNgThermostatTemperatureSensor(FreeAtHomeNgEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return measured thermostat temperature."""
         return self.thermostat_device.current_temperature
+
+
+class FreeAtHomeNgValveSensor(FreeAtHomeNgEntity, SensorEntity):
+    """Valve (heating) demand of a thermostat in percent."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "valve"
+
+    def __init__(
+        self,
+        device: FahThermostat,
+        *,
+        hub_device_id: str | None = None,
+        entry_id: str | None = None,
+    ) -> None:
+        """Initialize the valve sensor."""
+        super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
+        self.thermostat_device = device
+        self._attr_unique_id = f"{device.unique_id}/valve"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the valve demand."""
+        return self.thermostat_device.current_actuator
+
+
+class FreeAtHomeNgWindowPositionSensor(FreeAtHomeNgEntity, SensorEntity):
+    """Enum sensor for the position of a window contact (closed, tilted, open)."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["closed", "tilted", "open"]
+    _attr_translation_key = "window_position"
+
+    def __init__(
+        self,
+        device: FahBinarySensor,
+        *,
+        hub_device_id: str | None = None,
+        entry_id: str | None = None,
+    ) -> None:
+        """Initialize the window position sensor."""
+        super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
+        self.binary_device = device
+        self._attr_unique_id = f"{device.unique_id}/window_position"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the window position."""
+        return self.binary_device.window_position_state
 
 
 class FreeAtHomeNgDimmingStatusSensor(FreeAtHomeNgEntity, SensorEntity):

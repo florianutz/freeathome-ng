@@ -69,10 +69,19 @@ PLATFORMS: list[Platform] = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+# Platforms whose entities come from device models of another kind.
+PLATFORM_DEVICE_KINDS: dict[str, tuple[str, ...]] = {
+    "number": ("thermostat",),
+    "select": ("cover",),
+    "sensor": ("sensor", "thermostat", "binary_sensor"),
+}
 
 
 @dataclass
@@ -261,14 +270,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry)
     async def _on_devices_added(new_devices: list[FahBaseDevice]) -> None:
         new_set = set(new_devices)
         for platform, adder in list(runtime.platform_adders.items()):
-            if platform == "sensor":
-                candidates = (
-                    controller.get_devices("sensor")
-                    + controller.get_devices("thermostat")
-                    + controller.get_devices("binary_sensor")
-                )
-            else:
-                candidates = controller.get_devices(platform)
+            candidates = [
+                dev
+                for kind in PLATFORM_DEVICE_KINDS.get(platform, (platform,))
+                for dev in controller.get_devices(kind)
+            ]
             matching = [dev for dev in candidates if dev in new_set]
             if matching:
                 adder(matching)

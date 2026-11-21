@@ -105,6 +105,14 @@ class FahThermostat(FahBaseDevice):
             or PID_INFO_VALUE_FAN_STAGE in self._datapoints
         )
 
+    def supports_valve(self) -> bool:
+        """Return True if the thermostat reports its valve (heating) demand."""
+        return PID_HEATING_DEMAND in self._datapoints
+
+    def supports_temperature_correction(self) -> bool:
+        """Return True if the temperature correction parameter is available."""
+        return PARAM_TEMPERATURE_CORRECTION in self._parameters
+
     async def turn_on(self) -> None:
         """Turn thermostat on (and disable eco mode if supported)."""
         if PID_ECO_MODE_ON_OFF_REQUEST in self._datapoints:
