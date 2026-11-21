@@ -140,3 +140,83 @@ async def test_channel_devices_are_protected_from_removal(
     )
     assert not await async_remove_config_entry_device(hass, init_integration, present)
     assert await async_remove_config_entry_device(hass, init_integration, stale)
+
+
+async def test_device_removed_on_sysap_is_removed_from_registry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_sysap,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A `devicesRemoved` frame removes the device, its channel devices and entities."""
+    import asyncio
+
+    entry_id = init_integration.entry_id
+    fan_uid = f"{SYSAP_UUID}/ABB700D10005/ch0000"
+    assert entity_registry.async_get_entity_id(Platform.FAN, DOMAIN, fan_uid) is not None
+
+    await mock_sysap.broadcast_ws_frame(
+        {
+            SYSAP_UUID: {
+                "datapoints": {},
+                "devices": {},
+                "devicesAdded": [],
+                "devicesRemoved": ["ABB700D10005"],
+            }
+        }
+    )
+    for _ in range(50):
+        await hass.async_block_till_done()
+        if entity_registry.async_get_entity_id(Platform.FAN, DOMAIN, fan_uid) is None:
+            break
+        await asyncio.sleep(0.02)
+    assert entity_registry.async_get_entity_id(Platform.FAN, DOMAIN, fan_uid) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SYSAP_UUID}_ABB700D10005"), entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{SYSAP_UUID}_ABB700D10005_ch0000"), entry_id
+        )
+        is None
+    )
+
+
+async def test_stale_devices_removed_on_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Devices and channels deleted on the SysAP while HA was down are cleaned up."""
+    mock_config_entry.add_to_hass(hass)
+    entry_id = mock_config_entry.entry_id
+    gone = device_registry.async_get_or_create(
+        config_entry_id=entry_id, identifiers={(DOMAIN, f"{SYSAP_UUID}_GONE00000001")}
+    )
+    kept = device_registry.async_get_or_create(
+        config_entry_id=entry_id, identifiers={(DOMAIN, f"{SYSAP_UUID}_ABB700D10001")}
+    )
+    gone_channel = device_registry.async_get_or_create_child(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, f"{SYSAP_UUID}_ABB700D10001_ch0099")},
+        parent_device_id=kept.id,
+    )
+    # Present in the SysAP configuration, only filtered out (no room): kept.
+    filtered_channel = device_registry.async_get_or_create_child(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, f"{SYSAP_UUID}_ABB700D10001_ch0004")},
+        parent_device_id=kept.id,
+    )
+
+    assert await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(gone.id) is None
+    assert device_registry.async_get(gone_channel.id) is None
+    assert device_registry.async_get(kept.id) is not None
+    assert device_registry.async_get(filtered_channel.id) is not None
+    assert device_registry.async_get_device_by_identifier((DOMAIN, f"hub_{entry_id}"), entry_id)

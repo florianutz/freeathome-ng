@@ -328,6 +328,13 @@ async def test_binary_sensor_dimming_events_cyclic_filter_and_ws_updates(
         assert len(events) == 1  # cyclic duplicate suppressed
 
         # 3. Virtual device command + scene triggered + runtime devicesAdded + devicesRemoved
+        removed_fan = ctrl.get_devices("fan")[0]
+        removed_serials: list[tuple[str, str]] = []
+
+        async def _on_removed(sysap_uuid: str, serial: str) -> None:
+            removed_serials.append((sysap_uuid, serial))
+
+        ctrl.register_devices_removed_cb(_on_removed)
         await ctrl.handle_ws_message(
             {
                 SYSAP_UUID: {
@@ -360,7 +367,12 @@ async def test_binary_sensor_dimming_events_cyclic_filter_and_ws_updates(
         assert len(scene_triggers) == 1
         assert len(added_batches) == 1
         assert added_batches[0][0].serialnumber == "ABB700NEW001"
-        assert ctrl.get_devices("fan")[0].available is False
+        # The removed fan is forgotten (and was marked unavailable on its way out).
+        assert ctrl.get_devices("fan") == []
+        assert removed_fan.available is False
+        assert removed_serials == [(SYSAP_UUID, "ABB700D10005")]
+        assert f"{SYSAP_UUID}_ABB700D10005" not in ctrl.configured_device_keys()
+        assert not any(dev is removed_fan for dev in ctrl.monitored_datapoints.values())
     finally:
         await ctrl.close()
 

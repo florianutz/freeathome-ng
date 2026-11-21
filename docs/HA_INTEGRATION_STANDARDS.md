@@ -30,7 +30,7 @@ Detailed patterns behind the rules in [AGENTS.md](../AGENTS.md). Binding decisio
 - Primary entity of a channel (and of a SysAP function): `name=None`. Secondary entities: `translation_key`, never with the channel name as placeholder.
 - Entities are built from `EntityDescription` tables per platform; the description chooses `device_class`, `state_class`, `entity_category`, `entity_registry_enabled_default` and the value accessor.
 - `unique_id` stays `{sysap_uuid}/{serial}/{channel_id}` plus a suffix (`/{dp_id}`, `/current_temperature`, `/dimming_status`) for secondary entities.
-- Stale devices: when the SysAP reports `devicesRemoved`, or a device disappears in a resync, remove it from the device registry (`async_update_device(..., remove_config_entry_id=...)`).
+- Stale devices: when the SysAP reports `devicesRemoved`, the controller forgets the device and the HA layer removes it (`device_layout.async_remove_physical_device`, which takes channel devices and entities along). On setup, `async_remove_stale_devices` removes devices and channels that are missing from the SysAP configuration; devices only filtered out by options (for example channels without a room) are kept, so user metadata survives toggling an option.
 
 ## 3. API layer & WebSocket
 
@@ -50,7 +50,7 @@ Detailed patterns behind the rules in [AGENTS.md](../AGENTS.md). Binding decisio
 ## 5. Diagnostics & repairs
 
 - Config entry and device diagnostics run everything through `async_redact_data`. Redact: credentials, JID, serial numbers, SysAP UUID, host, geo coordinates.
-- Repair issues (`issue_registry.async_create_issue`, translated under `issues`) only for problems the user must act on, for example: legacy `freeathome` entry still loaded after cutover, SysAP firmware below 2.6.0, Local API disabled. Delete the issue once resolved.
+- Repair issues (`issue_registry.async_create_issue`, translated under `issues`) only for persistent problems the user must act on outside the existing flows, and deleted once resolved. Today there is none (`repair-issues: exempt`): credentials go through reauth, connection problems through setup retry with a translated error.
 
 ## 6. Domain isolation & legacy migration
 

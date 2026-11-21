@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Device names no longer contain the serial number; it is shown as the device's serial number instead.
 - Icons come from icon translations (`icons.json`), including icons for every action and for each dimmer status state. Sensors with a device class now show Home Assistant's own icon for it (for example the battery level icon follows the charge).
 - Timer program switches are shown as configuration entities.
+- Devices deleted on the SysAP are removed from Home Assistant, together with their channel devices and entities, both at runtime and on startup. Devices that are only hidden by an option (for example channels without a room) are kept.
 - New installations start with the Beaufort wind force sensor disabled, as it duplicates the wind speed. Existing installations are unchanged.
 - Actions are registered when Home Assistant starts, not when a SysAP loads, so automations that use them validate even while the SysAP is offline.
 - Error messages from setup, actions and the legacy migration are translated, and a command the SysAP rejects now shows a clear error instead of a raw exception.

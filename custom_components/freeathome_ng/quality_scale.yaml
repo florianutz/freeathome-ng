@@ -74,11 +74,17 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: todo
-    comment: Candidates are legacy entry still active after cutover, SysAP firmware below 2.6, Local API disabled (AP5).
+    status: exempt
+    comment: >-
+      No persistent problem the user must fix outside the existing flows. Rejected credentials
+      start reauthentication; an unreachable SysAP, a disabled Local API or firmware below 2.6
+      fail setup with a translated error and retry; the legacy entry is removed by the cutover
+      itself, and running both integrations side by side is supported.
   stale-devices:
-    status: todo
-    comment: devicesRemoved only marks devices unavailable; remove them from the device registry (AP5).
+    status: done
+    comment: >-
+      devicesRemoved frames remove the device with its channel devices and entities; on setup,
+      devices and channels missing from the SysAP configuration are removed.
 
   # Platinum
   async-dependency: done
