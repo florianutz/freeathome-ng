@@ -17,9 +17,7 @@ rules:
     comment: README has no removal section (AP7).
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: todo
-    comment: Only sensor.py uses has_entity_name; channel devices per ADR-001 (AP4).
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -71,9 +69,7 @@ rules:
   entity-disabled-by-default:
     status: todo
     comment: No entity is disabled by default (AP4).
-  entity-translations:
-    status: todo
-    comment: Only sensors use translation_key (AP4).
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: todo

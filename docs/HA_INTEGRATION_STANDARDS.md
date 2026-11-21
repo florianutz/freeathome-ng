@@ -1,6 +1,6 @@
 # free@home NG — Integration Standards & Patterns
 
-Detailed patterns behind the rules in [AGENTS.md](../AGENTS.md). Binding decisions are in [DECISIONS.md](DECISIONS.md). Minimum Home Assistant version: **2026.8.0**.
+Detailed patterns behind the rules in [AGENTS.md](../AGENTS.md). Binding decisions are in [DECISIONS.md](DECISIONS.md). Minimum Home Assistant version: **2026.9.0**.
 
 ---
 
@@ -22,10 +22,12 @@ Detailed patterns behind the rules in [AGENTS.md](../AGENTS.md). Binding decisio
 | Level | Identifier | Name / area | Linked via |
 |---|---|---|---|
 | SysAP hub | `hub_{entry_id}` | `sysapName` | — |
-| Physical device | `{sysap_uuid}_{serial}` | device `displayName`, model, firmware | hub |
-| Channel device | `{sysap_uuid}_{serial}_{channel_id}` | channel `displayName`, channel room as `suggested_area` | physical device |
+| Physical device | `{sysap_uuid}_{serial}` | device `displayName`, model, firmware, `serial_number`; device room as `suggested_area` | hub (`via_device_id`) |
+| Channel device (HA child device) | `{sysap_uuid}_{serial}_{channel_id}` | channel `displayName`; own area only if the channel's room differs from the device's room, otherwise inherited | physical device (`parent_device_id`) |
+| SysAP function (scene, group, timer program: `FFFF…` serial) | `{sysap_uuid}_{serial}` | function name and room | hub (`via_device_id`) |
 
-- Primary entity of a channel: `name=None`. Secondary entities: `translation_key` (+ placeholders only where unavoidable).
+- The layout lives in `device_layout.py`; `FreeAtHomeNgEntity.device_info` resolves it when the entity is added (the physical device is registered first, as child devices require).
+- Primary entity of a channel (and of a SysAP function): `name=None`. Secondary entities: `translation_key`, never with the channel name as placeholder.
 - Entities are built from `EntityDescription` tables per platform; the description chooses `device_class`, `state_class`, `entity_category`, `entity_registry_enabled_default` and the value accessor.
 - `unique_id` stays `{sysap_uuid}/{serial}/{channel_id}` plus a suffix (`/{dp_id}`, `/current_temperature`, `/dimming_status`) for secondary entities.
 - Stale devices: when the SysAP reports `devicesRemoved`, or a device disappears in a resync, remove it from the device registry (`async_update_device(..., remove_config_entry_id=...)`).
@@ -57,7 +59,7 @@ Detailed patterns behind the rules in [AGENTS.md](../AGENTS.md). Binding decisio
   - `dry_run=True` is strictly read-only and returns deterministic mappings (`("freeathome", serial)` → NG identifiers; legacy `<serial>/<ch>` and `<sysap_id>/FFFF.../<ch>` unique IDs → `{sysap_uuid}/...`), `switch_as_x` parity checks, conflicts and warnings.
   - Side-by-side sync (`cutover=False`) copies device `name_by_user`, `area_id`, labels and entity metadata/Assist options without touching the legacy entry; `serialnumbers` filtering is allowed.
   - Cutover aborts before deleting anything if no matching NG entities exist, blocks partial cutover with `serialnumbers`, sets `runtime.suppress_reload = True`, removes the legacy entry and orphaned legacy entities, copies only user-set `disabled_by`/`hidden_by`, renames NG entities onto the original `entity_id`s and applies entity registry options **after** renaming.
-  - With channel devices (ADR-001), legacy device metadata is applied to the matching channel devices.
+  - With channel devices (ADR-001), legacy device metadata is applied to the physical device; channel devices without an area of their own inherit its area.
 
 ## 7. Packaging (Hassfest, HACS / Marketplace)
 

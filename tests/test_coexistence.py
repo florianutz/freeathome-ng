@@ -66,7 +66,7 @@ def test_manifest_and_hacs_metadata() -> None:
     assert manifest["config_flow"] is True
     assert manifest["version"] == pyproject["project"]["version"]
     assert hacs["render_readme"] is True
-    assert hacs["homeassistant"] == "2026.8.0"
+    assert hacs["homeassistant"] == "2026.9.0"
 
     for png in ("icon.png", "icon@2x.png", "logo.png", "logo@2x.png"):
         path = COMP_DIR / "brand" / png
@@ -112,11 +112,11 @@ def test_translations_and_services_yaml_valid() -> None:
         assert "services" in data
 
         sensor_trans = data["entity"]["sensor"]
-        assert "{channel_id}" in sensor_trans["dimming_status"]["name"]
-        assert "{channel_name}" in sensor_trans["thermostat_temperature"]["name"]
-        for sensor_type in SENSOR_TYPES:
+        # ADR-001: entity names never repeat the channel name, which comes from the
+        # channel device, so translations carry no name placeholders.
+        for sensor_type in (*SENSOR_TYPES, "dimming_status", "thermostat_temperature"):
             assert sensor_type in sensor_trans
-            assert "{channel_name}" in sensor_trans[sensor_type]["name"]
+            assert "{" not in sensor_trans[sensor_type]["name"]
 
         for svc_name, svc_def in services.items():
             assert svc_name in data["services"]

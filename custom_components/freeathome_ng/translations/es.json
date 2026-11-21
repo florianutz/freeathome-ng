@@ -126,7 +126,7 @@
   "entity": {
     "sensor": {
       "dimming_status": {
-        "name": "Estado regulador {channel_id}",
+        "name": "Estado regulador",
         "state": {
           "not_pressed": "Sin pulsar",
           "pressed_up": "Pulsación superior",
@@ -136,61 +136,61 @@
         }
       },
       "temperature": {
-        "name": "{channel_name} Temperatura"
+        "name": "Temperatura"
       },
       "thermostat_temperature": {
-        "name": "{channel_name} Temperatura"
+        "name": "Temperatura"
       },
       "windstrength": {
-        "name": "{channel_name} Velocidad del viento"
+        "name": "Velocidad del viento"
       },
       "windforce": {
-        "name": "{channel_name} Fuerza del viento"
+        "name": "Fuerza del viento"
       },
       "rain": {
-        "name": "{channel_name} Lluvia"
+        "name": "Lluvia"
       },
       "lux": {
-        "name": "{channel_name} Iluminancia"
+        "name": "Iluminancia"
       },
       "valve_volume_flow": {
-        "name": "{channel_name} Apertura de válvula"
+        "name": "Apertura de válvula"
       },
       "humidity": {
-        "name": "{channel_name} Humedad"
+        "name": "Humedad"
       },
       "co2": {
-        "name": "{channel_name} CO2"
+        "name": "CO2"
       },
       "voc": {
-        "name": "{channel_name} COV"
+        "name": "COV"
       },
       "pv_power": {
-        "name": "{channel_name} Potencia FV"
+        "name": "Potencia FV"
       },
       "battery_power": {
-        "name": "{channel_name} Potencia batería"
+        "name": "Potencia batería"
       },
       "battery_soc": {
-        "name": "{channel_name} Nivel batería"
+        "name": "Nivel batería"
       },
       "grid_power": {
-        "name": "{channel_name} Potencia red"
+        "name": "Potencia red"
       },
       "home_power": {
-        "name": "{channel_name} Consumo hogar"
+        "name": "Consumo hogar"
       },
       "consumed_energy": {
-        "name": "{channel_name} Energía consumida"
+        "name": "Energía consumida"
       },
       "injected_energy": {
-        "name": "{channel_name} Energía inyectada"
+        "name": "Energía inyectada"
       },
       "self_consumption": {
-        "name": "{channel_name} Autoconsumo"
+        "name": "Autoconsumo"
       },
       "self_sufficiency": {
-        "name": "{channel_name} Autosuficiencia"
+        "name": "Autosuficiencia"
       }
     }
   },

@@ -51,6 +51,7 @@ from .const import (
     EVENT_SCENE_TRIGGERED,
     EVENT_VIRTUAL_DEVICE_COMMAND,
 )
+from .device_layout import active_identifiers
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -292,12 +293,10 @@ async def async_remove_config_entry_device(
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Allow deleting a device from HA only if it is no longer on this SysAP."""
-    active_identifiers: set[tuple[str, str]] = {(DOMAIN, f"hub_{config_entry.entry_id}")}
     runtime = getattr(config_entry, "runtime_data", None)
-    if runtime is not None:
-        for dev in runtime.controller.devices:
-            active_identifiers.add((DOMAIN, f"{dev.sysap_uuid}_{dev.serialnumber}"))
-    return not any(ident in active_identifiers for ident in device_entry.identifiers)
+    devices = runtime.controller.devices if runtime is not None else []
+    in_use = active_identifiers(config_entry.entry_id, devices)
+    return not any(ident in in_use for ident in device_entry.identifiers)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FreeAtHomeNgConfigEntry) -> bool:

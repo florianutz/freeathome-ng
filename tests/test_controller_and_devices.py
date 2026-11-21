@@ -511,7 +511,8 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
         rt = ctrl.get_devices("climate")[0]
         assert isinstance(rt, FahThermostat)
         assert rt.name == "Office RT"
-        assert rt.device_info["name"] == "Office RT (ABB700RT36)"
+        assert rt.device_info["name"] == "Office RT"
+        assert rt.device_info["serial_number"] == "ABB700RT36"
         assert rt.device_info["model"] == "Room temperature controller"
         assert rt.temperature_correction == -1.5
 
@@ -523,7 +524,6 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
         rt_temp_sensor = FreeAtHomeNgThermostatTemperatureSensor(rt)
         assert "_attr_name" not in rt_temp_sensor.__dict__
         assert rt_temp_sensor._attr_translation_key == "thermostat_temperature"
-        assert rt_temp_sensor._attr_translation_placeholders == {"channel_name": "Office RT"}
 
         valve_dev = FahSensor(
             ctrl,
@@ -537,7 +537,6 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
         ha_valve_sensor = FreeAtHomeNgSensor(valve_dev)
         assert "_attr_name" not in ha_valve_sensor.__dict__
         assert ha_valve_sensor._attr_translation_key == "valve_volume_flow"
-        assert ha_valve_sensor._attr_translation_placeholders == {"channel_name": "Office Valve"}
 
         client.set_datapoint = AsyncMock()  # type: ignore[method-assign]
         switches = {(s.serialnumber, s.channel_id): s for s in ctrl.get_devices("switch")}

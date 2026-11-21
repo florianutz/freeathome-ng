@@ -126,7 +126,7 @@
   "entity": {
     "sensor": {
       "dimming_status": {
-        "name": "Dimmer status {channel_id}",
+        "name": "Dimmer status",
         "state": {
           "not_pressed": "Not pressed",
           "pressed_up": "Upper rocker pressed",
@@ -136,61 +136,61 @@
         }
       },
       "temperature": {
-        "name": "{channel_name} Temperature"
+        "name": "Temperature"
       },
       "thermostat_temperature": {
-        "name": "{channel_name} Temperature"
+        "name": "Temperature"
       },
       "windstrength": {
-        "name": "{channel_name} Wind speed"
+        "name": "Wind speed"
       },
       "windforce": {
-        "name": "{channel_name} Wind force"
+        "name": "Wind force"
       },
       "rain": {
-        "name": "{channel_name} Rain"
+        "name": "Rain"
       },
       "lux": {
-        "name": "{channel_name} Illuminance"
+        "name": "Illuminance"
       },
       "valve_volume_flow": {
-        "name": "{channel_name} Valve opening"
+        "name": "Valve opening"
       },
       "humidity": {
-        "name": "{channel_name} Humidity"
+        "name": "Humidity"
       },
       "co2": {
-        "name": "{channel_name} CO2"
+        "name": "CO2"
       },
       "voc": {
-        "name": "{channel_name} VOC"
+        "name": "VOC"
       },
       "pv_power": {
-        "name": "{channel_name} PV power"
+        "name": "PV power"
       },
       "battery_power": {
-        "name": "{channel_name} Battery power"
+        "name": "Battery power"
       },
       "battery_soc": {
-        "name": "{channel_name} Battery level"
+        "name": "Battery level"
       },
       "grid_power": {
-        "name": "{channel_name} Grid power"
+        "name": "Grid power"
       },
       "home_power": {
-        "name": "{channel_name} Home consumption"
+        "name": "Home consumption"
       },
       "consumed_energy": {
-        "name": "{channel_name} Consumed energy"
+        "name": "Consumed energy"
       },
       "injected_energy": {
-        "name": "{channel_name} Injected energy"
+        "name": "Injected energy"
       },
       "self_consumption": {
-        "name": "{channel_name} Self-consumption"
+        "name": "Self-consumption"
       },
       "self_sufficiency": {
-        "name": "{channel_name} Self-sufficiency"
+        "name": "Self-sufficiency"
       }
     }
   },

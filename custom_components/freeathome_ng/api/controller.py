@@ -359,7 +359,8 @@ class FreeAtHomeController:
 
             device_info: dict[str, Any] = {
                 "identifiers": {(DOMAIN, f"{sysap_uuid}_{serialnumber}")},
-                "name": f"{self.name_prefix}{device_label} ({serialnumber})",
+                "name": f"{self.name_prefix}{device_label}",
+                "serial_number": serialnumber,
                 "manufacturer": "ABB / Busch-Jaeger",
                 "model": model_name,
                 "configuration_url": self.client.base_http_url,
@@ -425,11 +426,10 @@ class FreeAtHomeController:
                     channel_display_name or device_display_name or f"{serialnumber}/{channel_id}"
                 )
 
+                room_name = floorplan.get(floor_id, {}).get(room_id) if room_id else None
                 room_suffix = ""
-                if self.use_room_names and floor_id and room_id:
-                    room_name = floorplan.get(floor_id, {}).get(room_id)
-                    if room_name:
-                        room_suffix = f" ({room_name})"
+                if self.use_room_names and floor_id and room_name:
+                    room_suffix = f" ({room_name})"
 
                 name_id = parse_hex_id(channel_data.get("nameId"))
                 position_suffix = (
@@ -437,19 +437,20 @@ class FreeAtHomeController:
                 )
                 full_name = f"{self.name_prefix}{base_name}{position_suffix}{room_suffix}"
 
-                created.extend(
-                    self._create_channel_devices(
-                        sysap_uuid=sysap_uuid,
-                        serialnumber=serialnumber,
-                        channel_id=channel_id,
-                        channel_data=channel_data,
-                        function_id=function_id,
-                        display_name=full_name,
-                        device_info=device_info,
-                        is_virtual=is_virtual,
-                        initializing=initializing,
-                    )
+                channel_devices = self._create_channel_devices(
+                    sysap_uuid=sysap_uuid,
+                    serialnumber=serialnumber,
+                    channel_id=channel_id,
+                    channel_data=channel_data,
+                    function_id=function_id,
+                    display_name=full_name,
+                    device_info=device_info,
+                    is_virtual=is_virtual,
+                    initializing=initializing,
                 )
+                for channel_device in channel_devices:
+                    channel_device.room_name = room_name or None
+                created.extend(channel_devices)
 
         return created
 

@@ -126,7 +126,7 @@
   "entity": {
     "sensor": {
       "dimming_status": {
-        "name": "Dimmerstatus {channel_id}",
+        "name": "Dimmerstatus",
         "state": {
           "not_pressed": "Niet ingedrukt",
           "pressed_up": "Bovenste knop ingedrukt",
@@ -136,61 +136,61 @@
         }
       },
       "temperature": {
-        "name": "{channel_name} Temperatuur"
+        "name": "Temperatuur"
       },
       "thermostat_temperature": {
-        "name": "{channel_name} Temperatuur"
+        "name": "Temperatuur"
       },
       "windstrength": {
-        "name": "{channel_name} Windsnelheid"
+        "name": "Windsnelheid"
       },
       "windforce": {
-        "name": "{channel_name} Windkracht"
+        "name": "Windkracht"
       },
       "rain": {
-        "name": "{channel_name} Regen"
+        "name": "Regen"
       },
       "lux": {
-        "name": "{channel_name} Verlichtingssterkte"
+        "name": "Verlichtingssterkte"
       },
       "valve_volume_flow": {
-        "name": "{channel_name} Klepstand"
+        "name": "Klepstand"
       },
       "humidity": {
-        "name": "{channel_name} Luchtvochtigheid"
+        "name": "Luchtvochtigheid"
       },
       "co2": {
-        "name": "{channel_name} CO2"
+        "name": "CO2"
       },
       "voc": {
-        "name": "{channel_name} VOC"
+        "name": "VOC"
       },
       "pv_power": {
-        "name": "{channel_name} PV-vermogen"
+        "name": "PV-vermogen"
       },
       "battery_power": {
-        "name": "{channel_name} Batterijvermogen"
+        "name": "Batterijvermogen"
       },
       "battery_soc": {
-        "name": "{channel_name} Batterijniveau"
+        "name": "Batterijniveau"
       },
       "grid_power": {
-        "name": "{channel_name} Netvermogen"
+        "name": "Netvermogen"
       },
       "home_power": {
-        "name": "{channel_name} Huisverbruik"
+        "name": "Huisverbruik"
       },
       "consumed_energy": {
-        "name": "{channel_name} Afgenomen energie"
+        "name": "Afgenomen energie"
       },
       "injected_energy": {
-        "name": "{channel_name} Teruggeleverde energie"
+        "name": "Teruggeleverde energie"
       },
       "self_consumption": {
-        "name": "{channel_name} Eigen verbruik"
+        "name": "Eigen verbruik"
       },
       "self_sufficiency": {
-        "name": "{channel_name} Zelfvoorzienendheid"
+        "name": "Zelfvoorzienendheid"
       }
     }
   },
