@@ -188,3 +188,32 @@ async def test_dynamic_device_added(
             return
         await asyncio.sleep(0.02)
     raise AssertionError("dynamically added device produced no entity")
+
+
+async def test_rarely_used_sensor_disabled_by_default(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The Beaufort wind force duplicates the wind speed and starts disabled."""
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{SYSAP_UUID}/ABB700D10009/ch0001/odp0001"
+    )
+    assert entity_id is not None
+    entry = entity_registry.async_get(entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
+
+
+async def test_timer_program_is_config_entity(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Timer program switches configure the system and are config entities."""
+    from homeassistant.const import EntityCategory
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{SYSAP_UUID}/FFFF4A000001/ch0000"
+    )
+    assert entity_registry.async_get(entity_id).entity_category is EntityCategory.CONFIG

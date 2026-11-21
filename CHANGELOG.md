@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every free@home channel is now its own device below its physical device, named like the channel. A channel in another room than its actuator (for example one gang of a multi-gang switch actuator) gets that room as its area; channels in the same room keep using the area of the physical device, including areas you assigned yourself. Scenes, groups and timer programs stay single devices.
 - Entities use Home Assistant's entity naming: the main entity of a channel is named after the channel device, other entities add a translated suffix (for example "Temperature"). Entity IDs of existing installations stay the same, and so do the names of main entities. The dimmer status sensor drops the channel number from its name ("Wall Rocker LT Dimmer status" instead of "Dimmer status ch0000").
 - Device names no longer contain the serial number; it is shown as the device's serial number instead.
+- Icons come from icon translations (`icons.json`), including icons for every action and for each dimmer status state. Sensors with a device class now show Home Assistant's own icon for it (for example the battery level icon follows the charge).
+- Timer program switches are shown as configuration entities.
+- New installations start with the Beaufort wind force sensor disabled, as it duplicates the wind speed. Existing installations are unchanged.
 - Actions are registered when Home Assistant starts, not when a SysAP loads, so automations that use them validate even while the SysAP is offline.
 - Error messages from setup, actions and the legacy migration are translated, and a command the SysAP rejects now shows a clear error instead of a raw exception.
 - WebSocket reconnects use randomised backoff, and unloading the integration now stops every background task cleanly.

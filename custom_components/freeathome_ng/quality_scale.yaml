@@ -63,17 +63,15 @@ rules:
     comment: AP7.
   dynamic-devices: done
   entity-category:
-    status: todo
-    comment: No entity sets entity_category (AP4).
+    status: done
+    comment: Timer program switches are config entities; no other entity is configuration or diagnostics.
   entity-device-class: done
   entity-disabled-by-default:
-    status: todo
-    comment: No entity is disabled by default (AP4).
+    status: done
+    comment: The Beaufort wind force (duplicate of wind speed) starts disabled.
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: todo
-    comment: icons.json does not exist yet (AP4).
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: todo

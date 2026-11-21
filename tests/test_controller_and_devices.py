@@ -506,7 +506,7 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
         # Dimming status sensor relies on translation_key rather than _attr_name
         dim_sensor = FreeAtHomeNgDimmingStatusSensor(ch0)  # type: ignore[arg-type]
         assert "_attr_name" not in dim_sensor.__dict__
-        assert dim_sensor._attr_translation_key == "dimming_status"
+        assert dim_sensor.translation_key == "dimming_status"
 
         rt = ctrl.get_devices("climate")[0]
         assert isinstance(rt, FahThermostat)
@@ -523,7 +523,7 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
 
         rt_temp_sensor = FreeAtHomeNgThermostatTemperatureSensor(rt)
         assert "_attr_name" not in rt_temp_sensor.__dict__
-        assert rt_temp_sensor._attr_translation_key == "thermostat_temperature"
+        assert rt_temp_sensor.translation_key == "thermostat_temperature"
 
         valve_dev = FahSensor(
             ctrl,
@@ -536,7 +536,7 @@ async def test_sysap_36_parameters_empty_values_names_and_dimming_status() -> No
         )
         ha_valve_sensor = FreeAtHomeNgSensor(valve_dev)
         assert "_attr_name" not in ha_valve_sensor.__dict__
-        assert ha_valve_sensor._attr_translation_key == "valve_volume_flow"
+        assert ha_valve_sensor.translation_key == "valve_volume_flow"
 
         client.set_datapoint = AsyncMock()  # type: ignore[method-assign]
         switches = {(s.serialnumber, s.channel_id): s for s in ctrl.get_devices("switch")}
