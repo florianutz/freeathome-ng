@@ -6,17 +6,11 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-
-try:
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-except ImportError:  # pragma: no cover - fallback for older HA typing
-    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
-        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
-    )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.switch import FahSwitch
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -74,11 +68,13 @@ class FreeAtHomeNgSwitch(FreeAtHomeNgEntity, SwitchEntity):
         """Return True if the switch is on."""
         return self.switch_device.is_on()
 
+    @api_action
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.switch_device.turn_on()
         self.async_write_ha_state()
 
+    @api_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.switch_device.turn_off()

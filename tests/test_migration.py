@@ -525,7 +525,7 @@ async def test_selective_serialnumbers_filter_and_partial_cutover_guard(
     assert env.dev_reg.async_get(env.devices["ng_rt"]).area_id is None
     assert "sensor" not in env.ent_reg.async_get("sensor.ng_bad_rt_temp").options
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc:
         await async_migrate_from_legacy(
             hass,
             env.hub_entry,
@@ -533,7 +533,31 @@ async def test_selective_serialnumbers_filter_and_partial_cutover_guard(
             cutover=True,
             serialnumbers_filter={"ABB700DA1DDF"},
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "partial_cutover_not_supported"
     assert _legacy_entries(hass) == [env.legacy_entry.entry_id]
+
+
+async def test_migration_validation_errors_are_translated(hass: HomeAssistant) -> None:
+    """Unloaded hubs and ambiguous legacy entries raise translated errors without writes."""
+    unloaded = MockConfigEntry(domain=DOMAIN, unique_id="ABB700000009")
+    unloaded.add_to_hass(hass)
+    with pytest.raises(ServiceValidationError) as exc:
+        await async_migrate_from_legacy(hass, unloaded, dry_run=True)
+    assert exc.value.translation_key == "entry_not_loaded"
+    assert exc.value.translation_placeholders == {"entry_id": unloaded.entry_id}
+
+    env = _build_env(hass)
+    hass.config_entries.async_update_entry(
+        env.legacy_entry, unique_id="ABB700111111", data={CONF_HOST: "10.0.0.1"}
+    )
+    MockConfigEntry(
+        domain=LEGACY_DOMAIN, unique_id="ABB700222222", data={CONF_HOST: "10.0.0.2"}
+    ).add_to_hass(hass)
+    with pytest.raises(ServiceValidationError) as exc:
+        await async_migrate_from_legacy(hass, env.hub_entry, dry_run=False, cutover=True)
+    assert exc.value.translation_key == "legacy_entry_ambiguous"
+    assert len(_legacy_entries(hass)) == 2
 
 
 async def test_device_metadata_updates_use_current_registry_api(hass: HomeAssistant) -> None:

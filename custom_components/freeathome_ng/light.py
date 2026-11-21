@@ -12,17 +12,11 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
-
-try:
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-except ImportError:  # pragma: no cover - fallback for older HA typing
-    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
-        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
-    )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.light import FahLight
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -125,6 +119,7 @@ class FreeAtHomeNgLight(FreeAtHomeNgEntity, LightEntity):
         """Return current RGB tuple."""
         return self.light_device.get_rgb_color()
 
+    @api_action
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
@@ -140,6 +135,7 @@ class FreeAtHomeNgLight(FreeAtHomeNgEntity, LightEntity):
         await self.light_device.turn_on()
         self.async_write_ha_state()
 
+    @api_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.light_device.turn_off()

@@ -404,3 +404,28 @@ async def test_mock_sysap_server_health_and_ws_broadcast() -> None:
     finally:
         await controller.close()
         await server.stop()
+
+
+def test_reconnect_delay_has_bounded_jitter() -> None:
+    """Reconnect delays get up to 25 % jitter and never shrink below the base delay."""
+    from custom_components.freeathome_ng.api.client import _with_jitter
+
+    delays = {_with_jitter(8.0) for _ in range(200)}
+    assert all(8.0 <= d <= 10.0 for d in delays)
+    assert len(delays) > 1
+
+
+async def test_close_awaits_cancelled_background_tasks() -> None:
+    """`close()` cancels and awaits the WebSocket task, leaving nothing pending."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        unused_port = sock.getsockname()[1]
+    client = FreeAtHomeLocalApiClient(f"127.0.0.1:{unused_port}", "apiuser", "secret")
+
+    async def _noop(_msg: dict) -> None:
+        return None
+
+    task = client.start_websocket_listener(_noop)
+    await asyncio.sleep(0.01)
+    await client.close()
+    assert task.done()

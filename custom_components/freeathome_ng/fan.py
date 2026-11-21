@@ -6,17 +6,11 @@ from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-
-try:
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-except ImportError:  # pragma: no cover - fallback for older HA typing
-    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
-        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
-    )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.fan import FahFan
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -89,6 +83,7 @@ class FreeAtHomeNgFan(FreeAtHomeNgEntity, FanEntity):
         """Return current fan speed percentage (0..100)."""
         return self.fan_device.percentage
 
+    @api_action
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -99,11 +94,13 @@ class FreeAtHomeNgFan(FreeAtHomeNgEntity, FanEntity):
         await self.fan_device.turn_on(percentage=percentage)
         self.async_write_ha_state()
 
+    @api_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.fan_device.turn_off()
         self.async_write_ha_state()
 
+    @api_action
     async def async_set_percentage(self, percentage: int) -> None:
         """Set fan speed percentage."""
         await self.fan_device.set_percentage(percentage)

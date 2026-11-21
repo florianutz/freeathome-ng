@@ -4,28 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
-
-try:
-    from homeassistant.components.diagnostics import async_redact_data
-except ImportError:  # pragma: no cover - fallback for lightweight test environments
-
-    def async_redact_data(data: Any, to_redact: set[str]) -> Any:
-        """Recursively redact sensitive keys from nested mappings/lists."""
-        if isinstance(data, dict):
-            return {
-                k: "**REDACTED**" if k in to_redact else async_redact_data(v, to_redact)
-                for k, v in data.items()
-            }
-        if isinstance(data, list):
-            return [async_redact_data(item, to_redact) for item in data]
-        return data
-
 
 TO_REDACT = {
     CONF_PASSWORD,

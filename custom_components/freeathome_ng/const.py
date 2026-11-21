@@ -462,3 +462,6 @@ DEVICE_ID_TO_MODEL: dict[str, str] = {
     "B008": "Sensor/switch actuator 8/8-gang, MDRC",
     "FFFF": "System Access Point",
 }
+
+SERVICE_COVER_FORCE_POSITION = "cover_force_position"
+SERVICE_THERMOSTAT_TEMPERATURE_CORRECTION = "thermostat_temperature_correction"

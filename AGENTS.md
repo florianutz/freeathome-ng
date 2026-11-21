@@ -25,8 +25,8 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 2. **Data flow.** `client` (REST + WebSocket) → `controller` (configuration model, datapoint routing, `devicesAdded`/`devicesRemoved`) → device models → callbacks → HA entities. Entities never call REST directly; they call device-model methods.
 3. **One config entry per SysAP** (`integration_type: hub`), typed `entry.runtime_data` (`FreeAtHomeNgConfigEntry = ConfigEntry[FreeAtHomeNgRuntime]`). No state in `hass.data`.
 4. **Device model** ([ADR-001](docs/DECISIONS.md)): SysAP hub device → physical device → one channel device per free@home channel. Devices are discovered from the SysAP; never add manual subentries for bus devices.
-5. **Services** are registered once in `async_setup` and target an entry via `config_entry_id`. They never fall back silently to another SysAP.
-6. **WebSocket lifecycle:** reconnect with capped exponential backoff and jitter, full configuration resync after every reconnect, one `WARNING` on loss, `DEBUG` for retries, one `INFO` on recovery. Every background task is cancelled in `async_unload_entry`.
+5. **Services** (domain and entity actions) are registered once in `async_setup` (`services.py`) and target an entry via `config_entry_id` (legacy: `host`). Writing actions need exactly one target and never fall back silently to another SysAP; read-only actions may cover all loaded SysAPs.
+6. **WebSocket lifecycle:** reconnect with capped exponential backoff and jitter, full configuration resync after every reconnect, one `WARNING` on loss, `DEBUG` for retries, one `INFO` on recovery. The WebSocket runs as `entry.async_create_background_task(controller.listen())`; every other task is tracked and cancelled and awaited in `controller.close()` on unload.
 
 ## 4. Coding standards
 
@@ -40,7 +40,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
   - `PARALLEL_UPDATES = 0` on every platform (push-only).
   - `extra_state_attributes` only for small user-relevant values; never raw SysAP configuration or frames (use diagnostics).
   - Availability follows both the WebSocket connection and the device's own reachability.
-- **Errors:** user-facing exceptions (`HomeAssistantError`, `ServiceValidationError`, `ConfigEntryNotReady`, `ConfigEntryAuthFailed`) use `translation_domain=DOMAIN` + `translation_key`; texts live in `strings.json` → `exceptions`. Catch `api/` exceptions at the HA boundary and re-raise as HA exceptions.
+- **Errors:** user-facing exceptions (`HomeAssistantError`, `ServiceValidationError`, `ConfigEntryNotReady`, `ConfigEntryAuthFailed`) use `translation_domain=DOMAIN` + `translation_key`; texts live in `strings.json` → `exceptions`. Catch `api/` exceptions at the HA boundary and re-raise as HA exceptions: entity actions use the `@api_action` decorator (`entity.py`), domain actions `_api_errors` (`services.py`).
 - **Config flow:** unique ID = SysAP serial; every field has `data_description`; specific errors (`cannot_connect`, `invalid_auth`, `unknown`); reauth and reconfigure use `async_update_reload_and_abort` / `async_update_and_abort`.
 - **Repairs:** use `issue_registry` for actionable problems the user must fix (not for transient errors).
 - **Diagnostics:** everything through `async_redact_data`; redact credentials, serials, JIDs, UUIDs, host and geo data.

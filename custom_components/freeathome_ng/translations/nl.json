@@ -14,6 +14,17 @@
           "use_https": "HTTPS / WSS gebruiken",
           "verify_ssl": "SSL-certificaat verifiëren",
           "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam van het System Access Point, eventueel met poort.",
+          "username": "Gebruiker van de lokale API, te vinden in de free@home-app onder Instellingen > Lokale API.",
+          "password": "Wachtwoord van de gebruiker van de lokale API.",
+          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
+          "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
+          "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
+          "verify_ssl": "Controleert het certificaat van de SysAP. Zet dit uit voor het zelfondertekende certificaat van de meeste SysAP's.",
+          "include_orphan_channels": "Maakt ook entiteiten aan voor kanalen zonder ruimte in free@home."
         }
       },
       "link": {
@@ -28,6 +39,16 @@
           "use_https": "HTTPS / WSS gebruiken",
           "verify_ssl": "SSL-certificaat verifiëren",
           "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        },
+        "data_description": {
+          "username": "Gebruiker van de lokale API, te vinden in de free@home-app onder Instellingen > Lokale API.",
+          "password": "Wachtwoord van de gebruiker van de lokale API.",
+          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
+          "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
+          "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
+          "verify_ssl": "Controleert het certificaat van de SysAP. Zet dit uit voor het zelfondertekende certificaat van de meeste SysAP's.",
+          "include_orphan_channels": "Maakt ook entiteiten aan voor kanalen zonder ruimte in free@home."
         }
       },
       "reauth_confirm": {
@@ -36,6 +57,10 @@
         "data": {
           "username": "Lokale API gebruikersnaam",
           "password": "Wachtwoord"
+        },
+        "data_description": {
+          "username": "Gebruiker van de lokale API, te vinden in de free@home-app onder Instellingen > Lokale API.",
+          "password": "Wachtwoord van de gebruiker van de lokale API."
         }
       },
       "reconfigure": {
@@ -48,6 +73,15 @@
           "use_https": "HTTPS / WSS gebruiken",
           "verify_ssl": "SSL-certificaat verifiëren",
           "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam van het System Access Point, eventueel met poort.",
+          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
+          "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
+          "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
+          "verify_ssl": "Controleert het certificaat van de SysAP. Zet dit uit voor het zelfondertekende certificaat van de meeste SysAP's.",
+          "include_orphan_channels": "Maakt ook entiteiten aan voor kanalen zonder ruimte in free@home."
         }
       }
     },
@@ -77,6 +111,14 @@
           "use_https": "HTTPS / WSS gebruiken",
           "verify_ssl": "SSL-certificaat verifiëren",
           "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        },
+        "data_description": {
+          "use_room_names": "Zet de free@home-ruimtenaam voor de entiteitsnamen.",
+          "switch_as_x": "Toont schakelactoren als schakelaars. Zet dit uit om ze als lampen te tonen.",
+          "name_prefix": "Tekst voor elke entiteitsnaam, bijvoorbeeld \"NG \" zolang de klassieke integratie nog draait.",
+          "use_https": "Verbindt via HTTPS en WSS in plaats van HTTP en WS.",
+          "verify_ssl": "Controleert het certificaat van de SysAP. Zet dit uit voor het zelfondertekende certificaat van de meeste SysAP's.",
+          "include_orphan_channels": "Maakt ook entiteiten aan voor kanalen zonder ruimte in free@home."
         }
       }
     }
@@ -160,6 +202,10 @@
         "host": {
           "name": "Host",
           "description": "Optioneel SysAP IP-adres of hostnaam."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
     },
@@ -174,6 +220,10 @@
         "host": {
           "name": "Host",
           "description": "Optioneel SysAP IP-adres of hostnaam."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
     },
@@ -204,6 +254,10 @@
         "host": {
           "name": "Host",
           "description": "Optioneel SysAP IP-adres of hostnaam."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
     },
@@ -242,6 +296,10 @@
         "host": {
           "name": "Host",
           "description": "Optioneel SysAP IP-adres of hostnaam."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
     },
@@ -260,6 +318,10 @@
         "host": {
           "name": "Host",
           "description": "Optioneel SysAP IP-adres of hostnaam."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
     },
@@ -286,6 +348,10 @@
         "host": {
           "name": "Host",
           "description": "Optioneel SysAP IP-adres of hostnaam."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
     },
@@ -308,6 +374,10 @@
         "host": {
           "name": "Host",
           "description": "Optioneel SysAP IP-adres of hostnaam."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
     },
@@ -354,8 +424,50 @@
         "serialnumbers": {
           "name": "Serienummerfilter (optioneel)",
           "description": "Optionele door komma's of nieuwe regels gescheiden serienummers voor selectieve voorvertoning of metadatasync."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "De free@home NG SysAP die gebruikt wordt. Verplicht als er meerdere SysAP's zijn ingesteld en de actie ernaar schrijft."
         }
       }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entries": {
+      "message": "Er is geen free@home NG SysAP geladen."
+    },
+    "host_not_found": {
+      "message": "Geen geladen free@home NG SysAP heeft de host {host}."
+    },
+    "entry_not_loaded": {
+      "message": "De free@home NG-configuratie-invoer {entry_id} is niet geladen."
+    },
+    "entry_host_mismatch": {
+      "message": "De configuratie-invoer {entry_id} hoort niet bij de host {host}."
+    },
+    "multiple_entries_for_host": {
+      "message": "Meerdere geladen SysAP's gebruiken de host {host}. Kies in plaats daarvan de configuratie-invoer."
+    },
+    "multiple_entries_loaded": {
+      "message": "Er zijn meerdere SysAP's geladen. Kies de configuratie-invoer die je wilt gebruiken."
+    },
+    "auth_failed": {
+      "message": "De SysAP op {host} heeft de inloggegevens geweigerd."
+    },
+    "cannot_connect": {
+      "message": "Kan geen verbinding maken met de SysAP op {host}: {error}"
+    },
+    "action_failed": {
+      "message": "De SysAP heeft de opdracht voor {entity_id} niet geaccepteerd: {error}"
+    },
+    "partial_cutover_not_supported": {
+      "message": "Een overname kan niet worden beperkt tot serienummers, omdat de oude integratie één configuratie-invoer voor de hele SysAP gebruikt. Gebruik cutover: false voor een selectieve synchronisatie, of verwijder de serienummers voor een volledige overname."
+    },
+    "legacy_entry_ambiguous": {
+      "message": "Er bestaan meerdere oude free@home-configuratie-invoeren en geen ervan komt op serienummer of host overeen met deze SysAP."
+    },
+    "request_failed": {
+      "message": "De SysAP op {host} heeft het verzoek niet geaccepteerd: {error}"
     }
   }
 }

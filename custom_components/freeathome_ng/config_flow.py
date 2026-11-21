@@ -264,12 +264,7 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Confirm updated credentials."""
-        entry = (
-            self._get_reauth_entry()
-            if hasattr(self, "_get_reauth_entry")
-            else self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        )
-        assert entry is not None
+        entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -286,11 +281,7 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if info.get("resolved_username"):
                     data[CONF_USERNAME] = info["resolved_username"]
-                if hasattr(self, "async_update_and_abort"):
-                    return self.async_update_and_abort(entry, data=data, reason="reauth_successful")
-                return self.async_update_reload_and_abort(
-                    entry, data=data, reason="reauth_successful"
-                )
+                return self.async_update_and_abort(entry, data=data, reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -308,12 +299,7 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure host or connection settings."""
-        entry = (
-            self._get_reconfigure_entry()
-            if hasattr(self, "_get_reconfigure_entry")
-            else self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        )
-        assert entry is not None
+        entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -331,12 +317,8 @@ class FreeAtHomeNgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 new_unique = info.get("serial_number") or data[CONF_HOST]
                 if entry.unique_id and info.get("serial_number") and new_unique != entry.unique_id:
                     errors[CONF_HOST] = "other_sysap"
-                elif hasattr(self, "async_update_and_abort"):
-                    return self.async_update_and_abort(
-                        entry, data=data, reason="reconfigure_successful"
-                    )
                 else:
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         entry, data=data, reason="reconfigure_successful"
                     )
 

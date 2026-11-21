@@ -14,6 +14,17 @@
           "use_https": "Use HTTPS / WSS",
           "verify_ssl": "Verify SSL certificate",
           "include_orphan_channels": "Include channels not assigned to a room"
+        },
+        "data_description": {
+          "host": "IP address or host name of the System Access Point, optionally with a port.",
+          "username": "Local API user, shown in the free@home app under Settings > Local API.",
+          "password": "Password of the Local API user.",
+          "use_room_names": "Put the free@home room name in front of entity names.",
+          "switch_as_x": "Show switch actuators as switch entities. Turn this off to show them as lights.",
+          "name_prefix": "Text put in front of every entity name, for example \"NG \" while the classic integration still runs.",
+          "use_https": "Connect over HTTPS and WSS instead of HTTP and WS.",
+          "verify_ssl": "Check the SysAP certificate. Turn this off for the self-signed certificate most SysAPs use.",
+          "include_orphan_channels": "Also create entities for channels that have no room in free@home."
         }
       },
       "link": {
@@ -28,6 +39,16 @@
           "use_https": "Use HTTPS / WSS",
           "verify_ssl": "Verify SSL certificate",
           "include_orphan_channels": "Include channels not assigned to a room"
+        },
+        "data_description": {
+          "username": "Local API user, shown in the free@home app under Settings > Local API.",
+          "password": "Password of the Local API user.",
+          "use_room_names": "Put the free@home room name in front of entity names.",
+          "switch_as_x": "Show switch actuators as switch entities. Turn this off to show them as lights.",
+          "name_prefix": "Text put in front of every entity name, for example \"NG \" while the classic integration still runs.",
+          "use_https": "Connect over HTTPS and WSS instead of HTTP and WS.",
+          "verify_ssl": "Check the SysAP certificate. Turn this off for the self-signed certificate most SysAPs use.",
+          "include_orphan_channels": "Also create entities for channels that have no room in free@home."
         }
       },
       "reauth_confirm": {
@@ -36,6 +57,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Local API user, shown in the free@home app under Settings > Local API.",
+          "password": "Password of the Local API user."
         }
       },
       "reconfigure": {
@@ -48,6 +73,15 @@
           "use_https": "Use HTTPS / WSS",
           "verify_ssl": "Verify SSL certificate",
           "include_orphan_channels": "Include channels not assigned to a room"
+        },
+        "data_description": {
+          "host": "IP address or host name of the System Access Point, optionally with a port.",
+          "use_room_names": "Put the free@home room name in front of entity names.",
+          "switch_as_x": "Show switch actuators as switch entities. Turn this off to show them as lights.",
+          "name_prefix": "Text put in front of every entity name, for example \"NG \" while the classic integration still runs.",
+          "use_https": "Connect over HTTPS and WSS instead of HTTP and WS.",
+          "verify_ssl": "Check the SysAP certificate. Turn this off for the self-signed certificate most SysAPs use.",
+          "include_orphan_channels": "Also create entities for channels that have no room in free@home."
         }
       }
     },
@@ -77,6 +111,14 @@
           "use_https": "Use HTTPS / WSS",
           "verify_ssl": "Verify SSL certificate",
           "include_orphan_channels": "Include channels not assigned to a room"
+        },
+        "data_description": {
+          "use_room_names": "Put the free@home room name in front of entity names.",
+          "switch_as_x": "Show switch actuators as switch entities. Turn this off to show them as lights.",
+          "name_prefix": "Text put in front of every entity name, for example \"NG \" while the classic integration still runs.",
+          "use_https": "Connect over HTTPS and WSS instead of HTTP and WS.",
+          "verify_ssl": "Check the SysAP certificate. Turn this off for the self-signed certificate most SysAPs use.",
+          "include_orphan_channels": "Also create entities for channels that have no room in free@home."
         }
       }
     }
@@ -160,6 +202,10 @@
         "host": {
           "name": "Host",
           "description": "Optional SysAP host IP/hostname to limit the dump to a specific SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
     },
@@ -174,6 +220,10 @@
         "host": {
           "name": "Host",
           "description": "Optional SysAP host IP/hostname."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
     },
@@ -204,6 +254,10 @@
         "host": {
           "name": "Host",
           "description": "Optional SysAP host IP/hostname."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
     },
@@ -242,6 +296,10 @@
         "host": {
           "name": "Host",
           "description": "Optional SysAP host IP/hostname."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
     },
@@ -260,6 +318,10 @@
         "host": {
           "name": "Host",
           "description": "Optional SysAP host IP/hostname."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
     },
@@ -286,6 +348,10 @@
         "host": {
           "name": "Host",
           "description": "Optional SysAP host IP/hostname."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
     },
@@ -308,6 +374,10 @@
         "host": {
           "name": "Host",
           "description": "Optional SysAP host IP/hostname."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
     },
@@ -354,8 +424,50 @@
         "serialnumbers": {
           "name": "Serial numbers filter (optional)",
           "description": "Optional comma- or newline-separated device serial numbers for selective preview or metadata sync."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "The free@home NG SysAP to use. Required when more than one SysAP is set up and the action writes to it."
         }
       }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entries": {
+      "message": "No free@home NG SysAP is loaded."
+    },
+    "host_not_found": {
+      "message": "No loaded free@home NG SysAP has the host {host}."
+    },
+    "entry_not_loaded": {
+      "message": "The free@home NG config entry {entry_id} is not loaded."
+    },
+    "entry_host_mismatch": {
+      "message": "The config entry {entry_id} does not belong to the host {host}."
+    },
+    "multiple_entries_for_host": {
+      "message": "More than one loaded SysAP uses the host {host}. Select the config entry instead."
+    },
+    "multiple_entries_loaded": {
+      "message": "More than one SysAP is loaded. Select the config entry to use."
+    },
+    "auth_failed": {
+      "message": "The SysAP at {host} rejected the credentials."
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to the SysAP at {host}: {error}"
+    },
+    "action_failed": {
+      "message": "The SysAP did not accept the command for {entity_id}: {error}"
+    },
+    "partial_cutover_not_supported": {
+      "message": "A cutover cannot be limited to serial numbers, because the legacy integration uses one config entry for the whole SysAP. Use cutover: false for a selective sync, or remove the serial numbers for a full cutover."
+    },
+    "legacy_entry_ambiguous": {
+      "message": "Several legacy free@home config entries exist and none matches this SysAP by serial number or host."
+    },
+    "request_failed": {
+      "message": "The SysAP at {host} did not accept the request: {error}"
     }
   }
 }

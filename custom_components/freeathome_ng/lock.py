@@ -6,17 +6,11 @@ from typing import Any
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
-
-try:
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-except ImportError:  # pragma: no cover - fallback for older HA typing
-    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
-        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
-    )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.lock import FahLock
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -76,10 +70,12 @@ class FreeAtHomeNgLock(FreeAtHomeNgEntity, LockEntity):
             return None
         return self.lock_device.state == "0"
 
+    @api_action
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the door opener."""
         await self.lock_device.lock()
 
+    @api_action
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door opener."""
         await self.lock_device.unlock()

@@ -13,33 +13,15 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-
-try:
-    from homeassistant.const import UnitOfDensity, UnitOfRatio
-except ImportError:  # pragma: no cover - fallback for older HA Core
-    from homeassistant.const import (
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_MILLION,
-    )
-
-    CO2_CONCENTRATION_UNIT = CONCENTRATION_PARTS_PER_MILLION
-    VOC_CONCENTRATION_UNIT = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-else:
-    CO2_CONCENTRATION_UNIT = UnitOfRatio.PARTS_PER_MILLION
-    VOC_CONCENTRATION_UNIT = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
-
-try:
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-except ImportError:  # pragma: no cover - fallback for older HA typing
-    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
-        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
-    )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.base import FahBaseDevice
@@ -52,6 +34,9 @@ from .fah_event import (
     DIMMING_STATUS_OPTIONS,
     dimming_status_sequence_from_event,
 )
+
+CO2_CONCENTRATION_UNIT = UnitOfRatio.PARTS_PER_MILLION
+VOC_CONCENTRATION_UNIT = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 
 PARALLEL_UPDATES = 0
 

@@ -2,6 +2,12 @@ dump_config:
   name: Dump configuration
   description: Export the full free@home Local API JSON configuration to the Home Assistant config folder.
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     host:
       name: Host
       description: Optional SysAP host IP/hostname to limit the dump to a specific SysAP.
@@ -13,6 +19,12 @@ monitor:
   name: Monitor WebSocket frames
   description: Record raw WebSocket JSON frames from the Local API into a JSONL file in the Home Assistant config folder.
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     duration:
       name: Duration
       description: Listening duration in seconds (1–300).
@@ -33,6 +45,12 @@ set_datapoint:
   name: Set datapoint
   description: Write a raw datapoint value to the SysAP Local REST API (e.g. to send feedback to virtual device output datapoints).
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     serialnumber:
       name: Serial number
       description: Device serial number or virtual device serial (e.g. 6000A1B2C3D4).
@@ -76,6 +94,12 @@ register_virtual_device:
   name: Register virtual device
   description: Register or refresh a virtual/proxy device on the SysAP with optional automatic TTL heartbeat renewal.
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     native_id:
       name: Native ID
       description: Unique identifier supplied by your automation for the virtual device.
@@ -150,6 +174,12 @@ unregister_virtual_device:
   name: Unregister virtual device
   description: Stop the TTL heartbeat and mark a persisted virtual device unresponsive (`ttl=0`) on the SysAP.
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     native_id:
       name: Native ID
       description: Unique identifier of the virtual device to unregister.
@@ -172,6 +202,12 @@ trigger_proxy_device:
   name: Trigger proxy device action
   description: Trigger an action (`shortpress`, `longpress`, `release`) on a free@home proxy device.
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     device_class:
       name: Device class
       description: Proxy device class (e.g. pushbutton).
@@ -208,6 +244,12 @@ send_notification:
   name: Send SysAP notification
   description: Push a notification message to the free@home SysAP (displayed in the app/panels).
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     subject:
       name: Subject
       description: Notification headline.
@@ -279,6 +321,12 @@ migrate_from_legacy:
   name: Migrate from legacy freeathome
   description: Preview or migrate device names, areas, entity metadata, Assist exposure, and Recorder history from the legacy freeathome integration into freeathome_ng.
   fields:
+    config_entry_id:
+      name: SysAP
+      description: The free@home NG SysAP to use.
+      selector:
+        config_entry:
+          integration: freeathome_ng
     entry_id:
       name: Hub entry ID
       description: Optional config entry ID of the target free@home NG SysAP (required when multiple SysAPs are loaded).

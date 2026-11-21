@@ -4,17 +4,11 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
-
-try:
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-except ImportError:  # pragma: no cover - fallback for older HA typing
-    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
-        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
-    )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.button import FahTrigger
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -67,6 +61,7 @@ class FreeAtHomeNgTriggerButton(FreeAtHomeNgEntity, ButtonEntity):
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.trigger_device = device
 
+    @api_action
     async def async_press(self) -> None:
         """Trigger a single pulse."""
         await self.trigger_device.press()
