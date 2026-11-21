@@ -7,7 +7,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 `freeathome_ng` is a Home Assistant custom integration for ABB / Busch-Jaeger free@home, built only on the official SysAP Local REST & WebSocket API (`/fhapi/v1/api`). It runs side by side with the legacy XMPP `freeathome` integration and can take over from it (`freeathome_ng.migrate_from_legacy`).
 
 - **Target:** Integration Quality Scale **Gold**, architecturally ready for **Platinum**. The status of every rule lives in `custom_components/freeathome_ng/quality_scale.yaml`; update it in the same PR that changes a rule's status.
-- **Minimum Home Assistant:** 2026.8.0 ([ADR-002](docs/DECISIONS.md)). Do not add compatibility guards for older releases.
+- **Minimum Home Assistant:** 2026.9.0 ([ADR-005](docs/DECISIONS.md)). Do not add compatibility guards for older releases.
 - **Binding design decisions:** [docs/DECISIONS.md](docs/DECISIONS.md). Patterns and details: [docs/HA_INTEGRATION_STANDARDS.md](docs/HA_INTEGRATION_STANDARDS.md).
 
 ## 2. Repository layout
@@ -24,7 +24,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 1. **Two layers, one direction.** `api/` is written as if it were its own PyPI package: stdlib + `aiohttp` only, never `homeassistant` (an AST test enforces this), fully typed, raises its own exceptions (`FreeAtHomeAuthError`, connection errors). The HA layer depends on `api/`, never the reverse.
 2. **Data flow.** `client` (REST + WebSocket) → `controller` (configuration model, datapoint routing, `devicesAdded`/`devicesRemoved`) → device models → callbacks → HA entities. Entities never call REST directly; they call device-model methods.
 3. **One config entry per SysAP** (`integration_type: hub`), typed `entry.runtime_data` (`FreeAtHomeNgConfigEntry = ConfigEntry[FreeAtHomeNgRuntime]`). No state in `hass.data`.
-4. **Device model** ([ADR-001](docs/DECISIONS.md)): SysAP hub device → physical device → one channel device per free@home channel. Devices are discovered from the SysAP; never add manual subentries for bus devices.
+4. **Device model** ([ADR-001](docs/DECISIONS.md)): SysAP hub device → physical device → one channel device (HA child device) per free@home channel; SysAP functions (`FFFF…`) stay single devices. The layout lives in `device_layout.py`. Devices are discovered from the SysAP; never add manual subentries for bus devices.
 5. **Services** (domain and entity actions) are registered once in `async_setup` (`services.py`) and target an entry via `config_entry_id` (legacy: `host`). Writing actions need exactly one target and never fall back silently to another SysAP; read-only actions may cover all loaded SysAPs.
 6. **WebSocket lifecycle:** reconnect with capped exponential backoff and jitter, full configuration resync after every reconnect, one `WARNING` on loss, `DEBUG` for retries, one `INFO` on recovery. The WebSocket runs as `entry.async_create_background_task(controller.listen())`; every other task is tracked and cancelled and awaited in `controller.close()` on unload.
 

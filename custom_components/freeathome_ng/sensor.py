@@ -234,9 +234,7 @@ class FreeAtHomeNgSensor(FreeAtHomeNgEntity, SensorEntity):
         """Initialize the sensor entity."""
         desc = SENSOR_TYPES.get(device.type or "")
         if device.type is not None and desc is not None:
-            self._attr_has_entity_name = True
             self._attr_translation_key = device.type
-            self._attr_translation_placeholders = {"channel_name": device.base_name}
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.sensor_device = device
         if desc is not None:
@@ -268,7 +266,6 @@ class FreeAtHomeNgThermostatTemperatureSensor(FreeAtHomeNgEntity, SensorEntity):
     """Dedicated temperature sensor exposed alongside each thermostat."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat_temperature"
@@ -283,7 +280,6 @@ class FreeAtHomeNgThermostatTemperatureSensor(FreeAtHomeNgEntity, SensorEntity):
         """Initialize thermostat temperature sensor."""
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.thermostat_device = device
-        self._attr_translation_placeholders = {"channel_name": device.name}
         self._attr_unique_id = f"{device.unique_id}/current_temperature"
 
     @property
@@ -296,7 +292,6 @@ class FreeAtHomeNgDimmingStatusSensor(FreeAtHomeNgEntity, SensorEntity):
     """Enum sensor exposing dimmer rocker press/hold actions."""
 
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_has_entity_name = True
     _attr_options = DIMMING_STATUS_OPTIONS
     _attr_translation_key = "dimming_status"
 
@@ -311,7 +306,6 @@ class FreeAtHomeNgDimmingStatusSensor(FreeAtHomeNgEntity, SensorEntity):
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.binary_device = device
         self._attr_native_value = DIMMING_STATUS_DEFAULT
-        self._attr_translation_placeholders = {"channel_id": device.channel_id}
         self._attr_unique_id = f"{device.unique_id}/dimming_status"
 
     async def async_added_to_hass(self) -> None:

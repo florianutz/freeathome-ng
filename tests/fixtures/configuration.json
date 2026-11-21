@@ -94,6 +94,8 @@
           },
           "ch0002": {
             "displayName": "Kitchen RGB Strip",
+            "floor": "01",
+            "room": "01",
             "functionID": "002F",
             "inputs": {
               "idp0000": { "pairingID": 1, "value": "1" },

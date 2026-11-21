@@ -126,7 +126,7 @@
   "entity": {
     "sensor": {
       "dimming_status": {
-        "name": "Dimmer-Status {channel_id}",
+        "name": "Dimmer-Status",
         "state": {
           "not_pressed": "Nicht gedrückt",
           "pressed_up": "Wippe oben gedrückt",
@@ -136,61 +136,61 @@
         }
       },
       "temperature": {
-        "name": "{channel_name} Temperatur"
+        "name": "Temperatur"
       },
       "thermostat_temperature": {
-        "name": "{channel_name} Temperatur"
+        "name": "Temperatur"
       },
       "windstrength": {
-        "name": "{channel_name} Windgeschwindigkeit"
+        "name": "Windgeschwindigkeit"
       },
       "windforce": {
-        "name": "{channel_name} Windstärke"
+        "name": "Windstärke"
       },
       "rain": {
-        "name": "{channel_name} Regen"
+        "name": "Regen"
       },
       "lux": {
-        "name": "{channel_name} Helligkeit"
+        "name": "Helligkeit"
       },
       "valve_volume_flow": {
-        "name": "{channel_name} Ventilstellung"
+        "name": "Ventilstellung"
       },
       "humidity": {
-        "name": "{channel_name} Luftfeuchtigkeit"
+        "name": "Luftfeuchtigkeit"
       },
       "co2": {
-        "name": "{channel_name} CO2"
+        "name": "CO2"
       },
       "voc": {
-        "name": "{channel_name} VOC"
+        "name": "VOC"
       },
       "pv_power": {
-        "name": "{channel_name} PV-Leistung"
+        "name": "PV-Leistung"
       },
       "battery_power": {
-        "name": "{channel_name} Batterieleistung"
+        "name": "Batterieleistung"
       },
       "battery_soc": {
-        "name": "{channel_name} Batterieladestand"
+        "name": "Batterieladestand"
       },
       "grid_power": {
-        "name": "{channel_name} Netzleistung"
+        "name": "Netzleistung"
       },
       "home_power": {
-        "name": "{channel_name} Hausverbrauch"
+        "name": "Hausverbrauch"
       },
       "consumed_energy": {
-        "name": "{channel_name} Netzbezug"
+        "name": "Netzbezug"
       },
       "injected_energy": {
-        "name": "{channel_name} Netzeinspeisung"
+        "name": "Netzeinspeisung"
       },
       "self_consumption": {
-        "name": "{channel_name} Eigenverbrauch"
+        "name": "Eigenverbrauch"
       },
       "self_sufficiency": {
-        "name": "{channel_name} Autarkiegrad"
+        "name": "Autarkiegrad"
       }
     }
   },

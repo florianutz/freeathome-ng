@@ -51,7 +51,7 @@ async def test_device_registry_snapshot(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """The device hierarchy (hub and bus devices) matches the snapshot."""
+    """The device hierarchy (hub, physical devices, channel devices) matches the snapshot."""
     devices = dr.async_entries_for_config_entry(device_registry, init_integration.entry_id)
     assert devices
     for device in sorted(devices, key=lambda d: sorted(d.identifiers)):
@@ -60,6 +60,16 @@ async def test_device_registry_snapshot(
         assert device == snapshot(name=identifier, exclude=props("configuration_url"))
         if device.configuration_url:
             assert device.configuration_url == f"http://{mock_sysap.host_port}"
+
+    children = dr.async_child_entries_for_config_entry(device_registry, init_integration.entry_id)
+    assert children
+    for child in sorted(children, key=lambda d: sorted(d.identifiers)):
+        identifier = next(iter(child.identifiers))[1]
+        parent = device_registry.async_get(child.parent_device_id)
+        assert parent is not None
+        # Channel device `{uuid}_{serial}_{channel}` belongs to physical device `{uuid}_{serial}`.
+        assert (DOMAIN, identifier.rsplit("_", 1)[0]) in parent.identifiers
+        assert child == snapshot(name=identifier)
 
 
 async def _broadcast_dp(server: MockSysApServer, path: str, value: str) -> None:

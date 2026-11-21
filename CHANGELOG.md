@@ -8,22 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Breaking changes
-- Minimum Home Assistant version is now **2026.8.0**. Users on older releases stay on v1.0.x.
+- Minimum Home Assistant version is now **2026.9.0**, which brings the child devices used for free@home channels. Users on older releases stay on v1.0.x.
 - With more than one SysAP set up, the writing actions `set_datapoint`, `register_virtual_device`, `unregister_virtual_device`, `trigger_proxy_device` and `send_notification` no longer run against every SysAP when no target is given. Choose the SysAP with the new `config_entry_id` field (or `host`); otherwise the action fails with a clear error. Setups with a single SysAP are not affected.
 
 ### Added
 - All actions accept a `config_entry_id` field with a SysAP picker in the UI.
 - Every setup and options field now has a help text, in all 7 languages.
 
-### Fixed
-- Climate: thermostats failed to load on current Home Assistant (`AttributeError` while adding the entity) and never reported current or target temperature, because the entity used a non-existent `native_*` temperature API.
-
 ### Changed
+- Every free@home channel is now its own device below its physical device, named like the channel. A channel in another room than its actuator (for example one gang of a multi-gang switch actuator) gets that room as its area; channels in the same room keep using the area of the physical device, including areas you assigned yourself. Scenes, groups and timer programs stay single devices.
+- Entities use Home Assistant's entity naming: the main entity of a channel is named after the channel device, other entities add a translated suffix (for example "Temperature"). Entity IDs of existing installations stay the same, and so do the names of main entities. The dimmer status sensor drops the channel number from its name ("Wall Rocker LT Dimmer status" instead of "Dimmer status ch0000").
+- Device names no longer contain the serial number; it is shown as the device's serial number instead.
 - Actions are registered when Home Assistant starts, not when a SysAP loads, so automations that use them validate even while the SysAP is offline.
 - Error messages from setup, actions and the legacy migration are translated, and a command the SysAP rejects now shows a clear error instead of a raw exception.
 - WebSocket reconnects use randomised backoff, and unloading the integration now stops every background task cleanly.
 - Development: new engineering handbook (`AGENTS.md`), `CLAUDE.md`, architecture decision records (`docs/DECISIONS.md`), Integration Quality Scale tracking (`quality_scale.yaml`), Claude Code skills, `ruff format`, strict `mypy` for the `api/` layer, coverage reporting and a translation parity script in CI.
 - Development: the test suite now runs against real Home Assistant (`pytest-homeassistant-custom-component`, Python 3.14) instead of hand-written stubs, with syrupy snapshots of all entities and devices.
+
+### Fixed
+- Climate: thermostats failed to load on current Home Assistant (`AttributeError` while adding the entity) and never reported current or target temperature, because the entity used a non-existent `native_*` temperature API.
 
 ## [1.0.0] - 2026-11-21
 

@@ -100,7 +100,6 @@ class FahSensor(FahBaseDevice):
     ) -> None:
         """Initialize sensor device."""
         resolved_datapoints = dict(datapoints or {})
-        self.base_name: str = name
         self.type = sensor_type_from_pairing_ids(resolved_datapoints)
         display_name = f"{name}_{self.type}" if self.type is not None else name
         super().__init__(
@@ -115,6 +114,7 @@ class FahSensor(FahBaseDevice):
             sysap_uuid=sysap_uuid,
             is_virtual=is_virtual,
         )
+        self.channel_name = name
         self.state: str | None = None
 
     @staticmethod

@@ -7,12 +7,13 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .api import FreeAtHomeApiError
 from .api.devices.base import FahBaseDevice
 from .const import DOMAIN
+from .device_layout import async_entity_device_info
 
 
 def api_action[EntityT: "FreeAtHomeNgEntity", **P, R](
@@ -37,6 +38,7 @@ def api_action[EntityT: "FreeAtHomeNgEntity", **P, R](
 class FreeAtHomeNgEntity(Entity):
     """Base entity binding a `FahBaseDevice` model to Home Assistant."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -46,16 +48,26 @@ class FreeAtHomeNgEntity(Entity):
         hub_device_id: str | None = None,
         entry_id: str | None = None,
     ) -> None:
-        """Initialize common entity attributes."""
+        """Initialize common entity attributes.
+
+        The primary entity of a channel has no name of its own and is named after its
+        channel device; secondary entities set a `translation_key` (ADR-001).
+        `hub_device_id` and `entry_id` are kept for platform call compatibility; the
+        device layout is resolved when the entity is added to Home Assistant.
+        """
         self.fah_device = device
         if not getattr(self, "_attr_translation_key", None):
-            self._attr_name = device.name
+            self._attr_name = None
         self._attr_unique_id = device.unique_id
 
-        info = dict(device.device_info)
-        if hub_device_id:
-            info["via_device_id"] = hub_device_id
-        self._attr_device_info = DeviceInfo(**info)
+    @property
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
+        """Return the channel device (or SysAP function device) of this entity."""
+        platform = getattr(self, "platform", None)
+        config_entry = platform.config_entry if platform is not None else None
+        if config_entry is None:
+            return None
+        return async_entity_device_info(self.hass, config_entry.entry_id, self.fah_device)
 
     @property
     def available(self) -> bool:

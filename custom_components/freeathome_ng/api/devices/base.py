@@ -38,6 +38,10 @@ class FahBaseDevice:
         self._is_virtual = is_virtual
         self._device_updated_cbs: list[Callable[[FahBaseDevice], Awaitable[None]]] = []
         self.available: bool = True
+        # Display name of the free@home channel (without model-specific suffixes).
+        self.channel_name: str = name
+        # Name of the free@home room the channel is assigned to, if any.
+        self.room_name: str | None = None
 
     def register_device_updated_cb(self, cb: Callable[[FahBaseDevice], Awaitable[None]]) -> None:
         """Register an async callback invoked when the device state updates."""
@@ -98,6 +102,25 @@ class FahBaseDevice:
     def lookup_key(self) -> str:
         """Return key matching WebSocket datapoint prefixes (`SERIAL/chXXXX`)."""
         return f"{self._serialnumber}/{self._channel_id}"
+
+    @property
+    def physical_device_key(self) -> str:
+        """Return the key of the physical device (`{sysap_uuid}_{serialnumber}`)."""
+        return f"{self._sysap_uuid}_{self._serialnumber}"
+
+    @property
+    def channel_device_key(self) -> str:
+        """Return the key of the channel device (`{sysap_uuid}_{serialnumber}_{channel_id}`)."""
+        return f"{self.physical_device_key}_{self._channel_id}"
+
+    @property
+    def is_sysap_function(self) -> bool:
+        """Return True for SysAP-level functions (scenes, groups, timer programs).
+
+        free@home gives these `FFFF…` serials; each one is a single logical unit
+        with its own name and room, so it is not split into channel devices.
+        """
+        return self._serialnumber.upper().startswith("FFFF")
 
     @property
     def unique_id(self) -> str:
