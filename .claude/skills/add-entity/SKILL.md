@@ -1,11 +1,13 @@
 ---
 name: add-entity
 description: Add a new free@home device type, entity or HA platform to freeathome_ng end to end (api device model, EntityDescription, translations, icons, tests, quality gate).
+argument-hint: "<device, functionID or platform>"
+allowed-tools: Bash, Read, Edit, Write, Grep, Glob
 ---
 
 # /add-entity
 
-Ask for, or derive from the request: the free@home `functionID`(s), the relevant pairing IDs (input/output datapoints) and parameter IDs, and the HA platform. Read AGENTS.md sections 3–5 and docs/DECISIONS.md (ADR-001) first.
+Input: `$ARGUMENTS` (device, functionID or platform). Ask for, or derive from the request: the free@home `functionID`(s), the relevant pairing IDs (input/output datapoints) and parameter IDs, and the HA platform. Read AGENTS.md sections 3–5 and docs/DECISIONS.md (ADR-001) first.
 
 ## 1. API layer (`custom_components/freeathome_ng/api/`)
 
@@ -42,3 +44,4 @@ Ask for, or derive from the request: the free@home `functionID`(s), the relevant
 
 1. Update README "Supported Platforms & Devices", `CHANGELOG.md` `[Unreleased]`, and `quality_scale.yaml` if a rule's status changed.
 2. Run `/check-quality`; everything must be green, including the minimum-HA run when the change uses a Home Assistant API for the first time.
+3. If the same check still fails after 3 fix attempts, stop and report the blocker with the failing output instead of trying further variations.

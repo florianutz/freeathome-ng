@@ -1,6 +1,7 @@
 ---
 name: check-quality
 description: Run the full local quality gate for freeathome_ng (ruff, format, mypy, pytest with coverage incl. migration/coexistence guard suites, translation parity) and summarise failures. Use before finishing any change.
+allowed-tools: Bash, Read, Grep, Glob
 ---
 
 # /check-quality

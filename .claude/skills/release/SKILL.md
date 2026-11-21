@@ -1,9 +1,14 @@
 ---
 name: release
 description: Prepare a freeathome_ng release (quality gate, SemVer bump in manifest.json and pyproject.toml, CHANGELOG, Hassfest/HACS checks, release PR). Tagging and publishing need explicit maintainer approval.
+argument-hint: "[X.Y.Z]"
+allowed-tools: Bash, Read, Edit, Write, Grep, Glob
+disable-model-invocation: true
 ---
 
 # /release
+
+Started only by the maintainer (`disable-model-invocation`). `$ARGUMENTS` may name the version; otherwise derive it in step 1.
 
 ## 1. Decide the version
 
@@ -27,7 +32,7 @@ For a major release, also list the deprecated actions and attributes (search `CH
 
 ## 4. Release PR
 
-Commit (`Release vX.Y.Z`), push the branch, open a PR with the CHANGELOG section as body (`gh api repos/{owner}/{repo}/pulls`, since `gh pr` may be unavailable), assign the maintainer and wait for green CI.
+Commit (`Release vX.Y.Z`), push the branch, open a PR with the CHANGELOG section as body (`gh api repos/{owner}/{repo}/pulls`, since `gh pr` may be unavailable), assign the maintainer and wait for green CI. If CI fails, fix the cause in this PR (never skip or disable a test); after 3 failed attempts on the same check, stop and report.
 
 ## 5. Tag and publish (only after explicit maintainer approval)
 

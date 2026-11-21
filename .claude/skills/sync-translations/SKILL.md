@@ -1,6 +1,7 @@
 ---
 name: sync-translations
 description: Reconcile strings.json with all 7 locale files (de, en, es, fr, it, nl, pl) of freeathome_ng, add missing translations, remove orphaned keys and fix placeholder mismatches.
+allowed-tools: Bash, Read, Edit, Write
 ---
 
 # /sync-translations

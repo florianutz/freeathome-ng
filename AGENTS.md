@@ -15,7 +15,7 @@ Binding rules for everyone (humans and AI agents) changing this repository. This
 - `custom_components/freeathome_ng/api/` — HA-free library: REST/WebSocket client (`client.py`), configuration and event controller (`controller.py`), protocol constants such as Function and Pairing IDs (`const.py`), device models (`devices/*.py`).
 - `custom_components/freeathome_ng/` — HA layer: setup and services (`__init__.py`), flows (`config_flow.py`), legacy takeover (`migration.py`), entity base (`entity.py`), one module per platform, `diagnostics.py`, `const.py` (HA constants only: domain, options, events, actions), `manifest.json`, `services.yaml`, `strings.json`, `translations/` (7 locales), `quality_scale.yaml`, `brand/`.
 - `tests/` — test suite, `mock_sysap_server.py` (SysAP double), `fixtures/configuration.json`.
-- `scripts/` — developer tooling (`check_translations.py`).
+- `scripts/` — developer tooling (`check_translations.py`, `anonymize_dump.py` for turning user dumps into fixtures).
 - `docs/` — decisions, standards, user migration guide.
 - `.claude/skills/` — Claude Code workflows (section 9).
 
@@ -89,6 +89,8 @@ CI (`.github/workflows/validate.yml`) additionally runs the tests on the minimum
 ## 8. Workflow
 
 - Small, single-purpose PRs on a feature branch; never push to `main` directly.
+- Bug fixes start with a failing test; for user reports with a dump use `/reproduce-from-dump`. Raw dumps never enter the repository, a PR or an issue comment.
+- Review comments: human reviewers first. Bot suggestions are accepted when they prevent a bug, fix a rule in this file or clearly help maintainers; otherwise answer why not. Agents stop and report after 3 failed attempts at the same CI failure.
 - Add user-visible changes to `CHANGELOG.md` under `[Unreleased]`.
 - Keep this file, `docs/`, `quality_scale.yaml` and the code consistent in the same PR.
 - Releases follow the `/release` skill; versions stay in sync across `manifest.json`, `pyproject.toml`, `CHANGELOG.md` and the `vX.Y.Z` tag.
@@ -98,7 +100,11 @@ CI (`.github/workflows/validate.yml`) additionally runs the tests on the minimum
 - `/check-quality` — run the full quality gate and report.
 - `/add-entity` — add a new entity type or platform end to end.
 - `/sync-translations` — reconcile `strings.json` with all 7 locales.
-- `/release` — prepare a release.
+- `/release` — prepare a release (only when the maintainer starts it).
+- `/reproduce-from-dump` — anonymise a user's dump into a fixture and a failing test.
+- `/issue-analysis` — analyse an issue and draft a reply for approval.
+
+Skill conventions: frontmatter with `description` (when to use), `argument-hint` and `allowed-tools`; `disable-model-invocation: true` for skills with outward effects; under ~100 lines, longer checklists in the skill's `references/`; a step that posts, tags or publishes waits for the maintainer.
 
 ## 10. Quality scale status
 
