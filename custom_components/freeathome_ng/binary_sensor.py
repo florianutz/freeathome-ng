@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,6 +22,63 @@ from .entity import FreeAtHomeNgEntity
 from .fah_event import create_event_data
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class FreeAtHomeNgBinarySensorDescription(BinarySensorEntityDescription):
+    """Binary sensor kind, chosen by the first description whose `matches` is true."""
+
+    matches: Callable[[FahBinarySensor], bool]
+
+
+# Order matters: safety sensors first, the generic rocker/input last.
+BINARY_SENSOR_DESCRIPTIONS: tuple[FreeAtHomeNgBinarySensorDescription, ...] = (
+    FreeAtHomeNgBinarySensorDescription(
+        key="smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
+        matches=FahBinarySensor.is_fire_sensor,
+    ),
+    FreeAtHomeNgBinarySensorDescription(
+        key="co", device_class=BinarySensorDeviceClass.CO, matches=FahBinarySensor.is_co_sensor
+    ),
+    FreeAtHomeNgBinarySensorDescription(
+        key="door_call",
+        translation_key="door_call",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        matches=FahBinarySensor.is_door_call_sensor,
+    ),
+    FreeAtHomeNgBinarySensorDescription(
+        key="window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        matches=FahBinarySensor.is_window_door_sensor,
+    ),
+    FreeAtHomeNgBinarySensorDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        matches=FahBinarySensor.is_motion_sensor,
+    ),
+    FreeAtHomeNgBinarySensorDescription(
+        key="rain",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        matches=FahBinarySensor.is_rain_sensor,
+    ),
+    FreeAtHomeNgBinarySensorDescription(
+        key="frost",
+        device_class=BinarySensorDeviceClass.COLD,
+        matches=FahBinarySensor.is_frost_sensor,
+    ),
+    FreeAtHomeNgBinarySensorDescription(
+        key="wind",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        matches=FahBinarySensor.is_wind_sensor,
+    ),
+)
+GENERIC_DESCRIPTION = FreeAtHomeNgBinarySensorDescription(key="input", matches=lambda _dev: True)
+
+
+def _description_for(device: FahBinarySensor) -> FreeAtHomeNgBinarySensorDescription:
+    """Return the description of the first matching binary sensor kind."""
+    return next((d for d in BINARY_SENSOR_DESCRIPTIONS if d.matches(device)), GENERIC_DESCRIPTION)
 
 
 async def async_setup_entry(
@@ -69,8 +129,13 @@ class FreeAtHomeNgBinarySensor(FreeAtHomeNgEntity, BinarySensorEntity):
         entry_id: str | None = None,
     ) -> None:
         """Initialize the binary sensor entity."""
+        # Set before the base initializer, which reads (and caches) `translation_key`.
+        self.entity_description = _description_for(device)
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.binary_device = device
+        # The primary entity keeps the channel device's name; the translation key
+        # only selects the icon (icons.json).
+        self._attr_name = None
         self._fallback_hass = hass
         self._reset_task: asyncio.Task[None] | None = None
         if device.is_door_call_sensor():
@@ -80,34 +145,6 @@ class FreeAtHomeNgBinarySensor(FreeAtHomeNgEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return True if the binary sensor is active."""
         return self.binary_device.state == "1"
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return device class for safety, window, motion, and weather sensors."""
-        if self.binary_device.is_fire_sensor():
-            return BinarySensorDeviceClass.SMOKE
-        if self.binary_device.is_co_sensor():
-            return BinarySensorDeviceClass.CO
-        if self.binary_device.is_door_call_sensor():
-            return BinarySensorDeviceClass.OCCUPANCY
-        if self.binary_device.is_window_door_sensor():
-            return BinarySensorDeviceClass.WINDOW
-        if self.binary_device.is_motion_sensor():
-            return BinarySensorDeviceClass.MOTION
-        if self.binary_device.is_rain_sensor():
-            return BinarySensorDeviceClass.MOISTURE
-        if self.binary_device.is_frost_sensor():
-            return BinarySensorDeviceClass.COLD
-        if self.binary_device.is_wind_sensor():
-            return BinarySensorDeviceClass.SAFETY
-        return None
-
-    @property
-    def icon(self) -> str | None:
-        """Return doorbell icon for door call sensors."""
-        if self.binary_device.is_door_call_sensor():
-            return "mdi:doorbell"
-        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from mock_sysap_server import MockSysApServer
@@ -111,7 +112,8 @@ async def test_climate_and_cover_attributes(
 ) -> None:
     """Thermostat and cover expose their state attributes; off hides the target."""
     climate = hass.states.get(entity_id_for(hass, *THERMOSTAT))
-    assert climate.state == HVACMode.HEAT_COOL
+    assert climate.state == HVACMode.HEAT
+    assert climate.attributes["hvac_action"] == HVACAction.HEATING
     assert "valve" in climate.attributes
     assert "temperature_correction" in climate.attributes
     await hass.services.async_call(
@@ -167,3 +169,24 @@ async def test_cover_stop_only_while_moving(
 
     await _broadcast_dp(mock_sysap, "ABB700D10003/ch0000/odp0000", "2")
     await _wait_for_state(hass, entity_id_for(hass, *SHUTTER), "opening")
+
+
+async def test_climate_hvac_action_follows_demand(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_sysap: MockSysApServer
+) -> None:
+    """The HVAC action is heating with valve demand, idle without and off when off."""
+    entity_id = entity_id_for(hass, *THERMOSTAT)
+    await _broadcast_dp(mock_sysap, "ABB700D10004/ch0000/odp0004", "0")
+    await _wait_for_attribute(hass, entity_id, "hvac_action", HVACAction.IDLE)
+    await _broadcast_dp(mock_sysap, "ABB700D10004/ch0000/odp0001", "0")
+    await _wait_for_state(hass, entity_id, HVACMode.OFF)
+    assert hass.states.get(entity_id).attributes["hvac_action"] == HVACAction.OFF
+
+
+async def _wait_for_attribute(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> None:
+    for _ in range(50):
+        await hass.async_block_till_done()
+        if hass.states.get(entity_id).attributes.get(name) == value:
+            return
+        await asyncio.sleep(0.02)
+    assert hass.states.get(entity_id).attributes.get(name) == value

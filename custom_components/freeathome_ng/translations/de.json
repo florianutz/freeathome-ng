@@ -124,6 +124,27 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_call": {
+        "name": "Türklingel"
+      }
+    },
+    "event": {
+      "control": {
+        "name": "Taste",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_up": "Obere Seite gedrückt",
+              "press_down": "Untere Seite gedrückt",
+              "hold_up": "Obere Seite gehalten",
+              "hold_down": "Untere Seite gehalten",
+              "release": "Losgelassen"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Dimmer-Status",
@@ -191,22 +212,6 @@
       },
       "self_sufficiency": {
         "name": "Autarkiegrad"
-      }
-    },
-    "event": {
-      "control": {
-        "name": "Taste",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_up": "Obere Seite gedrückt",
-              "press_down": "Untere Seite gedrückt",
-              "hold_up": "Obere Seite gehalten",
-              "hold_down": "Untere Seite gehalten",
-              "release": "Losgelassen"
-            }
-          }
-        }
       }
     }
   },
