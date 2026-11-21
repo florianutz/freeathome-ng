@@ -38,8 +38,8 @@ rules:
   parallel-updates: done
   reauthentication-flow: done
   test-coverage:
-    status: todo
-    comment: Coverage is 81 % (line+branch) against real HA 2026.10; target is >95 % (AP3, AP4).
+    status: done
+    comment: Line and branch coverage above 95 % against real HA, enforced by `fail_under` in pyproject.toml.
 
   # Gold
   devices: done
