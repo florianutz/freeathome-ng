@@ -20,7 +20,7 @@ Read `CHANGELOG.md` `[Unreleased]`. SemVer: breaking change (removed/renamed ser
 
 1. `custom_components/freeathome_ng/manifest.json` → `"version": "X.Y.Z"` (keep key order: `domain`, `name`, then alphabetical).
 2. `pyproject.toml` → `version = "X.Y.Z"`.
-3. `hacs.json` → `homeassistant` if the minimum HA version changed.
+3. `hacs.json` → `homeassistant` if the minimum HA version changed, together with `requirements_test_min_ha.txt`.
 4. `CHANGELOG.md`: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`, add a fresh empty `[Unreleased]`, group entries as Added / Changed / Fixed / Removed / Breaking changes. Breaking changes need migration instructions.
 
 ## 4. Release PR

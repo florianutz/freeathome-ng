@@ -84,7 +84,7 @@ pytest --cov --cov-report=term
 python3 scripts/check_translations.py
 ```
 
-CI (`.github/workflows/validate.yml`) additionally runs Hassfest and HACS validation.
+CI (`.github/workflows/validate.yml`) additionally runs the tests on the minimum Home Assistant (`requirements_test_min_ha.txt`), Hassfest and HACS validation; `ha-beta.yml` tests the newest HA pre-release weekly. `.pre-commit-config.yaml` runs ruff, mypy and the translation check locally. When the minimum HA changes, update `requirements_test_min_ha.txt` with it.
 
 ## 8. Workflow
 
