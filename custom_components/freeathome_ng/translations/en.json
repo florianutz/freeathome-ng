@@ -124,6 +124,27 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_call": {
+        "name": "Doorbell"
+      }
+    },
+    "event": {
+      "control": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_up": "Upper side pressed",
+              "press_down": "Lower side pressed",
+              "hold_up": "Upper side held",
+              "hold_down": "Lower side held",
+              "release": "Released"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Dimmer status",
@@ -191,22 +212,6 @@
       },
       "self_sufficiency": {
         "name": "Self-sufficiency"
-      }
-    },
-    "event": {
-      "control": {
-        "name": "Button",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_up": "Upper side pressed",
-              "press_down": "Lower side pressed",
-              "hold_up": "Upper side held",
-              "hold_down": "Lower side held",
-              "release": "Released"
-            }
-          }
-        }
       }
     }
   },

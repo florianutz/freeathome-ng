@@ -124,6 +124,27 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_call": {
+        "name": "Timbre"
+      }
+    },
+    "event": {
+      "control": {
+        "name": "Botón",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_up": "Lado superior pulsado",
+              "press_down": "Lado inferior pulsado",
+              "hold_up": "Lado superior mantenido",
+              "hold_down": "Lado inferior mantenido",
+              "release": "Soltado"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Estado regulador",
@@ -191,22 +212,6 @@
       },
       "self_sufficiency": {
         "name": "Autosuficiencia"
-      }
-    },
-    "event": {
-      "control": {
-        "name": "Botón",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_up": "Lado superior pulsado",
-              "press_down": "Lado inferior pulsado",
-              "hold_up": "Lado superior mantenido",
-              "hold_down": "Lado inferior mantenido",
-              "release": "Soltado"
-            }
-          }
-        }
       }
     }
   },

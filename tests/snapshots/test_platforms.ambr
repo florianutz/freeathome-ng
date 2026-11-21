@@ -878,13 +878,13 @@
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
-    'original_icon': 'mdi:doorbell',
+    'original_icon': None,
     'original_name': None,
     'platform': 'freeathome_ng',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'door_call',
     'unique_id': '00000000-0000-0000-0000-000000000000/ABB700D10010/ch0001',
     'unit_of_measurement': None,
   })
@@ -894,7 +894,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Doorbell',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:doorbell',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.living_room_entrance_access_doorbell',
@@ -1070,7 +1069,7 @@
         'high',
       ]),
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
@@ -1123,8 +1122,9 @@
         'high',
       ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
@@ -1145,7 +1145,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat_cool',
+    'state': 'heat',
   })
 # ---
 # name: test_platform_snapshot[cover][cover.living_room_central_shutters-entry]

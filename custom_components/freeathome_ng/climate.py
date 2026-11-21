@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -59,7 +60,7 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
-    _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = ["none", "eco"]
     _attr_fan_modes = ["auto", "low", "medium", "high"]
 
@@ -102,7 +103,17 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
-        return HVACMode.HEAT_COOL if self.thermostat_device.state else HVACMode.OFF
+        return HVACMode.HEAT if self.thermostat_device.state else HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return whether the controller is heating, idle or off."""
+        if not self.thermostat_device.state:
+            return HVACAction.OFF
+        demand = self.thermostat_device.current_actuator
+        if demand is None:
+            return None
+        return HVACAction.HEATING if demand > 0 else HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str:
@@ -127,7 +138,7 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
     @api_action
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
-        if hvac_mode == HVACMode.HEAT_COOL:
+        if hvac_mode == HVACMode.HEAT:
             await self.thermostat_device.turn_on()
         elif hvac_mode == HVACMode.OFF:
             await self.thermostat_device.turn_off()
@@ -160,7 +171,7 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
     @api_action
     async def async_turn_on(self) -> None:
         """Turn thermostat on."""
-        await self.async_set_hvac_mode(HVACMode.HEAT_COOL)
+        await self.async_set_hvac_mode(HVACMode.HEAT)
 
     @api_action
     async def async_turn_off(self) -> None:

@@ -124,6 +124,27 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_call": {
+        "name": "Campanello"
+      }
+    },
+    "event": {
+      "control": {
+        "name": "Pulsante",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_up": "Lato superiore premuto",
+              "press_down": "Lato inferiore premuto",
+              "hold_up": "Lato superiore tenuto premuto",
+              "hold_down": "Lato inferiore tenuto premuto",
+              "release": "Rilasciato"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "dimming_status": {
         "name": "Stato dimmer",
@@ -191,22 +212,6 @@
       },
       "self_sufficiency": {
         "name": "Autosufficienza"
-      }
-    },
-    "event": {
-      "control": {
-        "name": "Pulsante",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_up": "Lato superiore premuto",
-              "press_down": "Lato inferiore premuto",
-              "hold_up": "Lato superiore tenuto premuto",
-              "hold_down": "Lato inferiore tenuto premuto",
-              "release": "Rilasciato"
-            }
-          }
-        }
       }
     }
   },

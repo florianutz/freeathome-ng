@@ -1,5 +1,15 @@
 {
   "entity": {
+    "binary_sensor": {
+      "door_call": {
+        "default": "mdi:doorbell"
+      }
+    },
+    "event": {
+      "control": {
+        "default": "mdi:gesture-tap-button"
+      }
+    },
     "sensor": {
       "dimming_status": {
         "default": "mdi:gesture-tap-button",
@@ -39,11 +49,6 @@
       },
       "self_sufficiency": {
         "default": "mdi:home-percent"
-      }
-    },
-    "event": {
-      "control": {
-        "default": "mdi:gesture-tap-button"
       }
     }
   },
