@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every setup and options field now has a help text, in all 7 languages.
 
 ### Changed
+- The README documents every setup field and option, how data is updated, use cases, known limitations, troubleshooting and removal. The help text of "Include room names" now says correctly that the room is added in brackets after the channel name.
 - Every free@home channel is now its own device below its physical device, named like the channel. A channel in another room than its actuator (for example one gang of a multi-gang switch actuator) gets that room as its area; channels in the same room keep using the area of the physical device, including areas you assigned yourself. Scenes, groups and timer programs stay single devices.
 - Entities use Home Assistant's entity naming: the main entity of a channel is named after the channel device, other entities add a translated suffix (for example "Temperature"). Entity IDs of existing installations stay the same, and so do the names of main entities. The dimmer status sensor drops the channel number from its name ("Wall Rocker LT Dimmer status" instead of "Dimmer status ch0000").
 - Device names no longer contain the serial number; it is shown as the device's serial number instead.

@@ -19,7 +19,7 @@
           "host": "Adresse IP ou nom d'hôte du System Access Point, éventuellement avec un port.",
           "username": "Utilisateur de l'API locale, affiché dans l'app free@home sous Paramètres > API locale.",
           "password": "Mot de passe de l'utilisateur de l'API locale.",
-          "use_room_names": "Place le nom de la pièce free@home devant les noms d'entité.",
+          "use_room_names": "Ajoute le nom de la pièce free@home entre parenthèses après les noms de canal, par exemple « Plafonnier (Cuisine) ».",
           "switch_as_x": "Affiche les actionneurs de commutation comme interrupteurs. Désactivez pour les afficher comme lumières.",
           "name_prefix": "Texte placé devant chaque nom d'entité, par exemple \"NG \" tant que l'intégration classique fonctionne.",
           "use_https": "Se connecte en HTTPS et WSS au lieu de HTTP et WS.",
@@ -43,7 +43,7 @@
         "data_description": {
           "username": "Utilisateur de l'API locale, affiché dans l'app free@home sous Paramètres > API locale.",
           "password": "Mot de passe de l'utilisateur de l'API locale.",
-          "use_room_names": "Place le nom de la pièce free@home devant les noms d'entité.",
+          "use_room_names": "Ajoute le nom de la pièce free@home entre parenthèses après les noms de canal, par exemple « Plafonnier (Cuisine) ».",
           "switch_as_x": "Affiche les actionneurs de commutation comme interrupteurs. Désactivez pour les afficher comme lumières.",
           "name_prefix": "Texte placé devant chaque nom d'entité, par exemple \"NG \" tant que l'intégration classique fonctionne.",
           "use_https": "Se connecte en HTTPS et WSS au lieu de HTTP et WS.",
@@ -76,7 +76,7 @@
         },
         "data_description": {
           "host": "Adresse IP ou nom d'hôte du System Access Point, éventuellement avec un port.",
-          "use_room_names": "Place le nom de la pièce free@home devant les noms d'entité.",
+          "use_room_names": "Ajoute le nom de la pièce free@home entre parenthèses après les noms de canal, par exemple « Plafonnier (Cuisine) ».",
           "switch_as_x": "Affiche les actionneurs de commutation comme interrupteurs. Désactivez pour les afficher comme lumières.",
           "name_prefix": "Texte placé devant chaque nom d'entité, par exemple \"NG \" tant que l'intégration classique fonctionne.",
           "use_https": "Se connecte en HTTPS et WSS au lieu de HTTP et WS.",
@@ -113,7 +113,7 @@
           "include_orphan_channels": "Inclure les canaux non assignés à une pièce"
         },
         "data_description": {
-          "use_room_names": "Place le nom de la pièce free@home devant les noms d'entité.",
+          "use_room_names": "Ajoute le nom de la pièce free@home entre parenthèses après les noms de canal, par exemple « Plafonnier (Cuisine) ».",
           "switch_as_x": "Affiche les actionneurs de commutation comme interrupteurs. Désactivez pour les afficher comme lumières.",
           "name_prefix": "Texte placé devant chaque nom d'entité, par exemple \"NG \" tant que l'intégration classique fonctionne.",
           "use_https": "Se connecte en HTTPS et WSS au lieu de HTTP et WS.",

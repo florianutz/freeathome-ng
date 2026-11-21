@@ -86,6 +86,33 @@ Copy `custom_components/freeathome_ng` into your Home Assistant `<config>/custom
 
 ---
 
+## Configuration
+
+### Setup fields
+
+You enter these when you add the integration (Zeroconf discovery fills in the host for you). You can change the host later with **Reconfigure** and the credentials with **Re-authenticate**.
+
+| Field | Required | Description |
+|---|---|---|
+| `host` | yes | IP address or host name of the System Access Point, optionally with a port (for example `192.168.1.50` or `sysap.local:8080`). |
+| `username` | yes | The Local API user shown in the free@home app under *Settings → Local API*. If you enter the display name of a SysAP user instead, the integration resolves it via `/settings.json`. |
+| `password` | yes | Password of that Local API user. |
+
+### Options
+
+The options below appear in the setup dialog and later under **Settings → Devices & services → free@home NG → Configure**. Changing an option reloads the integration.
+
+| Option | Default | Description |
+|---|---|---|
+| `use_room_names` | off | Add the free@home room to channel names, for example `Ceiling Lamp (Kitchen)`. |
+| `switch_as_x` | on | Show switch actuators as `switch` entities. Turn it off to show them as `light` entities. |
+| `name_prefix` | empty | Text put in front of every device name, for example `NG ` while the classic integration still runs. |
+| `use_https` | off | Connect over HTTPS and WSS instead of HTTP and WS. |
+| `verify_ssl` | off | Check the SysAP's TLS certificate. Leave it off for the self-signed certificate most SysAPs use. |
+| `include_orphan_channels` | off | Also create entities for channels that have no room assigned in free@home. |
+
+---
+
 ## Migrating from Legacy `freeathome` (History, Names & Areas)
 
 You can migrate cleanly from the classic `freeathome` integration—preserving **device names, rooms/areas, labels, custom entity names, icons, aliases, Voice/Assist/Google/Alexa exposure, downstream helpers (`switch_as_x`, `integration`, `utility_meter`), and full Recorder history / Long-Term Statistics**—using the built-in **`freeathome_ng.migrate_from_legacy`** action:
@@ -227,6 +254,72 @@ Afterward, periodically send your live wattage readings (for example every 10 s 
 
 ---
 
+## How data is updated
+
+`freeathome_ng` is a **local push** integration and never polls:
+
+1. On startup it reads the complete SysAP configuration once over REST (`/fhapi/v1/api/rest/configuration`) and creates devices and entities from it.
+2. It then keeps one WebSocket connection (`/fhapi/v1/api/ws`) open. Every state change on the bus (`datapoints`, `parameters`), triggered scenes, and added or removed devices arrive there within milliseconds and update Home Assistant immediately.
+3. If the connection drops, all entities become unavailable and the integration reconnects in the background with exponential backoff (2 s up to 60 s, with jitter). After every reconnect it reads the full configuration again, so no state change is lost. A lost connection is logged once as a warning and the recovery once as info.
+4. Devices you add in the free@home app appear in Home Assistant without a restart. Devices you delete there are removed from Home Assistant, including their entities.
+
+---
+
+## Use cases
+
+- **Control and automate your free@home installation** from Home Assistant: lights, blinds, thermostats, ceiling fans, door openers and scenes, all with instant feedback.
+- **Use free@home wall switches for anything in Home Assistant:** react to `press_up`, `press_down` and `hold_*` events of rocker event entities, or register a virtual device and link it to a rocker in the free@home app (see the examples above).
+- **Show Home Assistant data on free@home panels:** feed PV, battery and grid power into free@home with an `EnergyMeterv2` virtual device, or push messages to the free@home app with `send_notification`.
+- **Move off the classic XMPP integration** step by step: run both side by side, then take over names, areas and history with `migrate_from_legacy`.
+
+---
+
+## Known limitations
+
+- Requires a **System Access Point 2.0 with firmware 2.6.0 or newer** and the Local API enabled. The older SysAP 1.0 has no Local API.
+- **Philips Hue devices** paired with the SysAP are skipped; use Home Assistant's Hue integration for them.
+- **Channels without a room** in free@home are skipped unless you turn on `include_orphan_channels`.
+- **Door call sensors** only report the ring itself; the integration turns them off again after 2 seconds.
+- free@home repeats some values every 840 seconds as a keep-alive. Binary sensors ignore these repeats so automations don't trigger twice; fire and CO alarms are never filtered.
+- **Scenes** can be activated but not edited, and timer programs can only be switched on or off.
+- Every channel is its own device below its physical device. On Home Assistant 2026.9, newly created entities of a channel get shorter entity IDs than on 2026.10 and later; existing entity IDs never change.
+
+---
+
+## Troubleshooting
+
+| Symptom | What to check |
+|---|---|
+| **Cannot connect** during setup | The host is reachable from Home Assistant, the Local API is enabled on the SysAP, and `use_https` matches how your SysAP is set up. |
+| **Invalid authentication** | Use the Local API user and password from *Settings → Local API* in the free@home app, not your free@home app login. When the SysAP rejects the credentials later, Home Assistant asks you to re-authenticate. |
+| **All entities unavailable** | The WebSocket connection to the SysAP is down. The log shows one warning; the integration reconnects on its own. Check the network and whether the SysAP was restarted. |
+| **A channel is missing** | Assign it to a room in the free@home app, or turn on `include_orphan_channels`. Hue devices are not supported. |
+| **A switch should be a light** (or the other way round) | Change the `switch_as_x` option. |
+
+For deeper analysis:
+
+- **Diagnostics:** *Settings → Devices & services → free@home NG → ⋮ → Download diagnostics*. Credentials, serial numbers and host data are redacted.
+- **Debug logging:**
+  ```yaml
+  logger:
+    logs:
+      custom_components.freeathome_ng: debug
+  ```
+- **Raw data:** `freeathome_ng.dump_config` writes the SysAP configuration and `freeathome_ng.monitor` records WebSocket frames to your configuration folder. Attach them (after checking them for personal data) to a [GitHub issue](https://github.com/florianutz/freeathome-ng/issues).
+
+---
+
+## Removal
+
+1. If you registered virtual devices, remove them first with `freeathome_ng.unregister_virtual_device`, so the SysAP stops expecting their heartbeat and marks them as unresponsive.
+2. Go to **Settings → Devices & services → free@home NG**, open the menu (**⋮**) of the SysAP entry and select **Delete**. Home Assistant removes all its devices and entities.
+3. Optionally uninstall the integration in the Marketplace / HACS (or delete `custom_components/freeathome_ng`) and restart Home Assistant.
+4. Optionally disable the Local API or delete its user in the free@home app.
+
+Removing `freeathome_ng` never touches the classic `freeathome` integration.
+
+---
+
 ## Documentation
 
 - [Migration Guide](docs/MIGRATION.md) — Step-by-step walkthrough for migrating names, areas, Assist exposure, and Recorder history from legacy `freeathome`.
@@ -238,9 +331,15 @@ Afterward, periodically send your live wattage readings (for example every 10 s 
 
 ## Development & Testing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the setup and [AGENTS.md](AGENTS.md) for the binding engineering rules. The quality gate:
+
 ```bash
-pytest
-ruff check custom_components tests
+pip install -r requirements_test.txt
+ruff check custom_components tests scripts
+ruff format --check custom_components tests scripts
+mypy
+pytest --cov --cov-report=term
+python3 scripts/check_translations.py
 ```
 
 A standalone mock SysAP REST & WebSocket server backed by [tests/fixtures/configuration.json](tests/fixtures/configuration.json) is included at [tests/mock_sysap_server.py](tests/mock_sysap_server.py):

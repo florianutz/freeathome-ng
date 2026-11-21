@@ -19,7 +19,7 @@
           "host": "Adres IP lub nazwa hosta System Access Point, opcjonalnie z portem.",
           "username": "Użytkownik lokalnego API, widoczny w aplikacji free@home w Ustawienia > Lokalne API.",
           "password": "Hasło użytkownika lokalnego API.",
-          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home w nawiasie po nazwach kanałów, na przykład „Lampa sufitowa (Kuchnia)”.",
           "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
           "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
           "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",
@@ -43,7 +43,7 @@
         "data_description": {
           "username": "Użytkownik lokalnego API, widoczny w aplikacji free@home w Ustawienia > Lokalne API.",
           "password": "Hasło użytkownika lokalnego API.",
-          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home w nawiasie po nazwach kanałów, na przykład „Lampa sufitowa (Kuchnia)”.",
           "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
           "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
           "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",
@@ -76,7 +76,7 @@
         },
         "data_description": {
           "host": "Adres IP lub nazwa hosta System Access Point, opcjonalnie z portem.",
-          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home w nawiasie po nazwach kanałów, na przykład „Lampa sufitowa (Kuchnia)”.",
           "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
           "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
           "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",
@@ -113,7 +113,7 @@
           "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
         },
         "data_description": {
-          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home w nawiasie po nazwach kanałów, na przykład „Lampa sufitowa (Kuchnia)”.",
           "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
           "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
           "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",

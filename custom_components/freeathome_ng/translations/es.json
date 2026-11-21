@@ -19,7 +19,7 @@
           "host": "Dirección IP o nombre de host del System Access Point, opcionalmente con puerto.",
           "username": "Usuario de la API local, visible en la app free@home en Ajustes > API local.",
           "password": "Contraseña del usuario de la API local.",
-          "use_room_names": "Añade el nombre de la habitación de free@home delante de los nombres de entidad.",
+          "use_room_names": "Añade el nombre de la habitación de free@home entre paréntesis detrás de los nombres de canal, por ejemplo «Lámpara de techo (Cocina)».",
           "switch_as_x": "Muestra los actuadores de conmutación como interruptores. Desactívalo para mostrarlos como luces.",
           "name_prefix": "Texto delante de cada nombre de entidad, por ejemplo \"NG \" mientras la integración clásica siga activa.",
           "use_https": "Conecta por HTTPS y WSS en lugar de HTTP y WS.",
@@ -43,7 +43,7 @@
         "data_description": {
           "username": "Usuario de la API local, visible en la app free@home en Ajustes > API local.",
           "password": "Contraseña del usuario de la API local.",
-          "use_room_names": "Añade el nombre de la habitación de free@home delante de los nombres de entidad.",
+          "use_room_names": "Añade el nombre de la habitación de free@home entre paréntesis detrás de los nombres de canal, por ejemplo «Lámpara de techo (Cocina)».",
           "switch_as_x": "Muestra los actuadores de conmutación como interruptores. Desactívalo para mostrarlos como luces.",
           "name_prefix": "Texto delante de cada nombre de entidad, por ejemplo \"NG \" mientras la integración clásica siga activa.",
           "use_https": "Conecta por HTTPS y WSS en lugar de HTTP y WS.",
@@ -76,7 +76,7 @@
         },
         "data_description": {
           "host": "Dirección IP o nombre de host del System Access Point, opcionalmente con puerto.",
-          "use_room_names": "Añade el nombre de la habitación de free@home delante de los nombres de entidad.",
+          "use_room_names": "Añade el nombre de la habitación de free@home entre paréntesis detrás de los nombres de canal, por ejemplo «Lámpara de techo (Cocina)».",
           "switch_as_x": "Muestra los actuadores de conmutación como interruptores. Desactívalo para mostrarlos como luces.",
           "name_prefix": "Texto delante de cada nombre de entidad, por ejemplo \"NG \" mientras la integración clásica siga activa.",
           "use_https": "Conecta por HTTPS y WSS en lugar de HTTP y WS.",
@@ -113,7 +113,7 @@
           "include_orphan_channels": "Incluir canales sin habitación asignada"
         },
         "data_description": {
-          "use_room_names": "Añade el nombre de la habitación de free@home delante de los nombres de entidad.",
+          "use_room_names": "Añade el nombre de la habitación de free@home entre paréntesis detrás de los nombres de canal, por ejemplo «Lámpara de techo (Cocina)».",
           "switch_as_x": "Muestra los actuadores de conmutación como interruptores. Desactívalo para mostrarlos como luces.",
           "name_prefix": "Texto delante de cada nombre de entidad, por ejemplo \"NG \" mientras la integración clásica siga activa.",
           "use_https": "Conecta por HTTPS y WSS en lugar de HTTP y WS.",
