@@ -655,7 +655,11 @@ async def async_migrate_from_legacy(
     """Preview or execute migration from legacy `freeathome` to `freeathome_ng`."""
     runtime: FreeAtHomeNgRuntime | None = getattr(hub_entry, "runtime_data", None)
     if runtime is None:
-        raise ServiceValidationError(f"free@home NG hub entry '{hub_entry.entry_id}' is not loaded")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
+            translation_placeholders={"entry_id": hub_entry.entry_id},
+        )
 
     filter_serials = (
         {s.strip().upper() for s in serialnumbers_filter if s.strip()}
@@ -664,9 +668,7 @@ async def async_migrate_from_legacy(
     )
     if not dry_run and cutover and filter_serials:
         raise ServiceValidationError(
-            "Partial cutover with serialnumbers filter is not supported because legacy "
-            "freeathome uses a single ConfigEntry for the entire SysAP. Use cutover=false "
-            "for selective metadata sync, or omit serialnumbers for full SysAP cutover."
+            translation_domain=DOMAIN, translation_key="partial_cutover_not_supported"
         )
 
     legacy_entries = _legacy_config_entries(hass)
@@ -675,8 +677,7 @@ async def async_migrate_from_legacy(
 
     if len(legacy_entries) > 1 and legacy_entry is None:
         raise ServiceValidationError(
-            "Multiple legacy freeathome entries exist and none matched this SysAP by "
-            "serial number or host."
+            translation_domain=DOMAIN, translation_key="legacy_entry_ambiguous"
         )
 
     legacy_entities, skipped_entities = collect_legacy_entities(

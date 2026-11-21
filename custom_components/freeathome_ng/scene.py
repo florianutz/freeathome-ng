@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.scene import FahScene
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -63,6 +63,7 @@ class FreeAtHomeNgScene(FreeAtHomeNgEntity, Scene):
         super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
         self.scene_device = device
 
+    @api_action
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene on the SysAP."""
         await self.scene_device.activate()

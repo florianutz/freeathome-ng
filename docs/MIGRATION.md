@@ -54,7 +54,7 @@ data:
   cutover: true
 ```
 
-*(If you run multiple SysAP hubs, also pass `entry_id: "<your_hub_entry_id>"` or `host: "<sysap_ip>"`.)*
+*(If you run multiple SysAP hubs, also pass `config_entry_id` (pick the SysAP in the action editor) or `host: "<sysap_ip>"`. The older `entry_id` field still works.)*
 
 Inspect the YAML response carefully:
 - **`summary`:** Counts of legacy devices/entities discovered, device metadata updates, same-domain entities (`history_preserved: true`), `domain_changed_entities`, `missing_ng_entities`, `conflicts`, and legacy entries to remove.

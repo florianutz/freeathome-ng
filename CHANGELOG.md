@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking changes
+- Minimum Home Assistant version is now **2026.8.0**. Users on older releases stay on v1.0.x.
+- With more than one SysAP set up, the writing actions `set_datapoint`, `register_virtual_device`, `unregister_virtual_device`, `trigger_proxy_device` and `send_notification` no longer run against every SysAP when no target is given. Choose the SysAP with the new `config_entry_id` field (or `host`); otherwise the action fails with a clear error. Setups with a single SysAP are not affected.
+
+### Added
+- All actions accept a `config_entry_id` field with a SysAP picker in the UI.
+- Every setup and options field now has a help text, in all 7 languages.
+
 ### Fixed
 - Climate: thermostats failed to load on current Home Assistant (`AttributeError` while adding the entity) and never reported current or target temperature, because the entity used a non-existent `native_*` temperature API.
 
 ### Changed
+- Actions are registered when Home Assistant starts, not when a SysAP loads, so automations that use them validate even while the SysAP is offline.
+- Error messages from setup, actions and the legacy migration are translated, and a command the SysAP rejects now shows a clear error instead of a raw exception.
+- WebSocket reconnects use randomised backoff, and unloading the integration now stops every background task cleanly.
 - Development: new engineering handbook (`AGENTS.md`), `CLAUDE.md`, architecture decision records (`docs/DECISIONS.md`), Integration Quality Scale tracking (`quality_scale.yaml`), Claude Code skills, `ruff format`, strict `mypy` for the `api/` layer, coverage reporting and a translation parity script in CI.
 - Development: the test suite now runs against real Home Assistant (`pytest-homeassistant-custom-component`, Python 3.14) instead of hand-written stubs, with syrupy snapshots of all entities and devices.
 

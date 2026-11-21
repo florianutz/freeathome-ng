@@ -6,6 +6,7 @@ import asyncio
 import base64
 import json
 import logging
+import random
 from collections.abc import Awaitable, Callable
 from typing import Any
 from urllib.parse import quote
@@ -17,6 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_REQUEST_TIMEOUT = 15
 WS_RECONNECT_INITIAL_DELAY = 2.0
 WS_RECONNECT_MAX_DELAY = 60.0
+
+
+def _with_jitter(delay: float) -> float:
+    """Return `delay` plus up to 25 % random jitter, so many clients do not reconnect in step."""
+    return delay + random.uniform(0, delay * 0.25)  # noqa: S311 - not used for security
 
 
 class FreeAtHomeApiError(Exception):
@@ -363,11 +369,14 @@ class FreeAtHomeLocalApiClient:
         on_connection_state: Callable[[bool], None] | None = None,
         on_reconnect: Callable[[], Awaitable[None]] | None = None,
     ) -> asyncio.Task[None]:
-        """Start the persistent WebSocket listener background task."""
+        """Start the persistent WebSocket listener as a task owned by this client.
+
+        Hosts that manage their own tasks (such as Home Assistant) should await
+        `run_websocket_listener` in a task they own instead.
+        """
         self.stop_websocket_listener()
-        self._ws_stop_event.clear()
         self._ws_task = asyncio.create_task(
-            self._websocket_loop(
+            self.run_websocket_listener(
                 on_message,
                 auth_failed_callback,
                 on_connection_state,
@@ -375,6 +384,19 @@ class FreeAtHomeLocalApiClient:
             )
         )
         return self._ws_task
+
+    async def run_websocket_listener(
+        self,
+        on_message: Callable[[dict[str, Any]], Awaitable[None]],
+        auth_failed_callback: Callable[[], None] | None = None,
+        on_connection_state: Callable[[bool], None] | None = None,
+        on_reconnect: Callable[[], Awaitable[None]] | None = None,
+    ) -> None:
+        """Run the WebSocket listener until `stop_websocket_listener` or cancellation."""
+        self._ws_stop_event.clear()
+        await self._websocket_loop(
+            on_message, auth_failed_callback, on_connection_state, on_reconnect
+        )
 
     def stop_websocket_listener(self) -> None:
         """Stop the WebSocket listener background task if running."""
@@ -481,18 +503,22 @@ class FreeAtHomeLocalApiClient:
             if self._ws_stop_event.is_set():
                 break
             try:
-                await asyncio.wait_for(self._ws_stop_event.wait(), timeout=backoff)
+                await asyncio.wait_for(self._ws_stop_event.wait(), timeout=_with_jitter(backoff))
                 break
             except TimeoutError:
                 backoff = min(backoff * 2, WS_RECONNECT_MAX_DELAY)
 
     async def close(self) -> None:
         """Stop all background tasks and close any owned HTTP session."""
+        ws_task = self._ws_task
         self.stop_websocket_listener()
-        for task in list(self._virtual_device_tasks.values()):
+        tasks = [t for t in (ws_task, *self._virtual_device_tasks.values()) if t is not None]
+        for task in tasks:
             if not task.done():
                 task.cancel()
         self._virtual_device_tasks.clear()
+        current = asyncio.current_task()
+        await asyncio.gather(*(t for t in tasks if t is not current), return_exceptions=True)
 
         if self._owned_session is not None and not self._owned_session.closed:
             await self._owned_session.close()

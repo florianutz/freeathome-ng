@@ -2,12 +2,36 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Awaitable, Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from .api import FreeAtHomeApiError
 from .api.devices.base import FahBaseDevice
+from .const import DOMAIN
+
+
+def api_action[EntityT: "FreeAtHomeNgEntity", **P, R](
+    func: Callable[Concatenate[EntityT, P], Awaitable[R]],
+) -> Callable[Concatenate[EntityT, P], Coroutine[Any, Any, R]]:
+    """Re-raise SysAP API errors of an entity action as a translated `HomeAssistantError`."""
+
+    @wraps(func)
+    async def _wrapper(self: EntityT, *args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return await func(self, *args, **kwargs)
+        except FreeAtHomeApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={"entity_id": self.entity_id, "error": str(err)},
+            ) from err
+
+    return _wrapper
 
 
 class FreeAtHomeNgEntity(Entity):

@@ -66,7 +66,7 @@ def test_manifest_and_hacs_metadata() -> None:
     assert manifest["config_flow"] is True
     assert manifest["version"] == pyproject["project"]["version"]
     assert hacs["render_readme"] is True
-    assert hacs["homeassistant"] == "2025.2.0"
+    assert hacs["homeassistant"] == "2026.8.0"
 
     for png in ("icon.png", "icon@2x.png", "logo.png", "logo@2x.png"):
         path = COMP_DIR / "brand" / png

@@ -204,6 +204,7 @@ class FreeAtHomeController:
         self._virtual_cmd_cbs: list[Callable[[str, str, str, str, str], Awaitable[None]]] = []
         self._devices_added_cbs: list[Callable[[list[FahBaseDevice]], Awaitable[None]]] = []
         self._auth_failed_cb: Callable[[], None] | None = None
+        self._pending_tasks: set[asyncio.Task[None]] = set()
         self._settings_loaded: bool = False
 
     def set_auth_failed_callback(self, cb: Callable[[], None] | None) -> None:
@@ -633,23 +634,33 @@ class FreeAtHomeController:
         for device in list(self.devices):
             await device.after_update()
 
+    def _on_connection_state(self, connected: bool) -> None:
+        """Track WebSocket connectivity and notify devices on every change."""
+        if connected == self.ws_connected:
+            return
+        self.ws_connected = connected
+        try:
+            task = asyncio.get_running_loop().create_task(self._notify_availability())
+        except RuntimeError:
+            return
+        self._pending_tasks.add(task)
+        task.add_done_callback(self._pending_tasks.discard)
+
     def start_listening(self) -> asyncio.Task[None]:
-        """Start the background WebSocket stream."""
-
-        def _on_state(connected: bool) -> None:
-            if connected == self.ws_connected:
-                return
-            self.ws_connected = connected
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self._notify_availability())
-            except RuntimeError:
-                pass
-
+        """Start the background WebSocket stream as a task owned by the client."""
         return self.client.start_websocket_listener(
             self.handle_ws_message,
             auth_failed_callback=self._auth_failed_cb,
-            on_connection_state=_on_state,
+            on_connection_state=self._on_connection_state,
+            on_reconnect=self.resync_configuration,
+        )
+
+    async def listen(self) -> None:
+        """Run the WebSocket stream until closed; for hosts that own the task."""
+        await self.client.run_websocket_listener(
+            self.handle_ws_message,
+            auth_failed_callback=self._auth_failed_cb,
+            on_connection_state=self._on_connection_state,
             on_reconnect=self.resync_configuration,
         )
 
@@ -810,3 +821,7 @@ class FreeAtHomeController:
         """Close the underlying client and stop background tasks."""
         self.ws_connected = False
         await self.client.close()
+        for task in list(self._pending_tasks):
+            task.cancel()
+        await asyncio.gather(*self._pending_tasks, return_exceptions=True)
+        self._pending_tasks.clear()

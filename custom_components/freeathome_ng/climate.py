@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -12,12 +11,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.climate import FahThermostat
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -54,14 +52,6 @@ async def async_setup_entry(
             for dev in new_devs
         ),
     )
-
-    platform = entity_platform.async_get_current_platform()
-    if platform is not None:
-        platform.async_register_entity_service(
-            "thermostat_temperature_correction",
-            {vol.Required("temperature_correction"): vol.Coerce(float)},
-            "async_set_temperature_correction",
-        )
 
 
 class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
@@ -135,6 +125,7 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
             "temperature_correction": self.thermostat_device.temperature_correction,
         }
 
+    @api_action
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         if hvac_mode == HVACMode.HEAT_COOL:
@@ -142,6 +133,7 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             await self.thermostat_device.turn_off()
 
+    @api_action
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set eco or normal preset."""
         if preset_mode == "eco":
@@ -149,24 +141,29 @@ class FreeAtHomeNgThermostat(FreeAtHomeNgEntity, ClimateEntity):
         else:
             await self.thermostat_device.turn_on()
 
+    @api_action
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is not None:
             await self.thermostat_device.set_target_temperature(float(temperature))
 
+    @api_action
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode stage."""
         await self.thermostat_device.set_fan_stage(fan_mode)
 
+    @api_action
     async def async_set_temperature_correction(self, temperature_correction: float) -> None:
         """Update temperature correction offset parameter."""
         await self.thermostat_device.set_temperature_correction(temperature_correction)
 
+    @api_action
     async def async_turn_on(self) -> None:
         """Turn thermostat on."""
         await self.async_set_hvac_mode(HVACMode.HEAT_COOL)
 
+    @api_action
     async def async_turn_off(self) -> None:
         """Turn thermostat off."""
         await self.async_set_hvac_mode(HVACMode.OFF)

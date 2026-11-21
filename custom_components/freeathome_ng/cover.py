@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -13,13 +12,11 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FreeAtHomeNgConfigEntry, register_platform_adder
 from .api.devices.cover import FahCover
-from .entity import FreeAtHomeNgEntity
+from .entity import FreeAtHomeNgEntity, api_action
 
 PARALLEL_UPDATES = 0
 
@@ -56,14 +53,6 @@ async def async_setup_entry(
             for dev in new_devs
         ),
     )
-
-    platform = entity_platform.async_get_current_platform()
-    if platform is not None:
-        platform.async_register_entity_service(
-            "cover_force_position",
-            {vol.Required("forced_position"): cv.string},
-            "async_force_position",
-        )
 
 
 class FreeAtHomeNgCover(FreeAtHomeNgEntity, CoverEntity):
@@ -134,26 +123,32 @@ class FreeAtHomeNgCover(FreeAtHomeNgEntity, CoverEntity):
         """Return forced position attribute."""
         return {"forced_position": self.cover_device.get_forced_cover_position()}
 
+    @api_action
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.cover_device.open_cover()
 
+    @api_action
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.cover_device.close_cover()
 
+    @api_action
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover movement."""
         await self.cover_device.stop_cover()
 
+    @api_action
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
         await self.cover_device.set_cover_position(int(kwargs[ATTR_POSITION]))
 
+    @api_action
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set cover tilt position."""
         await self.cover_device.set_cover_tilt_position(int(kwargs[ATTR_TILT_POSITION]))
 
+    @api_action
     async def async_force_position(self, forced_position: str) -> None:
         """Force cover open, closed, or release."""
         await self.cover_device.set_forced_cover_position(forced_position)

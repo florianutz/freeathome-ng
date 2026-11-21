@@ -14,6 +14,17 @@
           "use_https": "Użyj HTTPS / WSS",
           "verify_ssl": "Weryfikuj certyfikat SSL",
           "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        },
+        "data_description": {
+          "host": "Adres IP lub nazwa hosta System Access Point, opcjonalnie z portem.",
+          "username": "Użytkownik lokalnego API, widoczny w aplikacji free@home w Ustawienia > Lokalne API.",
+          "password": "Hasło użytkownika lokalnego API.",
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
+          "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
+          "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",
+          "verify_ssl": "Sprawdza certyfikat SysAP. Wyłącz dla certyfikatu z podpisem własnym, którego używa większość SysAP.",
+          "include_orphan_channels": "Tworzy też encje dla kanałów bez pomieszczenia w free@home."
         }
       },
       "link": {
@@ -28,6 +39,16 @@
           "use_https": "Użyj HTTPS / WSS",
           "verify_ssl": "Weryfikuj certyfikat SSL",
           "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        },
+        "data_description": {
+          "username": "Użytkownik lokalnego API, widoczny w aplikacji free@home w Ustawienia > Lokalne API.",
+          "password": "Hasło użytkownika lokalnego API.",
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
+          "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
+          "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",
+          "verify_ssl": "Sprawdza certyfikat SysAP. Wyłącz dla certyfikatu z podpisem własnym, którego używa większość SysAP.",
+          "include_orphan_channels": "Tworzy też encje dla kanałów bez pomieszczenia w free@home."
         }
       },
       "reauth_confirm": {
@@ -36,6 +57,10 @@
         "data": {
           "username": "Nazwa użytkownika Lokalnego API",
           "password": "Hasło"
+        },
+        "data_description": {
+          "username": "Użytkownik lokalnego API, widoczny w aplikacji free@home w Ustawienia > Lokalne API.",
+          "password": "Hasło użytkownika lokalnego API."
         }
       },
       "reconfigure": {
@@ -48,6 +73,15 @@
           "use_https": "Użyj HTTPS / WSS",
           "verify_ssl": "Weryfikuj certyfikat SSL",
           "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        },
+        "data_description": {
+          "host": "Adres IP lub nazwa hosta System Access Point, opcjonalnie z portem.",
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
+          "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
+          "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",
+          "verify_ssl": "Sprawdza certyfikat SysAP. Wyłącz dla certyfikatu z podpisem własnym, którego używa większość SysAP.",
+          "include_orphan_channels": "Tworzy też encje dla kanałów bez pomieszczenia w free@home."
         }
       }
     },
@@ -77,6 +111,14 @@
           "use_https": "Użyj HTTPS / WSS",
           "verify_ssl": "Weryfikuj certyfikat SSL",
           "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        },
+        "data_description": {
+          "use_room_names": "Dodaje nazwę pomieszczenia free@home przed nazwami encji.",
+          "switch_as_x": "Pokazuje aktory przełączające jako przełączniki. Wyłącz, aby pokazać je jako światła.",
+          "name_prefix": "Tekst przed nazwą każdej encji, na przykład \"NG \", dopóki działa klasyczna integracja.",
+          "use_https": "Łączy przez HTTPS i WSS zamiast HTTP i WS.",
+          "verify_ssl": "Sprawdza certyfikat SysAP. Wyłącz dla certyfikatu z podpisem własnym, którego używa większość SysAP.",
+          "include_orphan_channels": "Tworzy też encje dla kanałów bez pomieszczenia w free@home."
         }
       }
     }
@@ -160,6 +202,10 @@
         "host": {
           "name": "Host",
           "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
     },
@@ -174,6 +220,10 @@
         "host": {
           "name": "Host",
           "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
     },
@@ -204,6 +254,10 @@
         "host": {
           "name": "Host",
           "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
     },
@@ -242,6 +296,10 @@
         "host": {
           "name": "Host",
           "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
     },
@@ -260,6 +318,10 @@
         "host": {
           "name": "Host",
           "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
     },
@@ -286,6 +348,10 @@
         "host": {
           "name": "Host",
           "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
     },
@@ -308,6 +374,10 @@
         "host": {
           "name": "Host",
           "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
     },
@@ -354,8 +424,50 @@
         "serialnumbers": {
           "name": "Filtr numerów seryjnych (opcjonalnie)",
           "description": "Opcjonalne numery seryjne oddzielone przecinkami lub nowymi liniami do selektywnego podglądu lub synchronizacji metadanych."
+        },
+        "config_entry_id": {
+          "name": "SysAP",
+          "description": "SysAP free@home NG, którego użyć. Wymagany, gdy skonfigurowano kilka SysAP, a akcja coś w nim zapisuje."
         }
       }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entries": {
+      "message": "Żaden SysAP free@home NG nie jest załadowany."
+    },
+    "host_not_found": {
+      "message": "Żaden załadowany SysAP free@home NG nie ma hosta {host}."
+    },
+    "entry_not_loaded": {
+      "message": "Wpis konfiguracji free@home NG {entry_id} nie jest załadowany."
+    },
+    "entry_host_mismatch": {
+      "message": "Wpis konfiguracji {entry_id} nie należy do hosta {host}."
+    },
+    "multiple_entries_for_host": {
+      "message": "Kilka załadowanych SysAP używa hosta {host}. Zamiast tego wybierz wpis konfiguracji."
+    },
+    "multiple_entries_loaded": {
+      "message": "Załadowano kilka SysAP. Wybierz wpis konfiguracji, którego chcesz użyć."
+    },
+    "auth_failed": {
+      "message": "SysAP pod adresem {host} odrzucił dane logowania."
+    },
+    "cannot_connect": {
+      "message": "Nie można połączyć się z SysAP pod adresem {host}: {error}"
+    },
+    "action_failed": {
+      "message": "SysAP nie przyjął polecenia dla {entity_id}: {error}"
+    },
+    "partial_cutover_not_supported": {
+      "message": "Przejęcia nie można ograniczyć do numerów seryjnych, ponieważ stara integracja używa jednego wpisu konfiguracji dla całego SysAP. Użyj cutover: false do selektywnej synchronizacji albo usuń numery seryjne, aby wykonać pełne przejęcie."
+    },
+    "legacy_entry_ambiguous": {
+      "message": "Istnieje kilka starych wpisów konfiguracji free@home i żaden nie pasuje do tego SysAP pod względem numeru seryjnego ani hosta."
+    },
+    "request_failed": {
+      "message": "SysAP pod adresem {host} nie przyjął żądania: {error}"
     }
   }
 }
