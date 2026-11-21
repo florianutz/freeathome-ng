@@ -1,0 +1,361 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Połącz z free@home SysAP (Lokalne API)",
+        "description": "Podaj adres IP/nazwę hosta SysAP oraz dane logowania Lokalnego API (Ustawienia free@home -> Lokalne API, firmware >= 2.6.0).",
+        "data": {
+          "host": "Host / Adres IP",
+          "username": "Nazwa użytkownika Lokalnego API",
+          "password": "Hasło",
+          "use_room_names": "Uwzględniaj nazwy pomieszczeń w nazwach encji",
+          "switch_as_x": "Udostępniaj aktory przełączające jako przełączniki (zamiast świateł)",
+          "name_prefix": "Opcjonalny prefiks nazwy",
+          "use_https": "Użyj HTTPS / WSS",
+          "verify_ssl": "Weryfikuj certyfikat SSL",
+          "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        }
+      },
+      "link": {
+        "title": "Wykryto free@home SysAP ({name})",
+        "description": "Połącz free@home NG z wykrytym SysAP pod adresem {host} przez Lokalne API.",
+        "data": {
+          "username": "Nazwa użytkownika Lokalnego API",
+          "password": "Hasło",
+          "use_room_names": "Uwzględniaj nazwy pomieszczeń w nazwach encji",
+          "switch_as_x": "Udostępniaj aktory przełączające jako przełączniki (zamiast świateł)",
+          "name_prefix": "Opcjonalny prefiks nazwy",
+          "use_https": "Użyj HTTPS / WSS",
+          "verify_ssl": "Weryfikuj certyfikat SSL",
+          "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Ponowne uwierzytelnianie",
+        "description": "SysAP free@home pod adresem {host} odrzucił zapisane dane Lokalnego API.",
+        "data": {
+          "username": "Nazwa użytkownika Lokalnego API",
+          "password": "Hasło"
+        }
+      },
+      "reconfigure": {
+        "description": "Zaktualizuj ustawienia połączenia i nazewnictwa dla free@home NG.",
+        "data": {
+          "host": "Host / Adres IP",
+          "use_room_names": "Uwzględniaj nazwy pomieszczeń w nazwach encji",
+          "switch_as_x": "Udostępniaj aktory przełączające jako przełączniki (zamiast świateł)",
+          "name_prefix": "Opcjonalny prefiks nazwy",
+          "use_https": "Użyj HTTPS / WSS",
+          "verify_ssl": "Weryfikuj certyfikat SSL",
+          "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie udało się połączyć",
+      "invalid_auth": "Nieprawidłowe dane logowania",
+      "unknown": "Nieoczekiwany błąd",
+      "other_sysap": "Ten host należy do innego urządzenia SysAP niż skonfigurowane."
+    },
+    "abort": {
+      "already_configured": "Urządzenie jest już skonfigurowane",
+      "not_ipv4address": "Wykryty adres nie jest adresem IPv4.",
+      "not_sysap": "Wykryty host nie odpowiedział jako free@home SysAP.",
+      "serialNumber_not_found": "Nie znaleziono numeru seryjnego SysAP.",
+      "reauth_successful": "Ponowne uwierzytelnianie powiodło się",
+      "reconfigure_successful": "Ponowna konfiguracja powiodła się"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje free@home NG",
+        "data": {
+          "use_room_names": "Uwzględniaj nazwy pomieszczeń w nazwach encji",
+          "switch_as_x": "Udostępniaj aktory przełączające jako przełączniki (zamiast świateł)",
+          "name_prefix": "Opcjonalny prefiks nazwy",
+          "use_https": "Użyj HTTPS / WSS",
+          "verify_ssl": "Weryfikuj certyfikat SSL",
+          "include_orphan_channels": "Uwzględnij kanały nieprzypisane do pokoju"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dimming_status": {
+        "name": "Status ściemniacza {channel_id}",
+        "state": {
+          "not_pressed": "Nienaciśnięty",
+          "pressed_up": "Naciśnięty u góry",
+          "pressed_down": "Naciśnięty u dołu",
+          "held_up": "Przytrzymany u góry",
+          "held_down": "Przytrzymany u dołu"
+        }
+      },
+      "temperature": {
+        "name": "{channel_name} Temperatura"
+      },
+      "thermostat_temperature": {
+        "name": "{channel_name} Temperatura"
+      },
+      "windstrength": {
+        "name": "{channel_name} Prędkość wiatru"
+      },
+      "windforce": {
+        "name": "{channel_name} Siła wiatru"
+      },
+      "rain": {
+        "name": "{channel_name} Deszcz"
+      },
+      "lux": {
+        "name": "{channel_name} Natężenie światła"
+      },
+      "valve_volume_flow": {
+        "name": "{channel_name} Otwarcie zaworu"
+      },
+      "humidity": {
+        "name": "{channel_name} Wilgotność"
+      },
+      "co2": {
+        "name": "{channel_name} CO2"
+      },
+      "voc": {
+        "name": "{channel_name} LZO"
+      },
+      "pv_power": {
+        "name": "{channel_name} Moc PV"
+      },
+      "battery_power": {
+        "name": "{channel_name} Moc baterii"
+      },
+      "battery_soc": {
+        "name": "{channel_name} Poziom baterii"
+      },
+      "grid_power": {
+        "name": "{channel_name} Moc sieci"
+      },
+      "home_power": {
+        "name": "{channel_name} Zużycie domu"
+      },
+      "consumed_energy": {
+        "name": "{channel_name} Pobrana energia"
+      },
+      "injected_energy": {
+        "name": "{channel_name} Oddana energia"
+      },
+      "self_consumption": {
+        "name": "{channel_name} Autokonsumpcja"
+      },
+      "self_sufficiency": {
+        "name": "{channel_name} Samowystarczalność"
+      }
+    }
+  },
+  "services": {
+    "dump_config": {
+      "name": "Eksportuj konfigurację",
+      "description": "Eksportuje pełną konfigurację JSON Lokalnego API do folderu konfiguracji Home Assistant.",
+      "fields": {
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        }
+      }
+    },
+    "monitor": {
+      "name": "Monitoruj ramki WebSocket",
+      "description": "Zapisuje surowe ramki JSON WebSocket z Lokalnego API do pliku JSONL.",
+      "fields": {
+        "duration": {
+          "name": "Czas trwania",
+          "description": "Czas nasłuchu w sekundach (1-300)."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        }
+      }
+    },
+    "set_datapoint": {
+      "name": "Ustaw punkt danych",
+      "description": "Zapisuje wartość do Lokalnego REST API SysAP.",
+      "fields": {
+        "serialnumber": {
+          "name": "Numer seryjny",
+          "description": "Numer seryjny urządzenia (np. 6000A1B2C3D4)."
+        },
+        "channel_id": {
+          "name": "ID kanału",
+          "description": "Identyfikator kanału (np. ch0000)."
+        },
+        "datapoint_id": {
+          "name": "ID punktu danych",
+          "description": "Punkt wejściowy lub wyjściowy (np. idp0000 lub odp0000)."
+        },
+        "value": {
+          "name": "Wartość",
+          "description": "Wartość tekstowa do zapisania."
+        },
+        "sysap_uuid": {
+          "name": "UUID SysAP",
+          "description": "Opcjonalny UUID SysAP."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        }
+      }
+    },
+    "register_virtual_device": {
+      "name": "Zarejestruj urządzenie wirtualne",
+      "description": "Rejestruje lub odświeża urządzenie wirtualne/proxy na SysAP z odnawianiem TTL.",
+      "fields": {
+        "native_id": {
+          "name": "Natywne ID",
+          "description": "Unikalny identyfikator urządzenia wirtualnego."
+        },
+        "device_type": {
+          "name": "Typ urządzenia",
+          "description": "Oficjalny typ urządzenia wirtualnego free@home."
+        },
+        "display_name": {
+          "name": "Nazwa wyświetlana",
+          "description": "Nazwa widoczna w free@home."
+        },
+        "ttl": {
+          "name": "TTL (sekundy)",
+          "description": "Czas życia w sekundach (0 = nieaktywne, -1 = stałe, >0 = keep-alive)."
+        },
+        "flavor": {
+          "name": "Wariant",
+          "description": "Opcjonalny wariant (np. dla EnergyMeterv2)."
+        },
+        "capabilities": {
+          "name": "Możliwości",
+          "description": "Opcjonalna lista funkcji."
+        },
+        "sysap_uuid": {
+          "name": "UUID SysAP",
+          "description": "Opcjonalny UUID SysAP."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        }
+      }
+    },
+    "unregister_virtual_device": {
+      "name": "Wyrejestruj urządzenie wirtualne",
+      "description": "Zatrzymuje odświeżanie TTL i oznacza urządzenie wirtualne jako nieaktywne (ttl=0).",
+      "fields": {
+        "native_id": {
+          "name": "Natywne ID",
+          "description": "Unikalny identyfikator urządzenia wirtualnego."
+        },
+        "sysap_uuid": {
+          "name": "UUID SysAP",
+          "description": "Opcjonalny UUID SysAP."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        }
+      }
+    },
+    "trigger_proxy_device": {
+      "name": "Wyzwól akcję urządzenia proxy",
+      "description": "Wyzwala akcję (shortpress, longpress, release) na urządzeniu proxy.",
+      "fields": {
+        "device_class": {
+          "name": "Klasa urządzenia",
+          "description": "Klasa proxy (np. pushbutton)."
+        },
+        "device_id": {
+          "name": "ID urządzenia",
+          "description": "Identyfikator urządzenia proxy."
+        },
+        "action": {
+          "name": "Akcja",
+          "description": "Akcja do wyzwolenia (shortpress, longpress, release)."
+        },
+        "sysap_uuid": {
+          "name": "UUID SysAP",
+          "description": "Opcjonalny UUID SysAP."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        }
+      }
+    },
+    "send_notification": {
+      "name": "Wyślij powiadomienie SysAP",
+      "description": "Wysyła powiadomienie systemowe do free@home SysAP.",
+      "fields": {
+        "subject": {
+          "name": "Temat",
+          "description": "Nagłówek powiadomienia."
+        },
+        "body": {
+          "name": "Treść",
+          "description": "Treść wiadomości."
+        },
+        "timeout_minutes": {
+          "name": "Limit czasu (minuty)",
+          "description": "Opcjonalny czas automatycznego zamknięcia w minutach."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP."
+        }
+      }
+    },
+    "cover_force_position": {
+      "name": "Wymuś pozycję rolety",
+      "description": "Wymusza określoną pozycję osłony (open, closed lub none).",
+      "fields": {
+        "forced_position": {
+          "name": "Wymuszona pozycja",
+          "description": "Docelowy stan wymuszony (open, closed lub none)."
+        }
+      }
+    },
+    "thermostat_temperature_correction": {
+      "name": "Ustaw korektę temperatury termostatu",
+      "description": "Zmienia parametr korekty temperatury termostatu.",
+      "fields": {
+        "temperature_correction": {
+          "name": "Korekta temperatury",
+          "description": "Przesunięcie temperatury w °C."
+        }
+      }
+    },
+    "migrate_from_legacy": {
+      "name": "Migruj ze starszego freeathome",
+      "description": "Podgląd lub migracja nazw urządzeń, obszarów, metadanych encji, ekspozycji Assist i historii Recorder z klasycznej integracji freeathome do freeathome_ng.",
+      "fields": {
+        "entry_id": {
+          "name": "ID wpisu Huba",
+          "description": "Opcjonalne ID wpisu konfiguracji docelowego SysAP free@home NG."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Opcjonalny adres IP lub nazwa hosta SysAP do wyboru docelowego huba."
+        },
+        "dry_run": {
+          "name": "Tylko podgląd (dry run)",
+          "description": "Sprawdź dokładny plan migracji bez modyfikowania wpisów, urządzeń ani encji."
+        },
+        "cutover": {
+          "name": "Przełączenie (usuń stary wpis i zachowaj entity_id / historię)",
+          "description": "Kopiuje tylko metadane gdy wyłączone; usuwa stary wpis i zmienia entity_id po włączeniu z dry_run=false."
+        },
+        "serialnumbers": {
+          "name": "Filtr numerów seryjnych (opcjonalnie)",
+          "description": "Opcjonalne numery seryjne oddzielone przecinkami lub nowymi liniami do selektywnego podglądu lub synchronizacji metadanych."
+        }
+      }
+    }
+  }
+}

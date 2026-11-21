@@ -1,0 +1,85 @@
+"""Support for free@home NG door opener locks."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.lock import LockEntity
+from homeassistant.core import HomeAssistant
+
+try:
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+except ImportError:  # pragma: no cover - fallback for older HA typing
+    from homeassistant.helpers.entity_platform import (  # type: ignore[no-redef]
+        AddEntitiesCallback as AddConfigEntryEntitiesCallback,
+    )
+
+from . import FreeAtHomeNgConfigEntry, register_platform_adder
+from .api.devices.lock import FahLock
+from .entity import FreeAtHomeNgEntity
+
+PARALLEL_UPDATES = 0
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: FreeAtHomeNgConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up free@home NG lock entities."""
+    runtime = config_entry.runtime_data
+    hub_device_id = runtime.hub_device_id
+    entry_id = config_entry.entry_id
+    locks = runtime.controller.get_devices("lock")
+    async_add_entities(
+        FreeAtHomeNgLock(
+            dev,  # type: ignore[arg-type]
+            hub_device_id=hub_device_id,
+            entry_id=entry_id,
+        )
+        for dev in locks
+    )
+
+    register_platform_adder(
+        hass,
+        entry_id,
+        "lock",
+        lambda new_devs: async_add_entities(
+            FreeAtHomeNgLock(
+                dev,  # type: ignore[arg-type]
+                hub_device_id=hub_device_id,
+                entry_id=entry_id,
+            )
+            for dev in new_devs
+        ),
+    )
+
+
+class FreeAtHomeNgLock(FreeAtHomeNgEntity, LockEntity):
+    """Representation of a free@home NG door opener lock."""
+
+    def __init__(
+        self,
+        device: FahLock,
+        *,
+        hub_device_id: str | None = None,
+        entry_id: str | None = None,
+    ) -> None:
+        """Initialize the lock entity."""
+        super().__init__(device, hub_device_id=hub_device_id, entry_id=entry_id)
+        self.lock_device = device
+
+    @property
+    def is_locked(self) -> bool | None:
+        """Return True if the lock is locked."""
+        if self.lock_device.state is None:
+            return None
+        return self.lock_device.state == "0"
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Lock the door opener."""
+        await self.lock_device.lock()
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """Unlock the door opener."""
+        await self.lock_device.unlock()

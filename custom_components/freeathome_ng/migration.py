@@ -1,0 +1,1046 @@
+"""Migration helpers for moving devices, metadata, and history from legacy `freeathome`."""
+
+from __future__ import annotations
+
+import logging
+import re
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+
+from .const import (
+    CONF_NAME_PREFIX,
+    CONF_SWITCH_AS_X,
+    CONF_USE_ROOM_NAMES,
+    DEFAULT_NAME_PREFIX,
+    DEFAULT_SWITCH_AS_X,
+    DOMAIN,
+    LEGACY_DOMAIN,
+)
+
+if TYPE_CHECKING:
+    from . import FreeAtHomeNgRuntime
+
+_LOGGER = logging.getLogger(__name__)
+_CHANNEL_RE = re.compile(r"^ch[0-9a-fA-F]{4}$")
+
+
+@dataclass(frozen=True)
+class ParsedLegacyUniqueId:
+    """Parsed components of a legacy `freeathome` entity `unique_id`."""
+
+    serialnumber: str
+    channel_id: str
+    suffix: str = ""
+    sysap_prefix: str | None = None
+
+
+@dataclass
+class LegacyDeviceInfo:
+    """Discovered device from legacy `freeathome` device registry."""
+
+    serialnumber: str
+    entry_id: str | None
+    device_registry_id: str | None
+    title: str
+    device_name: str | None = None
+    area_id: str | None = None
+    labels: set[str] = field(default_factory=set)
+
+    def as_summary(self) -> dict[str, Any]:
+        """Return JSON-serializable summary representation."""
+        return {
+            "serialnumber": self.serialnumber,
+            "legacy_entry_id": self.entry_id,
+            "title": self.title,
+            "device_name": self.device_name,
+            "area_id": self.area_id,
+            "labels": sorted(self.labels),
+        }
+
+
+@dataclass
+class LegacyEntityInfo:
+    """Mapped entity from legacy `freeathome` entity registry."""
+
+    entity_id: str
+    unique_id: str
+    serialnumber: str
+    channel_id: str
+    suffix: str
+    legacy_domain: str
+    ng_domain: str
+    ng_unique_id: str
+    config_entry_id: str | None = None
+    name: str | None = None
+    icon: str | None = None
+    area_id: str | None = None
+    aliases: set[Any] | None = None
+    labels: set[str] = field(default_factory=set)
+    disabled_by_user: bool = False
+    hidden_by_user: bool = False
+    options: dict[str, dict[str, Any]] = field(default_factory=dict)
+    domain_changed: bool = False
+
+    def as_summary(
+        self,
+        *,
+        cutover: bool,
+        current_ng_entity_id: str | None = None,
+        target_entity_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Return JSON-serializable summary representation."""
+        return {
+            "legacy_entity_id": self.entity_id,
+            "legacy_unique_id": self.unique_id,
+            "serialnumber": self.serialnumber,
+            "channel_id": self.channel_id,
+            "legacy_domain": self.legacy_domain,
+            "ng_domain": self.ng_domain,
+            "ng_unique_id": self.ng_unique_id,
+            "current_ng_entity_id": current_ng_entity_id,
+            "target_entity_id": target_entity_id,
+            "will_rename_entity_id": bool(
+                cutover
+                and not self.domain_changed
+                and target_entity_id == self.entity_id
+                and current_ng_entity_id != self.entity_id
+            ),
+            "history_preserved": bool(
+                cutover
+                and not self.domain_changed
+                and target_entity_id == self.entity_id
+            ),
+            "domain_changed": self.domain_changed,
+            "name": self.name,
+            "area_id": self.area_id,
+            "icon": self.icon,
+            "aliases": sorted(a for a in (self.aliases or ()) if isinstance(a, str)),
+            "labels": sorted(self.labels),
+            "disabled_by_user": self.disabled_by_user,
+            "hidden_by_user": self.hidden_by_user,
+            "option_domains": sorted(self.options),
+        }
+
+
+def parse_legacy_unique_id(unique_id: str) -> ParsedLegacyUniqueId | None:
+    """Parse legacy `freeathome` unique_id into serial, channel, and suffix."""
+    raw = unique_id.strip()
+    if not raw or "/" not in raw:
+        return None
+    parts = [part.strip() for part in raw.split("/")]
+
+    # Format A: `<SERIAL>/chXXXX` (+ optional `/odpXXXX`, `/current_temperature`, `/dimming_status`)
+    if len(parts) >= 2 and parts[0] and _CHANNEL_RE.match(parts[1]):
+        suffix = f"/{'/'.join(parts[2:])}" if len(parts) > 2 and any(parts[2:]) else ""
+        return ParsedLegacyUniqueId(
+            serialnumber=parts[0],
+            channel_id=parts[1],
+            suffix=suffix,
+        )
+
+    # Format B (virtual devices / scenes on multi-SysAP legacy): `<SYSAP_ID>/FFFF.../chXXXX`
+    if len(parts) >= 3 and parts[0] and parts[1] and _CHANNEL_RE.match(parts[2]):
+        suffix = f"/{'/'.join(parts[3:])}" if len(parts) > 3 and any(parts[3:]) else ""
+        return ParsedLegacyUniqueId(
+            serialnumber=parts[1],
+            channel_id=parts[2],
+            suffix=suffix,
+            sysap_prefix=parts[0],
+        )
+
+    return None
+
+
+def parse_serialnumbers_text(raw: str) -> list[str]:
+    """Parse comma-, space-, or newline-separated serial numbers uniquely."""
+    seen: set[str] = set()
+    result: list[str] = []
+    for token in re.split(r"[\s,]+", raw.strip()):
+        cleaned = token.strip().upper()
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            result.append(cleaned)
+    return result
+
+
+def _is_user_reason(reason: Any) -> bool:
+    """Return True only if disabled_by/hidden_by represents a user-initiated action."""
+    if reason is None:
+        return False
+    value = getattr(reason, "value", reason)
+    return str(value).strip().lower().endswith("user")
+
+
+def _extract_entity_options(raw_options: Any) -> dict[str, dict[str, Any]]:
+    """Extract user-meaningful entity options, dropping legacy precision defaults."""
+    if not isinstance(raw_options, dict) and not hasattr(raw_options, "items"):
+        return {}
+    cleaned: dict[str, dict[str, Any]] = {}
+    for opt_domain, opt_values in raw_options.items():
+        if not isinstance(opt_domain, str) or not hasattr(opt_values, "items"):
+            continue
+        if opt_domain == LEGACY_DOMAIN:
+            continue
+        copied = {
+            k: v
+            for k, v in opt_values.items()
+            if not (opt_domain == "sensor" and k == "suggested_display_precision")
+        }
+        if copied:
+            cleaned[opt_domain] = copied
+    return cleaned
+
+
+def _extract_aliases(raw_aliases: Any) -> set[Any] | None:
+    """Return alias set when user-defined string aliases exist, preserving markers."""
+    if not raw_aliases:
+        return None
+    alias_items = set(raw_aliases)
+    if any(isinstance(item, str) and item for item in alias_items):
+        return alias_items
+    return None
+
+
+def _iter_entity_entries(ent_reg: Any) -> list[Any]:
+    """Return all entity registry entries across real HA and test stub registries."""
+    if hasattr(ent_reg, "entities") and hasattr(ent_reg.entities, "values"):
+        return list(ent_reg.entities.values())
+    return list(getattr(ent_reg, "entries", []))
+
+
+def _iter_device_entries(dev_reg: Any) -> list[Any]:
+    """Return all device registry entries across real HA and test stub registries."""
+    devices = getattr(dev_reg, "devices", None)
+    if hasattr(devices, "values"):
+        return list(devices.values())
+    if isinstance(devices, list):
+        return list(devices)
+    return []
+
+
+def _lookup_device(
+    dev_reg: Any,
+    domain: str,
+    identifier_value: str,
+    *,
+    config_entry_id: str | None = None,
+    device_registry_id: str | None = None,
+) -> Any | None:
+    """Safely look up a DeviceEntry across HA 2025.2–2026.11+ without deprecated calls."""
+    if device_registry_id and hasattr(dev_reg, "async_get"):
+        direct = dev_reg.async_get(device_registry_id)
+        if direct is not None:
+            return direct
+
+    identifier = (domain, identifier_value)
+
+    # HA 2026.8+: config-entry-scoped lookup (preferred when entry_id is known).
+    if config_entry_id and hasattr(dev_reg, "async_get_device_by_identifier"):
+        return dev_reg.async_get_device_by_identifier(identifier, config_entry_id)
+
+    # HA 2026.8+: multi-entry lookup (never fall through to deprecated async_get_device).
+    if hasattr(dev_reg, "async_get_devices"):
+        matches = dev_reg.async_get_devices(identifiers={identifier}) or ()
+        if config_entry_id:
+            for dev in matches:
+                if config_entry_id in getattr(dev, "config_entries", ()):
+                    return dev
+            return None
+        return next(iter(matches), None)
+
+    # Legacy HA (< 2026.8) fallback.
+    if hasattr(dev_reg, "async_get_device"):
+        return dev_reg.async_get_device(identifiers={identifier})
+
+    for dev in _iter_device_entries(dev_reg):
+        if identifier in getattr(dev, "identifiers", set()) and (
+            not config_entry_id
+            or config_entry_id in getattr(dev, "config_entries", ())
+        ):
+            return dev
+    return None
+
+
+def _legacy_config_entries(hass: Any) -> list[ConfigEntry[Any]]:
+    """Return all configured legacy `freeathome` config entries."""
+    if hass is None or not hasattr(hass, "config_entries"):
+        return []
+    if not hasattr(hass.config_entries, "async_entries"):
+        return []
+    return [
+        entry
+        for entry in hass.config_entries.async_entries(LEGACY_DOMAIN)
+        if getattr(entry, "domain", None) == LEGACY_DOMAIN
+    ]
+
+
+def find_matching_legacy_entry(
+    hass: Any, hub_entry: ConfigEntry[Any]
+) -> ConfigEntry[Any] | None:
+    """Match the legacy `freeathome` config entry corresponding to `hub_entry`."""
+    legacy_entries = _legacy_config_entries(hass)
+    if not legacy_entries:
+        return None
+
+    runtime: FreeAtHomeNgRuntime | None = getattr(hub_entry, "runtime_data", None)
+    hub_serial = str(
+        getattr(hub_entry, "unique_id", None)
+        or (getattr(runtime.controller, "sysap_serial", None) if runtime else None)
+        or ""
+    ).strip().upper()
+    hub_host = str(hub_entry.data.get(CONF_HOST, "")).strip().lower()
+
+    if hub_serial:
+        for entry in legacy_entries:
+            leg_serial = str(getattr(entry, "unique_id", None) or "").strip().upper()
+            if leg_serial and leg_serial == hub_serial:
+                return entry
+
+    if hub_host:
+        for entry in legacy_entries:
+            leg_host = str(entry.data.get(CONF_HOST, "")).strip().lower()
+            if leg_host and leg_host == hub_host:
+                return entry
+
+    if len(legacy_entries) == 1:
+        return legacy_entries[0]
+
+    return None
+
+
+def get_legacy_setup_defaults(
+    hass: Any,
+    *,
+    host: str | None = None,
+    serial_number: str | None = None,
+) -> dict[str, Any]:
+    """Return non-destructive setup defaults read from a legacy `freeathome` entry."""
+    legacy_entries = _legacy_config_entries(hass)
+    if not legacy_entries:
+        return {}
+
+    matched: ConfigEntry[Any] | None = None
+    target_serial = (serial_number or "").strip().upper()
+    target_host = (host or "").strip().lower()
+
+    if target_serial:
+        matched = next(
+            (
+                entry
+                for entry in legacy_entries
+                if str(getattr(entry, "unique_id", None) or "").strip().upper()
+                == target_serial
+            ),
+            None,
+        )
+    if matched is None and target_host:
+        matched = next(
+            (
+                entry
+                for entry in legacy_entries
+                if str(entry.data.get(CONF_HOST, "")).strip().lower() == target_host
+            ),
+            None,
+        )
+    if matched is None and len(legacy_entries) == 1:
+        matched = legacy_entries[0]
+    if matched is None:
+        return {}
+
+    defaults: dict[str, Any] = {}
+    if matched.data.get(CONF_HOST):
+        defaults[CONF_HOST] = str(matched.data[CONF_HOST])
+    if CONF_USE_ROOM_NAMES in matched.data:
+        defaults[CONF_USE_ROOM_NAMES] = bool(matched.data[CONF_USE_ROOM_NAMES])
+    if CONF_SWITCH_AS_X in matched.data:
+        defaults[CONF_SWITCH_AS_X] = bool(matched.data[CONF_SWITCH_AS_X])
+    return defaults
+
+
+def _candidate_sysap_uuids(hub_entry: ConfigEntry[Any]) -> list[str]:
+    """Return ordered SysAP UUIDs owned by `hub_entry`."""
+    runtime: FreeAtHomeNgRuntime | None = getattr(hub_entry, "runtime_data", None)
+    if runtime is None:
+        return ["00000000-0000-0000-0000-000000000000"]
+    uuids = list(getattr(runtime.controller, "sysap_uuids", ()) or ())
+    if uuids:
+        return uuids
+    primary = getattr(runtime.controller, "primary_sysap_uuid", "")
+    return [primary or "00000000-0000-0000-0000-000000000000"]
+
+
+def _index_ng_entities(
+    ent_reg: Any, hub_entry_id: str
+) -> tuple[dict[tuple[str, str], Any], dict[str, Any]]:
+    """Index NG entity registry entries by `(domain, unique_id)` and `unique_id`."""
+    by_domain_uid: dict[tuple[str, str], Any] = {}
+    by_uid: dict[str, Any] = {}
+    for ent_entry in er.async_entries_for_config_entry(ent_reg, hub_entry_id):
+        entity_id = str(getattr(ent_entry, "entity_id", ""))
+        ent_domain = str(
+            getattr(ent_entry, "domain", None)
+            or (entity_id.split(".", 1)[0] if "." in entity_id else "sensor")
+        )
+        unique_id = str(getattr(ent_entry, "unique_id", ""))
+        if unique_id:
+            by_domain_uid[(ent_domain, unique_id)] = ent_entry
+            by_uid.setdefault(unique_id, ent_entry)
+    return by_domain_uid, by_uid
+
+
+def _build_legacy_device_info(
+    dev_entry: Any,
+    serialnumber: str,
+    legacy_entry: ConfigEntry[Any] | None,
+) -> LegacyDeviceInfo:
+    """Create a `LegacyDeviceInfo` from a DeviceEntry."""
+    raw_name_by_user = getattr(dev_entry, "name_by_user", None)
+    device_name = (
+        str(raw_name_by_user).strip()
+        if isinstance(raw_name_by_user, str) and raw_name_by_user.strip()
+        else None
+    )
+    area_id = getattr(dev_entry, "area_id", None)
+    labels = set(getattr(dev_entry, "labels", None) or ())
+    title = str(getattr(dev_entry, "name", None) or serialnumber)
+    entry_id: str | None = None
+    if legacy_entry is not None and legacy_entry.entry_id in getattr(
+        dev_entry, "config_entries", ()
+    ):
+        entry_id = legacy_entry.entry_id
+    elif getattr(dev_entry, "config_entries", ()):
+        entry_id = next(iter(getattr(dev_entry, "config_entries", ())), None)
+
+    return LegacyDeviceInfo(
+        serialnumber=serialnumber,
+        entry_id=entry_id,
+        device_registry_id=getattr(dev_entry, "id", None),
+        title=title,
+        device_name=device_name,
+        area_id=area_id if isinstance(area_id, str) and area_id else None,
+        labels={str(lbl) for lbl in labels if lbl},
+    )
+
+
+def discover_legacy_devices(
+    hass: Any,
+    legacy_entry: ConfigEntry[Any] | None,
+    legacy_entities: list[LegacyEntityInfo] | None = None,
+    *,
+    serialnumbers_filter: set[str] | None = None,
+) -> list[LegacyDeviceInfo]:
+    """Discover legacy `freeathome` device metadata from the device registry."""
+    if hass is None:
+        return []
+
+    dev_reg = dr.async_get(hass)
+    discovered: dict[str, LegacyDeviceInfo] = {}
+
+    for dev_entry in _iter_device_entries(dev_reg):
+        if legacy_entry is not None and legacy_entry.entry_id not in getattr(
+            dev_entry, "config_entries", ()
+        ):
+            continue
+        serial = next(
+            (
+                ident_val
+                for ident_dom, ident_val in getattr(dev_entry, "identifiers", ())
+                if ident_dom == LEGACY_DOMAIN and ident_val
+            ),
+            None,
+        )
+        if not serial:
+            continue
+        if serialnumbers_filter is not None and serial.upper() not in serialnumbers_filter:
+            continue
+        discovered[serial] = _build_legacy_device_info(dev_entry, serial, legacy_entry)
+
+    # Supplement via entity references in case the device registry cannot enumerate `.devices`.
+    if legacy_entities:
+        for le in legacy_entities:
+            if le.serialnumber in discovered:
+                continue
+            dev_entry = _lookup_device(
+                dev_reg,
+                LEGACY_DOMAIN,
+                le.serialnumber,
+                config_entry_id=legacy_entry.entry_id if legacy_entry else le.config_entry_id,
+            )
+            if dev_entry is not None:
+                discovered[le.serialnumber] = _build_legacy_device_info(
+                    dev_entry, le.serialnumber, legacy_entry
+                )
+
+    return list(discovered.values())
+
+
+def collect_legacy_entities(
+    hass: Any,
+    hub_entry: ConfigEntry[Any],
+    legacy_entry: ConfigEntry[Any] | None,
+    *,
+    serialnumbers_filter: set[str] | None = None,
+) -> tuple[list[LegacyEntityInfo], list[dict[str, Any]]]:
+    """Collect and deterministically map legacy `freeathome` entities onto NG."""
+    ent_reg = er.async_get(hass)
+    ng_by_domain_uid, ng_by_uid = _index_ng_entities(ent_reg, hub_entry.entry_id)
+    candidate_uuids = _candidate_sysap_uuids(hub_entry)
+    primary_uuid = candidate_uuids[0]
+
+    mapped: list[LegacyEntityInfo] = []
+    skipped: list[dict[str, Any]] = []
+
+    for ent_entry in _iter_entity_entries(ent_reg):
+        if getattr(ent_entry, "platform", None) != LEGACY_DOMAIN:
+            continue
+
+        ent_cfg_id = getattr(ent_entry, "config_entry_id", None)
+        if legacy_entry is not None and ent_cfg_id not in (legacy_entry.entry_id, None):
+            continue
+
+        entity_id = str(getattr(ent_entry, "entity_id", ""))
+        unique_id = str(getattr(ent_entry, "unique_id", ""))
+        parsed = parse_legacy_unique_id(unique_id)
+        if parsed is None:
+            skipped.append(
+                {
+                    "entity_id": entity_id,
+                    "unique_id": unique_id,
+                    "reason": "unrecognized_legacy_unique_id",
+                }
+            )
+            continue
+
+        if (
+            serialnumbers_filter is not None
+            and parsed.serialnumber.upper() not in serialnumbers_filter
+        ):
+            continue
+
+        legacy_domain = str(
+            getattr(ent_entry, "domain", None)
+            or (entity_id.split(".", 1)[0] if "." in entity_id else "sensor")
+        )
+
+        ng_domain = legacy_domain
+        ng_unique_id = f"{primary_uuid}/{parsed.serialnumber}/{parsed.channel_id}{parsed.suffix}"
+        matched_ng = None
+
+        for sysap_uuid in candidate_uuids:
+            candidate_uid = (
+                f"{sysap_uuid}/{parsed.serialnumber}/{parsed.channel_id}{parsed.suffix}"
+            )
+            if (legacy_domain, candidate_uid) in ng_by_domain_uid:
+                matched_ng = ng_by_domain_uid[(legacy_domain, candidate_uid)]
+                ng_domain = legacy_domain
+                ng_unique_id = candidate_uid
+                break
+
+        if matched_ng is None:
+            for sysap_uuid in candidate_uuids:
+                candidate_uid = (
+                    f"{sysap_uuid}/{parsed.serialnumber}/{parsed.channel_id}{parsed.suffix}"
+                )
+                if candidate_uid in ng_by_uid:
+                    matched_ng = ng_by_uid[candidate_uid]
+                    matched_eid = str(getattr(matched_ng, "entity_id", ""))
+                    ng_domain = str(
+                        getattr(matched_ng, "domain", None)
+                        or (
+                            matched_eid.split(".", 1)[0]
+                            if "." in matched_eid
+                            else legacy_domain
+                        )
+                    )
+                    ng_unique_id = candidate_uid
+                    break
+
+        raw_name = getattr(ent_entry, "name", None)
+        raw_icon = getattr(ent_entry, "icon", None)
+        raw_area = getattr(ent_entry, "area_id", None)
+        raw_labels = getattr(ent_entry, "labels", None) or ()
+
+        mapped.append(
+            LegacyEntityInfo(
+                entity_id=entity_id,
+                unique_id=unique_id,
+                serialnumber=parsed.serialnumber,
+                channel_id=parsed.channel_id,
+                suffix=parsed.suffix,
+                legacy_domain=legacy_domain,
+                ng_domain=ng_domain,
+                ng_unique_id=ng_unique_id,
+                config_entry_id=ent_cfg_id,
+                name=str(raw_name) if isinstance(raw_name, str) and raw_name else None,
+                icon=str(raw_icon) if isinstance(raw_icon, str) and raw_icon else None,
+                area_id=str(raw_area) if isinstance(raw_area, str) and raw_area else None,
+                aliases=_extract_aliases(getattr(ent_entry, "aliases", None)),
+                labels={str(lbl) for lbl in raw_labels if lbl},
+                disabled_by_user=_is_user_reason(getattr(ent_entry, "disabled_by", None)),
+                hidden_by_user=_is_user_reason(getattr(ent_entry, "hidden_by", None)),
+                options=_extract_entity_options(getattr(ent_entry, "options", None)),
+                domain_changed=legacy_domain != ng_domain,
+            )
+        )
+
+    return mapped, skipped
+
+
+def _transfer_device_metadata(
+    dev_reg: Any,
+    ng_dev: Any,
+    legacy: LegacyDeviceInfo,
+) -> dict[str, Any] | None:
+    """Copy device name override, area, and labels onto an NG device entry."""
+    kwargs: dict[str, Any] = {}
+    if legacy.device_name:
+        kwargs["name_by_user"] = legacy.device_name
+    if legacy.area_id:
+        kwargs["area_id"] = legacy.area_id
+    if legacy.labels:
+        existing_labels = set(getattr(ng_dev, "labels", None) or ())
+        kwargs["labels"] = existing_labels | legacy.labels
+    if not kwargs:
+        return None
+    if hasattr(dev_reg, "async_update_device"):
+        dev_reg.async_update_device(ng_dev.id, **kwargs)
+    return {
+        "serialnumber": legacy.serialnumber,
+        "ng_device_id": ng_dev.id,
+        "name_by_user": kwargs.get("name_by_user"),
+        "area_id": kwargs.get("area_id"),
+        "labels": sorted(kwargs["labels"]) if "labels" in kwargs else [],
+    }
+
+
+def _apply_entity_migration(
+    ent_reg: Any,
+    ng_ent: Any,
+    legacy_ent: LegacyEntityInfo,
+    *,
+    cutover: bool,
+    has_conflict: bool,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Copy metadata, options, and optionally `entity_id` onto an NG entity."""
+    kwargs: dict[str, Any] = {}
+    if legacy_ent.name is not None:
+        kwargs["name"] = legacy_ent.name
+    if legacy_ent.icon is not None:
+        kwargs["icon"] = legacy_ent.icon
+    if legacy_ent.area_id is not None:
+        kwargs["area_id"] = legacy_ent.area_id
+    if legacy_ent.aliases is not None:
+        kwargs["aliases"] = legacy_ent.aliases
+    if legacy_ent.labels:
+        existing_labels = set(getattr(ng_ent, "labels", None) or ())
+        kwargs["labels"] = existing_labels | legacy_ent.labels
+    if legacy_ent.disabled_by_user:
+        disabler_cls = getattr(er, "RegistryEntryDisabler", None)
+        kwargs["disabled_by"] = getattr(disabler_cls, "USER", "user")
+    if legacy_ent.hidden_by_user:
+        hider_cls = getattr(er, "RegistryEntryHider", None)
+        kwargs["hidden_by"] = getattr(hider_cls, "USER", "user")
+
+    wants_rename = (
+        cutover
+        and not legacy_ent.domain_changed
+        and not has_conflict
+        and ng_ent.entity_id != legacy_ent.entity_id
+    )
+    if wants_rename:
+        kwargs["new_entity_id"] = legacy_ent.entity_id
+
+    conflict_entry: dict[str, Any] | None = None
+    original_ng_entity_id = ng_ent.entity_id
+    final_entity_id = original_ng_entity_id
+
+    if kwargs and hasattr(ent_reg, "async_update_entity"):
+        try:
+            updated = ent_reg.async_update_entity(original_ng_entity_id, **kwargs)
+            final_entity_id = (
+                getattr(updated, "entity_id", None)
+                or kwargs.get("new_entity_id")
+                or original_ng_entity_id
+            )
+        except ValueError as err:
+            if "new_entity_id" in kwargs:
+                conflict_entry = {
+                    "entity_id": legacy_ent.entity_id,
+                    "ng_entity_id": original_ng_entity_id,
+                    "reason": str(err),
+                }
+                fallback_kwargs = {
+                    k: v for k, v in kwargs.items() if k != "new_entity_id"
+                }
+                if fallback_kwargs:
+                    updated = ent_reg.async_update_entity(
+                        original_ng_entity_id, **fallback_kwargs
+                    )
+                    final_entity_id = (
+                        getattr(updated, "entity_id", None) or original_ng_entity_id
+                    )
+            else:
+                raise
+
+    if legacy_ent.options and hasattr(ent_reg, "async_update_entity_options"):
+        for opt_domain, opt_values in legacy_ent.options.items():
+            ent_reg.async_update_entity_options(final_entity_id, opt_domain, opt_values)
+
+    return (
+        legacy_ent.as_summary(
+            cutover=cutover,
+            current_ng_entity_id=original_ng_entity_id,
+            target_entity_id=final_entity_id,
+        ),
+        conflict_entry,
+    )
+
+
+async def async_migrate_from_legacy(
+    hass: Any,
+    hub_entry: ConfigEntry[Any],
+    *,
+    dry_run: bool = True,
+    cutover: bool = False,
+    serialnumbers_filter: set[str] | None = None,
+) -> dict[str, Any]:
+    """Preview or execute migration from legacy `freeathome` to `freeathome_ng`."""
+    runtime: FreeAtHomeNgRuntime | None = getattr(hub_entry, "runtime_data", None)
+    if runtime is None:
+        raise ServiceValidationError(
+            f"free@home NG hub entry '{hub_entry.entry_id}' is not loaded"
+        )
+
+    filter_serials = (
+        {s.strip().upper() for s in serialnumbers_filter if s.strip()}
+        if serialnumbers_filter
+        else None
+    )
+    if not dry_run and cutover and filter_serials:
+        raise ServiceValidationError(
+            "Partial cutover with serialnumbers filter is not supported because legacy "
+            "freeathome uses a single ConfigEntry for the entire SysAP. Use cutover=false "
+            "for selective metadata sync, or omit serialnumbers for full SysAP cutover."
+        )
+
+    legacy_entries = _legacy_config_entries(hass)
+    legacy_entry = find_matching_legacy_entry(hass, hub_entry)
+    warnings: list[str] = []
+
+    if len(legacy_entries) > 1 and legacy_entry is None:
+        raise ServiceValidationError(
+            "Multiple legacy freeathome entries exist and none matched this SysAP by "
+            "serial number or host."
+        )
+
+    legacy_entities, skipped_entities = collect_legacy_entities(
+        hass,
+        hub_entry,
+        legacy_entry,
+        serialnumbers_filter=filter_serials,
+    )
+    legacy_devices = discover_legacy_devices(
+        hass,
+        legacy_entry,
+        legacy_entities,
+        serialnumbers_filter=filter_serials,
+    )
+
+    if filter_serials is not None:
+        found_serials = {d.serialnumber.upper() for d in legacy_devices} | {
+            e.serialnumber.upper() for e in legacy_entities
+        }
+        missing_filter = sorted(filter_serials - found_serials)
+        if missing_filter:
+            warnings.append(
+                f"Requested serial numbers not found in legacy freeathome: {', '.join(missing_filter)}"
+            )
+
+    merged_opts = {**hub_entry.data, **hub_entry.options}
+    name_prefix = str(merged_opts.get(CONF_NAME_PREFIX, DEFAULT_NAME_PREFIX))
+    if cutover and name_prefix:
+        warnings.append(
+            f"Hub currently has name_prefix='{name_prefix}'. Clear it in Hub Options "
+            "after cutover if you no longer want prefixed entity names."
+        )
+
+    ng_switch_as_x = bool(merged_opts.get(CONF_SWITCH_AS_X, DEFAULT_SWITCH_AS_X))
+    if legacy_entry is not None and CONF_SWITCH_AS_X in legacy_entry.data:
+        leg_switch_as_x = bool(legacy_entry.data[CONF_SWITCH_AS_X])
+        if leg_switch_as_x != ng_switch_as_x:
+            warnings.append(
+                f"switch_as_x mismatch detected (legacy={leg_switch_as_x}, "
+                f"freeathome_ng={ng_switch_as_x}). Switching actuators changed domain "
+                "between light and switch and cannot retain same-domain Recorder history."
+            )
+
+    if any(ent.domain_changed for ent in legacy_entities):
+        warnings.append(
+            "Some entities changed domain between legacy freeathome and freeathome_ng "
+            "(for example light <-> switch due to switch_as_x); metadata and Assist "
+            "options are copied, while cross-domain entity_id renaming is skipped."
+        )
+
+    if cutover:
+        warnings.append(
+            "Update automations using legacy freeathome_event to freeathome_ng_event "
+            "and legacy freeathome.* actions (dump/monitor/cover_force_position/"
+            "thermostat_temperature_correction) to freeathome_ng.*."
+        )
+
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    existing_by_eid = {str(e.entity_id): e for e in _iter_entity_entries(ent_reg)}
+    ng_by_domain_uid, _ = _index_ng_entities(ent_reg, hub_entry.entry_id)
+
+    conflicts: list[dict[str, Any]] = []
+    conflicting_eids: set[str] = set()
+    for le in legacy_entities:
+        if cutover and not le.domain_changed:
+            holder = existing_by_eid.get(le.entity_id)
+            if holder is not None and getattr(holder, "platform", None) not in (
+                LEGACY_DOMAIN,
+                DOMAIN,
+            ):
+                conflicts.append(
+                    {
+                        "entity_id": le.entity_id,
+                        "reason": "held_by_other_integration",
+                        "holder_platform": getattr(holder, "platform", None),
+                    }
+                )
+                conflicting_eids.add(le.entity_id)
+
+    if dry_run:
+        device_updates = [
+            dev.as_summary()
+            for dev in legacy_devices
+            if dev.device_name or dev.area_id or dev.labels
+        ]
+        same_domain_plan: list[dict[str, Any]] = []
+        changed_domain_plan: list[dict[str, Any]] = []
+        missing_ng_plan: list[dict[str, Any]] = []
+
+        for le in legacy_entities:
+            ng_ent = ng_by_domain_uid.get((le.ng_domain, le.ng_unique_id))
+            if ng_ent is None:
+                missing_ng_plan.append(
+                    {
+                        "legacy_entity_id": le.entity_id,
+                        "ng_domain": le.ng_domain,
+                        "ng_unique_id": le.ng_unique_id,
+                        "reason": "ng_entity_not_created",
+                    }
+                )
+            current_ng_eid = ng_ent.entity_id if ng_ent is not None else None
+            planned_target = (
+                le.entity_id
+                if (
+                    cutover
+                    and ng_ent is not None
+                    and not le.domain_changed
+                    and le.entity_id not in conflicting_eids
+                )
+                else current_ng_eid
+            )
+            row = le.as_summary(
+                cutover=cutover,
+                current_ng_entity_id=current_ng_eid,
+                target_entity_id=planned_target,
+            )
+            if le.domain_changed:
+                changed_domain_plan.append(row)
+            else:
+                same_domain_plan.append(row)
+
+        legacy_entries_to_remove = (
+            [
+                {
+                    "entry_id": legacy_entry.entry_id,
+                    "title": getattr(legacy_entry, "title", LEGACY_DOMAIN),
+                    "unique_id": getattr(legacy_entry, "unique_id", None),
+                }
+            ]
+            if cutover and legacy_entry is not None
+            else []
+        )
+
+        return {
+            "success": True,
+            "dry_run": True,
+            "cutover": cutover,
+            "hub_entry_id": hub_entry.entry_id,
+            "legacy_entry_id": legacy_entry.entry_id if legacy_entry else None,
+            "summary": {
+                "discovered_legacy_devices": len(legacy_devices),
+                "discovered_legacy_entities": len(legacy_entities),
+                "device_metadata_updates": len(device_updates),
+                "same_domain_entities": len(same_domain_plan),
+                "domain_changed_entities": len(changed_domain_plan),
+                "missing_ng_entities": len(missing_ng_plan),
+                "skipped_entities": len(skipped_entities),
+                "conflicts": len(conflicts),
+                "legacy_entries_to_remove": len(legacy_entries_to_remove),
+            },
+            "device_metadata_updates": device_updates,
+            "entity_migrations": same_domain_plan,
+            "domain_changed_entities": changed_domain_plan,
+            "missing_ng_entities": missing_ng_plan,
+            "skipped_entities": skipped_entities,
+            "conflicts": conflicts,
+            "legacy_entries_to_remove": legacy_entries_to_remove,
+            "warnings": warnings,
+        }
+
+    # --- Execution mode (`dry_run=False`) ---
+    matched_ng_count = sum(
+        1
+        for le in legacy_entities
+        if ng_by_domain_uid.get((le.ng_domain, le.ng_unique_id)) is not None
+    )
+    if cutover and matched_ng_count == 0 and (legacy_entry is not None or legacy_entities):
+        warnings.append(
+            "Cutover aborted before removing legacy freeathome: zero matching "
+            "freeathome_ng entities were found on this hub."
+        )
+        return {
+            "success": False,
+            "dry_run": False,
+            "cutover": True,
+            "hub_entry_id": hub_entry.entry_id,
+            "legacy_entry_id": legacy_entry.entry_id if legacy_entry else None,
+            "summary": {
+                "device_metadata_updates": 0,
+                "same_domain_entities_migrated": 0,
+                "domain_changed_entities_migrated": 0,
+                "missing_ng_entities": len(legacy_entities),
+                "skipped_entities": len(skipped_entities),
+                "conflicts": len(conflicts),
+                "removed_legacy_entries": 0,
+            },
+            "device_metadata_updates": [],
+            "entity_migrations": [],
+            "domain_changed_entities": [],
+            "missing_ng_entities": [
+                {
+                    "legacy_entity_id": le.entity_id,
+                    "ng_domain": le.ng_domain,
+                    "ng_unique_id": le.ng_unique_id,
+                    "reason": "ng_entity_not_created",
+                }
+                for le in legacy_entities
+            ],
+            "skipped_entities": skipped_entities,
+            "conflicts": conflicts,
+            "removed_legacy_entries": [],
+            "warnings": warnings,
+        }
+
+    removed_legacy_entries: list[dict[str, Any]] = []
+    device_metadata_updates: list[dict[str, Any]] = []
+    migrated_same_domain: list[dict[str, Any]] = []
+    migrated_changed_domain: list[dict[str, Any]] = []
+    missing_ng_entities: list[dict[str, Any]] = []
+
+    try:
+        runtime.suppress_reload = True
+
+        if cutover:
+            if legacy_entry is not None:
+                await hass.config_entries.async_remove(legacy_entry.entry_id)
+                removed_legacy_entries.append(
+                    {
+                        "entry_id": legacy_entry.entry_id,
+                        "title": getattr(legacy_entry, "title", LEGACY_DOMAIN),
+                        "unique_id": getattr(legacy_entry, "unique_id", None),
+                    }
+                )
+
+            # Remove any orphaned/YAML legacy entities holding target same-domain entity_ids.
+            post_remove_by_eid = {
+                str(e.entity_id): e for e in _iter_entity_entries(ent_reg)
+            }
+            for le in legacy_entities:
+                if le.domain_changed:
+                    continue
+                holder = post_remove_by_eid.get(le.entity_id)
+                if holder is not None and getattr(holder, "platform", None) == LEGACY_DOMAIN:
+                    ent_reg.async_remove(le.entity_id)
+
+        candidate_uuids = _candidate_sysap_uuids(hub_entry)
+        for dev in legacy_devices:
+            ng_dev = None
+            for sysap_uuid in candidate_uuids:
+                ng_dev = _lookup_device(
+                    dev_reg,
+                    DOMAIN,
+                    f"{sysap_uuid}_{dev.serialnumber}",
+                    config_entry_id=hub_entry.entry_id,
+                )
+                if ng_dev is not None:
+                    break
+            if ng_dev is not None:
+                updated_dev = _transfer_device_metadata(dev_reg, ng_dev, dev)
+                if updated_dev is not None:
+                    device_metadata_updates.append(updated_dev)
+
+        ng_by_domain_uid, _ = _index_ng_entities(ent_reg, hub_entry.entry_id)
+        for le in legacy_entities:
+            ng_ent = ng_by_domain_uid.get((le.ng_domain, le.ng_unique_id))
+            if ng_ent is None:
+                missing_ng_entities.append(
+                    {
+                        "legacy_entity_id": le.entity_id,
+                        "ng_domain": le.ng_domain,
+                        "ng_unique_id": le.ng_unique_id,
+                        "reason": "ng_entity_not_created",
+                    }
+                )
+                continue
+
+            row, conflict_entry = _apply_entity_migration(
+                ent_reg,
+                ng_ent,
+                le,
+                cutover=cutover,
+                has_conflict=le.entity_id in conflicting_eids,
+            )
+            if conflict_entry is not None:
+                conflicts.append(conflict_entry)
+            if le.domain_changed:
+                migrated_changed_domain.append(row)
+            else:
+                migrated_same_domain.append(row)
+    finally:
+        runtime.suppress_reload = False
+
+    return {
+        "success": True,
+        "dry_run": False,
+        "cutover": cutover,
+        "hub_entry_id": hub_entry.entry_id,
+        "legacy_entry_id": legacy_entry.entry_id if legacy_entry else None,
+        "summary": {
+            "device_metadata_updates": len(device_metadata_updates),
+            "same_domain_entities_migrated": len(migrated_same_domain),
+            "domain_changed_entities_migrated": len(migrated_changed_domain),
+            "missing_ng_entities": len(missing_ng_entities),
+            "skipped_entities": len(skipped_entities),
+            "conflicts": len(conflicts),
+            "removed_legacy_entries": len(removed_legacy_entries),
+        },
+        "device_metadata_updates": device_metadata_updates,
+        "entity_migrations": migrated_same_domain,
+        "domain_changed_entities": migrated_changed_domain,
+        "missing_ng_entities": missing_ng_entities,
+        "skipped_entities": skipped_entities,
+        "conflicts": conflicts,
+        "removed_legacy_entries": removed_legacy_entries,
+        "warnings": warnings,
+    }

@@ -1,0 +1,309 @@
+dump_config:
+  name: Dump configuration
+  description: Export the full free@home Local API JSON configuration to the Home Assistant config folder.
+  fields:
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname to limit the dump to a specific SysAP.
+      example: "192.168.1.50"
+      selector:
+        text:
+
+monitor:
+  name: Monitor WebSocket frames
+  description: Record raw WebSocket JSON frames from the Local API into a JSONL file in the Home Assistant config folder.
+  fields:
+    duration:
+      name: Duration
+      description: Listening duration in seconds (1–300).
+      default: 10
+      example: 10
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: s
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname.
+      selector:
+        text:
+
+set_datapoint:
+  name: Set datapoint
+  description: Write a raw datapoint value to the SysAP Local REST API (e.g. to send feedback to virtual device output datapoints).
+  fields:
+    serialnumber:
+      name: Serial number
+      description: Device serial number or virtual device serial (e.g. 6000A1B2C3D4).
+      required: true
+      example: "ABB700000001"
+      selector:
+        text:
+    channel_id:
+      name: Channel ID
+      description: Channel identifier (e.g. ch0000).
+      required: true
+      example: "ch0000"
+      selector:
+        text:
+    datapoint_id:
+      name: Datapoint ID
+      description: Input or output datapoint identifier (e.g. idp0000 or odp0000).
+      required: true
+      example: "odp0000"
+      selector:
+        text:
+    value:
+      name: Value
+      description: String value to write to the datapoint.
+      required: true
+      example: "1"
+      selector:
+        text:
+    sysap_uuid:
+      name: SysAP UUID
+      description: Optional SysAP UUID (defaults to primary SysAP UUID).
+      selector:
+        text:
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname.
+      selector:
+        text:
+
+register_virtual_device:
+  name: Register virtual device
+  description: Register or refresh a virtual/proxy device on the SysAP with optional automatic TTL heartbeat renewal.
+  fields:
+    native_id:
+      name: Native ID
+      description: Unique identifier supplied by your automation for the virtual device.
+      required: true
+      example: "ha_garage_door"
+      selector:
+        text:
+    device_type:
+      name: Device type
+      description: Official free@home virtual device type.
+      required: true
+      example: "SwitchingActuator"
+      selector:
+        select:
+          options:
+            - SwitchingActuator
+            - DimActuator
+            - ShutterActuator
+            - CeilingFanActuator
+            - RTC
+            - BinarySensor
+            - WindowSensor
+            - WeatherStation
+            - Weather-TemperatureSensor
+            - Weather-WindSensor
+            - Weather-BrightnessSensor
+            - Weather-RainSensor
+            - CODetector
+            - FireDetector
+            - KNX-SwitchSensor
+            - MediaPlayer
+            - EnergyMeterv2
+    display_name:
+      name: Display name
+      description: Friendly name shown in free@home.
+      example: "HA Garage Door"
+      selector:
+        text:
+    ttl:
+      name: TTL (seconds)
+      description: Time-to-live in seconds (0 = mark unresponsive, -1 = persistent, >0 = periodic keep-alive).
+      default: 180
+      example: 180
+      selector:
+        number:
+          min: -1
+          max: 86400
+          unit_of_measurement: s
+    flavor:
+      name: Flavor
+      description: Optional device flavor (e.g. for EnergyMeterv2).
+      example: "0C"
+      selector:
+        text:
+    capabilities:
+      name: Capabilities
+      description: Optional capability list (for EnergyMeterv2 or MediaPlayer).
+      selector:
+        object:
+    sysap_uuid:
+      name: SysAP UUID
+      description: Optional SysAP UUID.
+      selector:
+        text:
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname.
+      selector:
+        text:
+
+unregister_virtual_device:
+  name: Unregister virtual device
+  description: Stop the TTL heartbeat and mark a persisted virtual device unresponsive (`ttl=0`) on the SysAP.
+  fields:
+    native_id:
+      name: Native ID
+      description: Unique identifier of the virtual device to unregister.
+      required: true
+      example: "ha_garage_door"
+      selector:
+        text:
+    sysap_uuid:
+      name: SysAP UUID
+      description: Optional SysAP UUID.
+      selector:
+        text:
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname.
+      selector:
+        text:
+
+trigger_proxy_device:
+  name: Trigger proxy device action
+  description: Trigger an action (`shortpress`, `longpress`, `release`) on a free@home proxy device.
+  fields:
+    device_class:
+      name: Device class
+      description: Proxy device class (e.g. pushbutton).
+      required: true
+      example: "pushbutton"
+      selector:
+        text:
+    device_id:
+      name: Device ID
+      description: Proxy device identifier/name.
+      required: true
+      example: "szene_a"
+      selector:
+        text:
+    action:
+      name: Action
+      description: Action to trigger (`shortpress`, `longpress`, `release`).
+      required: true
+      example: "shortpress"
+      selector:
+        text:
+    sysap_uuid:
+      name: SysAP UUID
+      description: Optional SysAP UUID.
+      selector:
+        text:
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname.
+      selector:
+        text:
+
+send_notification:
+  name: Send SysAP notification
+  description: Push a notification message to the free@home SysAP (displayed in the app/panels).
+  fields:
+    subject:
+      name: Subject
+      description: Notification headline.
+      required: true
+      example: "Washing machine finished"
+      selector:
+        text:
+    body:
+      name: Body
+      description: Notification message text.
+      required: true
+      example: "The cycle completed successfully."
+      selector:
+        text:
+    timeout_minutes:
+      name: Timeout (minutes)
+      description: Optional auto-dismiss timeout in minutes.
+      example: 60
+      selector:
+        number:
+          min: 1
+          max: 10080
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname.
+      selector:
+        text:
+
+cover_force_position:
+  name: Force cover position
+  description: Force a cover into a specific position (`open`, `closed`, or `none`).
+  target:
+    entity:
+      integration: freeathome_ng
+      domain: cover
+  fields:
+    forced_position:
+      name: Forced position
+      description: Target forced state (`open`, `closed`, or `none`).
+      required: true
+      example: "closed"
+      selector:
+        select:
+          options:
+            - "none"
+            - "open"
+            - "closed"
+
+thermostat_temperature_correction:
+  name: Set thermostat temperature correction
+  description: Change the temperature correction offset parameter of a thermostat.
+  target:
+    entity:
+      integration: freeathome_ng
+      domain: climate
+  fields:
+    temperature_correction:
+      name: Temperature correction
+      description: Signed temperature offset in °C.
+      required: true
+      example: -1.0
+      selector:
+        number:
+          min: -10
+          max: 10
+          step: 0.5
+
+migrate_from_legacy:
+  name: Migrate from legacy freeathome
+  description: Preview or migrate device names, areas, entity metadata, Assist exposure, and Recorder history from the legacy freeathome integration into freeathome_ng.
+  fields:
+    entry_id:
+      name: Hub entry ID
+      description: Optional config entry ID of the target free@home NG SysAP (required when multiple SysAPs are loaded).
+      selector:
+        text:
+    host:
+      name: Host
+      description: Optional SysAP host IP/hostname to select the target free@home NG hub.
+      example: "192.168.1.50"
+      selector:
+        text:
+    dry_run:
+      name: Preview only (dry run)
+      description: Inspect the exact migration plan without modifying entries, devices, or entities. Always run a preview first.
+      default: true
+      selector:
+        boolean:
+    cutover:
+      name: Cutover (remove legacy entry & preserve entity IDs / history)
+      description: When disabled (side-by-side mode), only metadata is copied. When enabled (with dry_run=false), the legacy freeathome entry is removed and same-domain entity IDs are renamed for seamless history continuity.
+      default: false
+      selector:
+        boolean:
+    serialnumbers:
+      name: Serial numbers filter (optional)
+      description: Optional comma- or newline-separated device serial numbers for selective dry-run or metadata sync (not supported with cutover=true).
+      selector:
+        text:

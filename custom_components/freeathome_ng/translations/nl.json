@@ -1,0 +1,361 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met free@home SysAP (Lokale API)",
+        "description": "Voer het IP-adres/hostnaam van de SysAP en je Lokale API-gegevens in (te activeren via free@home Instellingen -> Lokale API, firmware >= 2.6.0).",
+        "data": {
+          "host": "Host",
+          "username": "Lokale API gebruikersnaam",
+          "password": "Wachtwoord",
+          "use_room_names": "Kamernamen opnemen in entiteitsnamen",
+          "switch_as_x": "Schakelactoren als schakelaars tonen (i.p.v. lampen)",
+          "name_prefix": "Optioneel naamvoorvoegsel",
+          "use_https": "HTTPS / WSS gebruiken",
+          "verify_ssl": "SSL-certificaat verifiëren",
+          "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        }
+      },
+      "link": {
+        "title": "Gevonden free@home SysAP ({name})",
+        "description": "Verbind free@home NG met de gevonden SysAP op {host}.",
+        "data": {
+          "username": "Lokale API gebruikersnaam",
+          "password": "Wachtwoord",
+          "use_room_names": "Kamernamen opnemen in entiteitsnamen",
+          "switch_as_x": "Schakelactoren als schakelaars tonen (i.p.v. lampen)",
+          "name_prefix": "Optioneel naamvoorvoegsel",
+          "use_https": "HTTPS / WSS gebruiken",
+          "verify_ssl": "SSL-certificaat verifiëren",
+          "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Opnieuw authenticeren",
+        "description": "De free@home SysAP op {host} heeft de opgeslagen inloggegevens geweigerd.",
+        "data": {
+          "username": "Lokale API gebruikersnaam",
+          "password": "Wachtwoord"
+        }
+      },
+      "reconfigure": {
+        "description": "Werk verbindings- en naaminstellingen bij voor je free@home NG SysAP.",
+        "data": {
+          "host": "Host",
+          "use_room_names": "Kamernamen opnemen in entiteitsnamen",
+          "switch_as_x": "Schakelactoren als schakelaars tonen (i.p.v. lampen)",
+          "name_prefix": "Optioneel naamvoorvoegsel",
+          "use_https": "HTTPS / WSS gebruiken",
+          "verify_ssl": "SSL-certificaat verifiëren",
+          "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbinding mislukt",
+      "invalid_auth": "Ongeldige inloggegevens",
+      "unknown": "Onbekende fout",
+      "other_sysap": "Deze host hoort bij een andere SysAP dan de geconfigureerde vermelding."
+    },
+    "abort": {
+      "already_configured": "Apparaat is al geconfigureerd",
+      "not_ipv4address": "Gevonden adres is geen IPv4-adres.",
+      "not_sysap": "Gevonden host reageerde niet als een free@home SysAP.",
+      "serialNumber_not_found": "Serienummer van SysAP niet gevonden.",
+      "reauth_successful": "Opnieuw authenticeren geslaagd",
+      "reconfigure_successful": "Herconfiguratie geslaagd"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "free@home NG Opties",
+        "data": {
+          "use_room_names": "Kamernamen opnemen in entiteitsnamen",
+          "switch_as_x": "Schakelactoren als schakelaars tonen (i.p.v. lampen)",
+          "name_prefix": "Optioneel naamvoorvoegsel",
+          "use_https": "HTTPS / WSS gebruiken",
+          "verify_ssl": "SSL-certificaat verifiëren",
+          "include_orphan_channels": "Kanalen zonder kamer meenemen"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dimming_status": {
+        "name": "Dimmerstatus {channel_id}",
+        "state": {
+          "not_pressed": "Niet ingedrukt",
+          "pressed_up": "Bovenste knop ingedrukt",
+          "pressed_down": "Onderste knop ingedrukt",
+          "held_up": "Bovenste knop ingehouden",
+          "held_down": "Onderste knop ingehouden"
+        }
+      },
+      "temperature": {
+        "name": "{channel_name} Temperatuur"
+      },
+      "thermostat_temperature": {
+        "name": "{channel_name} Temperatuur"
+      },
+      "windstrength": {
+        "name": "{channel_name} Windsnelheid"
+      },
+      "windforce": {
+        "name": "{channel_name} Windkracht"
+      },
+      "rain": {
+        "name": "{channel_name} Regen"
+      },
+      "lux": {
+        "name": "{channel_name} Verlichtingssterkte"
+      },
+      "valve_volume_flow": {
+        "name": "{channel_name} Klepstand"
+      },
+      "humidity": {
+        "name": "{channel_name} Luchtvochtigheid"
+      },
+      "co2": {
+        "name": "{channel_name} CO2"
+      },
+      "voc": {
+        "name": "{channel_name} VOC"
+      },
+      "pv_power": {
+        "name": "{channel_name} PV-vermogen"
+      },
+      "battery_power": {
+        "name": "{channel_name} Batterijvermogen"
+      },
+      "battery_soc": {
+        "name": "{channel_name} Batterijniveau"
+      },
+      "grid_power": {
+        "name": "{channel_name} Netvermogen"
+      },
+      "home_power": {
+        "name": "{channel_name} Huisverbruik"
+      },
+      "consumed_energy": {
+        "name": "{channel_name} Afgenomen energie"
+      },
+      "injected_energy": {
+        "name": "{channel_name} Teruggeleverde energie"
+      },
+      "self_consumption": {
+        "name": "{channel_name} Eigen verbruik"
+      },
+      "self_sufficiency": {
+        "name": "{channel_name} Zelfvoorzienendheid"
+      }
+    }
+  },
+  "services": {
+    "dump_config": {
+      "name": "Configuratie exporteren",
+      "description": "Exporteert de volledige JSON-configuratie van de Lokale API naar de Home Assistant-configuratiemap.",
+      "fields": {
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam."
+        }
+      }
+    },
+    "monitor": {
+      "name": "WebSocket-frames opnemen",
+      "description": "Neemt ruwe WebSocket JSON-frames van de Lokale API op in een JSONL-bestand in de configuratiemap.",
+      "fields": {
+        "duration": {
+          "name": "Duur",
+          "description": "Luisterduur in seconden (1-300)."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam."
+        }
+      }
+    },
+    "set_datapoint": {
+      "name": "Datapunt instellen",
+      "description": "Schrijft een ruwe datapuntwaarde naar de SysAP Lokale REST API (bijv. voor virtuele apparaten).",
+      "fields": {
+        "serialnumber": {
+          "name": "Serienummer",
+          "description": "Serienummer van apparaat of virtueel apparaat (bijv. 6000A1B2C3D4)."
+        },
+        "channel_id": {
+          "name": "Kanaal-ID",
+          "description": "Kanaalidentificatie (bijv. ch0000)."
+        },
+        "datapoint_id": {
+          "name": "Datapunt-ID",
+          "description": "Invoer- of uitvoerdatapunt (bijv. idp0000 of odp0000)."
+        },
+        "value": {
+          "name": "Waarde",
+          "description": "De te schrijven tekenreeks."
+        },
+        "sysap_uuid": {
+          "name": "SysAP-UUID",
+          "description": "Optionele SysAP-UUID (standaard primaire SysAP)."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam."
+        }
+      }
+    },
+    "register_virtual_device": {
+      "name": "Virtueel apparaat registreren",
+      "description": "Registreert of vernieuwt een virtueel/proxy-apparaat op de SysAP met optionele TTL-heartbeat.",
+      "fields": {
+        "native_id": {
+          "name": "Native ID",
+          "description": "Unieke identificatie uit je automatisering voor het virtuele apparaat."
+        },
+        "device_type": {
+          "name": "Apparaattype",
+          "description": "Officieel free@home virtueel apparaattype."
+        },
+        "display_name": {
+          "name": "Weergavenaam",
+          "description": "Naam die in free@home wordt weergegeven."
+        },
+        "ttl": {
+          "name": "TTL (seconden)",
+          "description": "Geldigheidsduur in seconden (0 = inactief, -1 = blijvend, >0 = periodieke keep-alive)."
+        },
+        "flavor": {
+          "name": "Flavor",
+          "description": "Optionele variant (bijv. voor EnergyMeterv2)."
+        },
+        "capabilities": {
+          "name": "Capabilities",
+          "description": "Optionele lijst met mogelijkheden (voor EnergyMeterv2 of MediaPlayer)."
+        },
+        "sysap_uuid": {
+          "name": "SysAP-UUID",
+          "description": "Optionele SysAP-UUID."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam."
+        }
+      }
+    },
+    "unregister_virtual_device": {
+      "name": "Virtueel apparaat uitschrijven",
+      "description": "Stopt de TTL-heartbeat en zet een opgeslagen virtueel apparaat op inactief (ttl=0) op de SysAP.",
+      "fields": {
+        "native_id": {
+          "name": "Native ID",
+          "description": "Unieke identificatie van het virtuele apparaat."
+        },
+        "sysap_uuid": {
+          "name": "SysAP-UUID",
+          "description": "Optionele SysAP-UUID."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam."
+        }
+      }
+    },
+    "trigger_proxy_device": {
+      "name": "Proxy-apparaatactie activeren",
+      "description": "Activeert een actie (shortpress, longpress, release) op een free@home proxy-apparaat.",
+      "fields": {
+        "device_class": {
+          "name": "Apparaatklasse",
+          "description": "Proxy-apparaatklasse (bijv. pushbutton)."
+        },
+        "device_id": {
+          "name": "Apparaat-ID",
+          "description": "Identificatie/naam van het proxy-apparaat."
+        },
+        "action": {
+          "name": "Actie",
+          "description": "Te activeren actie (shortpress, longpress, release)."
+        },
+        "sysap_uuid": {
+          "name": "SysAP-UUID",
+          "description": "Optionele SysAP-UUID."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam."
+        }
+      }
+    },
+    "send_notification": {
+      "name": "SysAP-melding verzenden",
+      "description": "Stuurt een systeemmelding naar de free@home SysAP (zichtbaar in de app en op panels).",
+      "fields": {
+        "subject": {
+          "name": "Onderwerp",
+          "description": "Titel van de melding."
+        },
+        "body": {
+          "name": "Bericht",
+          "description": "Tekst van de melding."
+        },
+        "timeout_minutes": {
+          "name": "Time-out (minuten)",
+          "description": "Optionele automatische verbergtijd in minuten."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam."
+        }
+      }
+    },
+    "cover_force_position": {
+      "name": "Dwangpositie voor zonwering instellen",
+      "description": "Dwingt een rolluik, jaloezie of zonnescherm in een vaste positie (open, closed of none).",
+      "fields": {
+        "forced_position": {
+          "name": "Dwangpositie",
+          "description": "Gewenste dwangstand (open, closed of none)."
+        }
+      }
+    },
+    "thermostat_temperature_correction": {
+      "name": "Temperatuurcorrectie thermostaat instellen",
+      "description": "Wijzigt de temperatuurcorrectie-parameter van een kamerthermostaat.",
+      "fields": {
+        "temperature_correction": {
+          "name": "Temperatuurcorrectie",
+          "description": "Temperatuurcorrectie in graden Celsius."
+        }
+      }
+    },
+    "migrate_from_legacy": {
+      "name": "Migreren van legacy freeathome",
+      "description": "Voorvertoning of migratie van apparaatnamen, ruimtes, entiteitsmetadata, Assist-toegang en Recorder-historie van de klassieke freeathome-integratie naar freeathome_ng.",
+      "fields": {
+        "entry_id": {
+          "name": "Hub-item-ID",
+          "description": "Optionele config-entry-ID van de doel-SysAP in free@home NG."
+        },
+        "host": {
+          "name": "Host",
+          "description": "Optioneel SysAP IP-adres of hostnaam om de doelhub te kiezen."
+        },
+        "dry_run": {
+          "name": "Alleen voorvertoning (dry run)",
+          "description": "Bekijk het exacte migratieplan zonder wijzigingen aan items, apparaten of entiteiten."
+        },
+        "cutover": {
+          "name": "Omschakeling (legacy-item verwijderen & entity-ID's / historie behouden)",
+          "description": "Kopieert alleen metadata indien uit; verwijdert het legacy-item en hernoemt entity-ID's bij inschakeling met dry_run=false."
+        },
+        "serialnumbers": {
+          "name": "Serienummerfilter (optioneel)",
+          "description": "Optionele door komma's of nieuwe regels gescheiden serienummers voor selectieve voorvertoning of metadatasync."
+        }
+      }
+    }
+  }
+}

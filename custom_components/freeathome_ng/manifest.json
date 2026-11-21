@@ -1,0 +1,24 @@
+{
+  "domain": "freeathome_ng",
+  "name": "Busch-Jaeger / ABB free@home NG (Local API)",
+  "categories": [
+    "hubs_protocols"
+  ],
+  "codeowners": [
+    "@florianutz"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/florianutz/freeathome-ng",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/florianutz/freeathome-ng/issues",
+  "requirements": [],
+  "version": "1.0.0",
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "free@home*"
+    }
+  ]
+}
