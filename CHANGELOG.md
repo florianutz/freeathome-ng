@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Actions are registered when Home Assistant starts, not when a SysAP loads, so automations that use them validate even while the SysAP is offline.
 - Error messages from setup, actions and the legacy migration are translated, and a command the SysAP rejects now shows a clear error instead of a raw exception.
 - WebSocket reconnects use randomised backoff, and unloading the integration now stops every background task cleanly.
-- Development: new engineering handbook (`AGENTS.md`), `CLAUDE.md`, architecture decision records (`docs/DECISIONS.md`), Integration Quality Scale tracking (`quality_scale.yaml`), Claude Code skills, `ruff format`, strict `mypy` for the `api/` layer, coverage reporting and a translation parity script in CI.
+- Development: new engineering handbook (`AGENTS.md`), `CLAUDE.md`, architecture decision records (`docs/DECISIONS.md`), Integration Quality Scale tracking (`quality_scale.yaml`), Claude Code skills, `ruff format`, strict `mypy` for the `api/` layer, coverage reporting and a translation parity script in CI. Test coverage is above 95 % (line and branch) and CI fails below that.
 - Development: the test suite now runs against real Home Assistant (`pytest-homeassistant-custom-component`, Python 3.14) instead of hand-written stubs, with syrupy snapshots of all entities and devices.
 
 ### Fixed
