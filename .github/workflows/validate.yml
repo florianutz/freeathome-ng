@@ -18,11 +18,15 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install aiohttp pytest pytest-asyncio pyyaml ruff
+          pip install aiohttp pytest pytest-asyncio pytest-cov pyyaml ruff mypy
       - name: Lint with ruff
         run: ruff check custom_components tests
-      - name: Run unit tests
-        run: pytest
+      - name: Check formatting with ruff
+        run: ruff format --check custom_components tests
+      - name: Type-check api/ with mypy (strict)
+        run: mypy
+      - name: Run unit tests with coverage
+        run: pytest --cov --cov-report=term
 
   hassfest:
     name: Home Assistant Hassfest
