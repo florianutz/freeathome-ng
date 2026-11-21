@@ -5,7 +5,7 @@
 ## Claude Code notes
 
 - `AGENTS.md` (imported above) is the single source of truth. Do not duplicate its rules here; change them there.
-- Workflows live in `.claude/skills/`: `/check-quality`, `/add-entity`, `/sync-translations`, `/release`, `/reproduce-from-dump`, `/issue-analysis`.
+- Workflows live in `.claude/skills/`: `/check-quality`, `/add-entity`, `/sync-translations`, `/release`, `/reproduce-from-dump`, `/issue-analysis`, `/bump-ha`, `/quality-scale-audit`.
 - Finish every change with `/check-quality` and report its summary.
 - Before touching `migration.py`, entity `unique_id`s or device identifiers, re-read AGENTS.md section 5.
 - Never push to `main`, create tags or publish releases without explicit approval from the maintainer.

@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every setup and options field now has a help text, in all 7 languages.
 
 ### Changed
-- Development: new script `scripts/anonymize_dump.py` turns a `dump_config` output into a fixture without personal data; the bug report template asks for anonymised dumps. New Claude Code skills `/reproduce-from-dump` and `/issue-analysis`; all skills declare their arguments and allowed tools, and `/release` only runs when started by the maintainer.
+- Development: new script `scripts/anonymize_dump.py` turns a `dump_config` output into a fixture without personal data; the bug report template asks for anonymised dumps. New Claude Code skills `/reproduce-from-dump`, `/issue-analysis`, `/bump-ha` and `/quality-scale-audit`, and a pull request template; all skills declare their arguments and allowed tools, and `/release` only runs when started by the maintainer.
 - Deprecated: the actions `cover_force_position` and `thermostat_temperature_correction` and the state attributes `valve`, `temperature_correction`, `forced_position` and `window_position`. They keep working for now; using a deprecated action shows a repair issue that names the replacing entity.
 - Binary sensors are described with entity descriptions like in Home Assistant core; the doorbell icon comes from icon translations, and doorbells get the translated name "Doorbell" as fallback.
 - The README documents every setup field and option, how data is updated, use cases, known limitations, troubleshooting and removal. The help text of "Include room names" now says correctly that the room is added in brackets after the channel name.

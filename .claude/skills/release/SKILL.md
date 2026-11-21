@@ -21,7 +21,7 @@ For a major release, also list the deprecated actions and attributes (search `CH
 1. Start from an up-to-date `main` on a branch `release/vX.Y.Z` (or the branch your environment prescribes).
 2. Run `/check-quality`; everything must be green.
 3. Check the latest CI run on `main` is green (`gh api repos/{owner}/{repo}/actions/runs?branch=main&per_page=1`), including Hassfest, HACS validation and the minimum-HA job. Report the latest `ha-beta.yml` run too; a red beta run does not block, but name it in the release PR.
-4. Confirm `quality_scale.yaml` matches reality and README documents every user-visible change.
+4. Run `/quality-scale-audit` and resolve any drift; confirm README documents every user-visible change.
 
 ## 3. Bump
 
