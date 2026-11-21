@@ -169,7 +169,7 @@ class FreeAtHomeLocalApiClient:
                 if "application/json" in content_type or raw_text.lstrip().startswith(("{", "[")):
                     return json.loads(raw_text)
                 return raw_text
-        except (FreeAtHomeAuthError, FreeAtHomeApiError):
+        except FreeAtHomeAuthError, FreeAtHomeApiError:
             raise
         except (TimeoutError, aiohttp.ClientError, OSError) as err:
             raise FreeAtHomeConnectionError(

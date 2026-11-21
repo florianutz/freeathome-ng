@@ -251,12 +251,12 @@ class FahLight(FahBaseDevice):
         elif self._datapoints.get(PID_INFO_ACTUAL_DIMMING_VALUE) == dp:
             try:
                 self.brightness = int(float(value))
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.debug("Ignoring invalid brightness value %s", value)
         elif self._datapoints.get(PID_INFO_COLOR_TEMPERATURE) == dp:
             try:
                 self.color_temp_percent = int(float(value))
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.debug("Ignoring invalid color temp value %s", value)
         elif self._datapoints.get(PID_INFO_RGB) == dp:
             parsed = self._parse_rgb_to_int(value)
@@ -267,7 +267,7 @@ class FahLight(FahBaseDevice):
         """Update min/max color temperature parameters."""
         try:
             kelvin = int(float(value))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return
         if kelvin <= 0:
             return

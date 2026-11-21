@@ -156,7 +156,7 @@ class FahBinarySensor(FahBaseDevice):
         """Decode KNX DPT 3.007 relative dimming values."""
         try:
             raw_value = int(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
         if not 0 <= raw_value <= 0x0F:
             return None
