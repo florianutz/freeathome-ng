@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-21
+
+Requires Home Assistant 2026.9.0 or newer. Before updating, check the breaking changes below: automations that use `heat_cool` on thermostats, and setups with several SysAPs that call writing actions without a target, need a small change.
+
 ### Breaking changes
 - Minimum Home Assistant version is now **2026.9.0**, which brings the child devices used for free@home channels. Users on older releases stay on v1.0.x.
 - With more than one SysAP set up, the writing actions `set_datapoint`, `register_virtual_device`, `unregister_virtual_device`, `trigger_proxy_device` and `send_notification` no longer run against every SysAP when no target is given. Choose the SysAP with the new `config_entry_id` field (or `host`); otherwise the action fails with a clear error. Setups with a single SysAP are not affected.
@@ -20,8 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every setup and options field now has a help text, in all 7 languages.
 
 ### Changed
-- Development: new script `scripts/anonymize_dump.py` turns a `dump_config` output into a fixture without personal data; the bug report template asks for anonymised dumps. New Claude Code skills `/reproduce-from-dump`, `/issue-analysis`, `/bump-ha` and `/quality-scale-audit`, and a pull request template; all skills declare their arguments and allowed tools, and `/release` only runs when started by the maintainer.
-- Deprecated: the actions `cover_force_position` and `thermostat_temperature_correction` and the state attributes `valve`, `temperature_correction`, `forced_position` and `window_position`. They keep working for now; using a deprecated action shows a repair issue that names the replacing entity.
 - Binary sensors are described with entity descriptions like in Home Assistant core; the doorbell icon comes from icon translations, and doorbells get the translated name "Doorbell" as fallback.
 - The README documents every setup field and option, how data is updated, use cases, known limitations, troubleshooting and removal. The help text of "Include room names" now says correctly that the room is added in brackets after the channel name.
 - Every free@home channel is now its own device below its physical device, named like the channel. A channel in another room than its actuator (for example one gang of a multi-gang switch actuator) gets that room as its area; channels in the same room keep using the area of the physical device, including areas you assigned yourself. Scenes, groups and timer programs stay single devices.
@@ -34,8 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Actions are registered when Home Assistant starts, not when a SysAP loads, so automations that use them validate even while the SysAP is offline.
 - Error messages from setup, actions and the legacy migration are translated, and a command the SysAP rejects now shows a clear error instead of a raw exception.
 - WebSocket reconnects use randomised backoff, and unloading the integration now stops every background task cleanly.
+- Development: new script `scripts/anonymize_dump.py` turns a `dump_config` output into a fixture without personal data; the bug report template asks for anonymised dumps. New Claude Code skills `/reproduce-from-dump`, `/issue-analysis`, `/bump-ha` and `/quality-scale-audit`, and a pull request template; all skills declare their arguments and allowed tools, and `/release` only runs when started by the maintainer.
 - Development: new engineering handbook (`AGENTS.md`), `CLAUDE.md`, architecture decision records (`docs/DECISIONS.md`), Integration Quality Scale tracking (`quality_scale.yaml`), Claude Code skills, `ruff format`, strict `mypy` for the `api/` layer, coverage reporting and a translation parity script in CI. Test coverage is above 95 % (line and branch) and CI fails below that. free@home protocol constants moved into the `api/` library (`api/const.py`), which no longer imports anything from the Home Assistant layer. `mypy --strict` now covers the whole integration, and action and option schemas use `probatio`, Home Assistant's schema library. CI also tests on the minimum Home Assistant (2026.9.0) and weekly on the newest beta; a pre-commit configuration runs the quality checks locally.
 - Development: the test suite now runs against real Home Assistant (`pytest-homeassistant-custom-component`, Python 3.14) instead of hand-written stubs, with syrupy snapshots of all entities and devices.
+
+### Deprecated
+- The actions `cover_force_position` and `thermostat_temperature_correction` and the state attributes `valve`, `temperature_correction`, `forced_position` and `window_position`. They keep working for now; using a deprecated action shows a repair issue that names the replacing entity.
 
 ### Fixed
 - Climate: thermostats failed to load on current Home Assistant (`AttributeError` while adding the entity) and never reported current or target temperature, because the entity used a non-existent `native_*` temperature API.

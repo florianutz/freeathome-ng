@@ -10,6 +10,14 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: The integration provides no conditions of its own; automations use entity states.
+  docs-triggers:
+    status: exempt
+    comment: >-
+      The integration provides no trigger platform of its own. Event entities and the
+      freeathome_ng_* bus events used as triggers are documented in the README.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions:

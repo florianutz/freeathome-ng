@@ -1,6 +1,6 @@
 [project]
 name = "freeathome-ng"
-version = "1.0.0"
+version = "2.0.0"
 description = "Next-generation Home Assistant integration for ABB/Busch-Jaeger free@home built on the official Local REST & WebSocket API."
 readme = "README.md"
 license = { text = "MIT" }
