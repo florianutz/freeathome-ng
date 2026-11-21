@@ -113,6 +113,7 @@ You can migrate cleanly from the classic `freeathome` integration—preserving *
   - Dimmer rocker status enum sensor (`not_pressed`, `pressed_up`, `pressed_down`, `held_up`, `held_down`)
 - **Binary Sensor (`binary_sensor`):** Wall switches/rockers, pushbuttons, motion/presence detectors (with 840 s cyclic keep-alive filter), window/door contacts (with `window_position` attribute `closed`/`tilted`/`open`), smoke/CO detectors, door call sensors (with momentary auto-reset), weather alarms.
 - **Button (`button`):** Momentary timed triggers (`0x0045`).
+- **Event (`event`):** One event entity per wall rocker or push button channel with the event types `press_up`, `press_down` and, for dimming rockers, `hold_up`, `hold_down` and `release`. Use them as triggers in the automation editor; the `freeathome_ng_event` bus event below keeps working.
 - **Lock (`lock`):** Door opener actuators (`0x001A`, `0x0020`).
 - **Scene (`scene`):** Custom and system scenes (`0x4800`–`0x4804`).
 

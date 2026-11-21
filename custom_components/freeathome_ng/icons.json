@@ -40,6 +40,11 @@
       "self_sufficiency": {
         "default": "mdi:home-percent"
       }
+    },
+    "event": {
+      "control": {
+        "default": "mdi:gesture-tap-button"
+      }
     }
   },
   "services": {

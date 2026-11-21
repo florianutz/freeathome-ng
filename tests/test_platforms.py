@@ -217,3 +217,49 @@ async def test_timer_program_is_config_entity(
         Platform.SWITCH, DOMAIN, f"{SYSAP_UUID}/FFFF4A000001/ch0000"
     )
     assert entity_registry.async_get(entity_id).entity_category is EntityCategory.CONFIG
+
+
+async def test_rocker_event_entity_fires_on_presses(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_sysap: MockSysApServer,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Rocker presses and long presses trigger the event entity (ADR-004)."""
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.EVENT, DOMAIN, f"{SYSAP_UUID}/ABB700D10001/ch0000/event"
+    )
+    assert entity_id is not None
+    bus_events: list[dict] = []
+    hass.bus.async_listen("freeathome_ng_event", lambda e: bus_events.append(e.data))
+
+    async def _expect(path: str, value: str, event_type: str) -> None:
+        await _broadcast_dp(mock_sysap, path, value)
+        for _ in range(50):
+            await hass.async_block_till_done()
+            state = hass.states.get(entity_id)
+            if state.attributes.get("event_type") == event_type:
+                return
+            await asyncio.sleep(0.02)
+        raise AssertionError(f"{entity_id} did not report {event_type}")
+
+    await _expect("ABB700D10001/ch0000/odp0000", "1", "press_up")
+    await _expect("ABB700D10001/ch0000/odp0001", "9", "hold_up")
+    await _expect("ABB700D10001/ch0000/odp0001", "8", "release")
+    await _expect("ABB700D10001/ch0000/odp0000", "0", "press_down")
+    # The bus event stays unchanged for existing automations.
+    assert [e["command"] for e in bus_events][:2] == ["pressed", "dim_start"]
+
+
+async def test_only_control_elements_get_event_entities(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Window contacts and door bells are no buttons and get no event entity."""
+    events = [
+        e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, init_integration.entry_id)
+        if e.domain == Platform.EVENT
+    ]
+    assert events == [f"{SYSAP_UUID}/ABB700D10001/ch0000/event"]

@@ -192,6 +192,22 @@
       "self_sufficiency": {
         "name": "Samowystarczalność"
       }
+    },
+    "event": {
+      "control": {
+        "name": "Przycisk",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_up": "Górna strona naciśnięta",
+              "press_down": "Dolna strona naciśnięta",
+              "hold_up": "Górna strona przytrzymana",
+              "hold_down": "Dolna strona przytrzymana",
+              "release": "Zwolniony"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

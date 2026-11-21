@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With more than one SysAP set up, the writing actions `set_datapoint`, `register_virtual_device`, `unregister_virtual_device`, `trigger_proxy_device` and `send_notification` no longer run against every SysAP when no target is given. Choose the SysAP with the new `config_entry_id` field (or `host`); otherwise the action fails with a clear error. Setups with a single SysAP are not affected.
 
 ### Added
+- Event entities for wall rockers and push buttons (`press_up`, `press_down`, and for dimming rockers `hold_up`, `hold_down`, `release`), usable as triggers in the automation editor. The `freeathome_ng_event` bus event is unchanged.
 - All actions accept a `config_entry_id` field with a SysAP picker in the UI.
 - Every setup and options field now has a help text, in all 7 languages.
 

@@ -8,6 +8,7 @@ from typing import Any
 
 from ...const import (
     FUNCTION_IDS_BINARY_SENSOR,
+    FUNCTION_IDS_CONTROL_ELEMENT,
     FUNCTION_IDS_DIMMING_STATUS,
     FUNCTION_IDS_DOOR_CALL_SENSOR,
     FUNCTION_IDS_WEATHER_STATION,
@@ -259,6 +260,14 @@ class FahBinarySensor(FahBaseDevice):
     def is_wind_sensor(self) -> bool:
         """Return True for wind alarm sensors."""
         return self._function_id == 0x000C or PID_WIND_ALARM in self._datapoints
+
+    def is_control_element(self) -> bool:
+        """Return True for wall rockers, push buttons and panel buttons."""
+        return self._function_id in FUNCTION_IDS_CONTROL_ELEMENT
+
+    def supports_hold_events(self) -> bool:
+        """Return True if the control reports long presses (relative dimming)."""
+        return PID_RELATIVE_SET_VALUE in self._datapoints
 
     def supports_dimming_status(self) -> bool:
         """Return True if this channel exposes two-sided dimming rocker events."""
