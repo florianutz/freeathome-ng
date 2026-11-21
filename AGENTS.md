@@ -1,86 +1,117 @@
-# free@home NG — Agent Instructions
+# free@home NG — Engineering Handbook
 
-## 1. Instruction Structure & Maintenance Rules
+Binding rules for everyone (humans and AI agents) changing this repository. This file is the single source of truth; `CLAUDE.md` imports it. Keep it under 200 lines: detail belongs in `docs/`, linked from here.
 
-This file (`AGENTS.md`) is the canonical repository handbook. More specific scoped `AGENTS.md` files (if added under subdirectories) supplement this root document; in any conflict, this root file governs.
+## 1. Project & quality target
 
-Meta-rules for editing `AGENTS.md`:
+`freeathome_ng` is a Home Assistant custom integration for ABB / Busch-Jaeger free@home, built only on the official SysAP Local REST & WebSocket API (`/fhapi/v1/api`). It runs side by side with the legacy XMPP `freeathome` integration and can take over from it (`freeathome_ng.migrate_from_legacy`).
 
-- Keep this file concise: **<= 200 lines** and **<= 16,000 Unicode characters**.
-- Offload deep architectural specs, compatibility tables, and reference guides into dedicated documents under `docs/` rather than duplicating prose here.
-- Use ordinary Markdown links with explicit scope descriptions; never use `@`-imports or bare `"see also"` references.
-- Verify no drift between `AGENTS.md`, `custom_components/freeathome_ng/`, `tests/`, and `docs/` after code or metadata changes.
+- **Target:** Integration Quality Scale **Gold**, architecturally ready for **Platinum**. The status of every rule lives in `custom_components/freeathome_ng/quality_scale.yaml`; update it in the same PR that changes a rule's status.
+- **Minimum Home Assistant:** 2026.8.0 ([ADR-002](docs/DECISIONS.md)). Do not add compatibility guards for older releases.
+- **Binding design decisions:** [docs/DECISIONS.md](docs/DECISIONS.md). Patterns and details: [docs/HA_INTEGRATION_STANDARDS.md](docs/HA_INTEGRATION_STANDARDS.md).
 
----
+## 2. Repository layout
 
-## 2. Project Overview
+- `custom_components/freeathome_ng/api/` — HA-free library: REST/WebSocket client (`client.py`), configuration and event controller (`controller.py`), device models (`devices/*.py`).
+- `custom_components/freeathome_ng/` — HA layer: setup and services (`__init__.py`), flows (`config_flow.py`), legacy takeover (`migration.py`), entity base (`entity.py`), one module per platform, `diagnostics.py`, `const.py`, `manifest.json`, `services.yaml`, `strings.json`, `translations/` (7 locales), `quality_scale.yaml`, `brand/`.
+- `tests/` — test suite, `mock_sysap_server.py` (SysAP double), `fixtures/configuration.json`.
+- `scripts/` — developer tooling (`check_translations.py`).
+- `docs/` — decisions, standards, user migration guide.
+- `.claude/skills/` — Claude Code workflows (section 9).
 
-**free@home NG (`freeathome_ng`)** is a Home Assistant (`>= 2025.2.0`) custom integration for **ABB / Busch-Jaeger free@home** built cleanly on the official **SysAP Local REST & WebSocket API** (`/fhapi/v1/api`), packaged for **Home Assistant Marketplace** (`2026.11+`, formerly HACS).
+## 3. Architecture
 
-It is designed for **zero-collision side-by-side operation** alongside the classic XMPP-based `freeathome` integration plus guided `freeathome_ng.migrate_from_legacy` takeover (preserving device metadata, Assist exposure, and Recorder history).
+1. **Two layers, one direction.** `api/` is written as if it were its own PyPI package: stdlib + `aiohttp` only, never `homeassistant` (an AST test enforces this), fully typed, raises its own exceptions (`FreeAtHomeAuthError`, connection errors). The HA layer depends on `api/`, never the reverse.
+2. **Data flow.** `client` (REST + WebSocket) → `controller` (configuration model, datapoint routing, `devicesAdded`/`devicesRemoved`) → device models → callbacks → HA entities. Entities never call REST directly; they call device-model methods.
+3. **One config entry per SysAP** (`integration_type: hub`), typed `entry.runtime_data` (`FreeAtHomeNgConfigEntry = ConfigEntry[FreeAtHomeNgRuntime]`). No state in `hass.data`.
+4. **Device model** ([ADR-001](docs/DECISIONS.md)): SysAP hub device → physical device → one channel device per free@home channel. Devices are discovered from the SysAP; never add manual subentries for bus devices.
+5. **Services** are registered once in `async_setup` and target an entry via `config_entry_id`. They never fall back silently to another SysAP.
+6. **WebSocket lifecycle:** reconnect with capped exponential backoff and jitter, full configuration resync after every reconnect, one `WARNING` on loss, `DEBUG` for retries, one `INFO` on recovery. Every background task is cancelled in `async_unload_entry`.
 
----
+## 4. Coding standards
 
-## 3. Repository Layout
+- **Python 3.12, typed.** `mypy --strict` must pass (today for `api/`; the HA layer joins in AP6). No new `Any` in public signatures, no bare `# type: ignore` (always with error code).
+- **Async:** no blocking I/O in the event loop (no `requests`, `time.sleep`, sync file I/O; use `hass.async_add_executor_job` if unavoidable). Use HA's shared `aiohttp` session via `async_get_clientsession`. Never create unmanaged tasks; use `entry.async_create_background_task`.
+- **Entities:**
+  - `_attr_has_entity_name = True` on every entity; names come from the device (primary entity, `name=None`) or from `translation_key`. No hard-coded English names.
+  - Describe entities with frozen `EntityDescription` dataclasses (`key`, `translation_key`, `device_class`, `entity_category`, `entity_registry_enabled_default`, value functions).
+  - Icons come from `icons.json` (including state icons), never `_attr_icon`.
+  - Diagnostic/config entities set `entity_category`; noisy or rarely used entities are disabled by default.
+  - `PARALLEL_UPDATES = 0` on every platform (push-only).
+  - `extra_state_attributes` only for small user-relevant values; never raw SysAP configuration or frames (use diagnostics).
+  - Availability follows both the WebSocket connection and the device's own reachability.
+- **Errors:** user-facing exceptions (`HomeAssistantError`, `ServiceValidationError`, `ConfigEntryNotReady`, `ConfigEntryAuthFailed`) use `translation_domain=DOMAIN` + `translation_key`; texts live in `strings.json` → `exceptions`. Catch `api/` exceptions at the HA boundary and re-raise as HA exceptions.
+- **Config flow:** unique ID = SysAP serial; every field has `data_description`; specific errors (`cannot_connect`, `invalid_auth`, `unknown`); reauth and reconfigure use `async_update_reload_and_abort` / `async_update_and_abort`.
+- **Repairs:** use `issue_registry` for actionable problems the user must fix (not for transient errors).
+- **Diagnostics:** everything through `async_redact_data`; redact credentials, serials, JIDs, UUIDs, host and geo data.
+- **Style:** `ruff check` and `ruff format` (config in `pyproject.toml`). Docstrings on public functions. Log with `%s` formatting, never f-strings.
+- **Names from the SysAP:** `.strip()` all room, device and channel names. Keep the 840 s keep-alive filter for binary sensors; never suppress `PID_FIRE_ALARM_ACTIVE` / `PID_CO_ALARM_ACTIVE`.
 
-- `custom_components/freeathome_ng/api/` — Pure-Python Local REST & WebSocket client (`client.py`), discovery/event controller (`controller.py`), and device models (`devices/*.py`). Zero `homeassistant` imports permitted.
-- `custom_components/freeathome_ng/` — Hub setup & services (`__init__.py`), Config/Discovery/Reauth/Reconfigure/Options flows (`config_flow.py`), migration engine (`migration.py`), entity base (`entity.py`), platforms (`binary_sensor.py`, `button.py`, `climate.py`, `cover.py`, `fan.py`, `light.py`, `lock.py`, `scene.py`, `sensor.py`, `switch.py`), `const.py`, `fah_event.py`, `diagnostics.py`, `manifest.json`, `services.yaml`, `strings.json`, `translations/` (7 locales), and `brand/` PNG assets.
-- `docs/` — Engineering standards ([HA Integration Engineering Standards](docs/HA_INTEGRATION_STANDARDS.md)) and user migration guide ([Migration Guide](docs/MIGRATION.md)).
-- `tests/` — Lightweight HA stubs (`conftest.py`), standalone mock SysAP server (`mock_sysap_server.py`), configuration fixture (`fixtures/configuration.json`), and test modules (`test_*.py`).
-- `.github/workflows/validate.yml` — GitHub Actions CI (`ruff`, `pytest`, `hassfest`, `hacs/action`).
+## 5. Protection rules (never break these)
 
----
+1. **Stable identifiers.** Never change the format of entity `unique_id`s (`{sysap_uuid}/{serialnumber}/{channel_id}[/...]`), device identifiers (`{sysap_uuid}_{serialnumber}`, `hub_{entry_id}`) or config entry unique IDs without a registry migration (`async_migrate_entry` / `er.async_migrate_entries`) and a test proving the migration.
+2. **Domain isolation.** Never use the legacy domain `freeathome`, its identifiers, `freeathome_event` or its services in normal operation. Event names `freeathome_ng_event`, `freeathome_ng_scene_triggered`, `freeathome_ng_virtual_device_command` are public API.
+3. **`migration.py`** changes only with green `tests/test_migration.py` and `tests/test_coexistence.py`, and with a new test for the changed behaviour. Keep its safety invariants (see [standards §6](docs/HA_INTEGRATION_STANDARDS.md)).
+4. **Translations:** `strings.json` is the source; all 7 locales (`en`, `de`, `es`, `fr`, `it`, `nl`, `pl`) stay key-identical and placeholder-identical (`scripts/check_translations.py`).
+5. **Public service schemas and event payloads** change only in a backwards-compatible way, or with a CHANGELOG entry under "Breaking changes".
+6. **README** contains no third-party attribution/credit sections or links to legacy forks. Call HACS on HA 2026.11+ "Home Assistant Marketplace".
+7. **Secrets:** never commit credentials, real SysAP dumps or host names; fixtures are anonymised.
 
-## 4. Non-Negotiable Architectural & HA Core Invariants
-
-1. **Pure-Python `api/` Layer:** Never import `homeassistant` inside `custom_components/freeathome_ng/api/**` (enforced by AST tests). Inject HA's managed `aiohttp.ClientSession` via `async_get_clientsession(hass, verify_ssl=verify_ssl)`.
-2. **Hub Architecture & `entry.runtime_data`:** Keep `"integration_type": "hub"` and one `ConfigEntry` per SysAP (`FreeAtHomeNgConfigEntry = ConfigEntry[FreeAtHomeNgRuntime]`). Register a `DeviceEntryType.SERVICE` Hub device at setup and implement `async_remove_config_entry_device`. Store only `"loaded_entries"` in `hass.data[DOMAIN]` for service routing. Do **not** replace WebSocket auto-discovery with manual Config Subentries.
-3. **Home Assistant 2026.11+ / 2027.x Deprecation Compliance:**
-   - Link child devices via `via_device_id` (from `runtime.hub_device_id`, with guarded `via_device=(DOMAIN, f"hub_{entry_id}")` fallback only for older HA/stubs) — required before `2027.8.0`.
-   - Look up devices with `async_get_device_by_identifier` / `async_get_devices` / `async_get` (guarded fallback to `async_get_device` only on HA `< 2026.8`) — required before `2027.8.0`.
-   - Use `hass.config_entries.async_schedule_reload` in `_async_reload_entry` / reauth triggers and `self.async_update_and_abort` in reauth/reconfigure flows (never mix `add_update_listener` with `async_update_reload_and_abort`) — required before `2026.12.0`.
-   - Use zero-arg `OptionsFlow` reading `self.config_entry`, guarded `UnitOfDensity` / `UnitOfRatio` imports (`2027.8.0`), `native_*_temperature` on climate (`2027.11.0`), `AddConfigEntryEntitiesCallback`, and `PARALLEL_UPDATES = 0` on all 10 platforms.
-4. **Local API, WebSocket & Virtual Device Invariants:**
-   - Support `/settings.json` username resolution when display name differs from JID localpart.
-   - Deduplicate WebSocket reconnect warnings (`log-when-unavailable`: single `WARNING` on disconnect, `DEBUG` retries, single `INFO` on recovery) and resync full configuration on reconnect.
-   - Strip leading/trailing whitespace (`.strip()`) on `sysapName`, device `displayName`, channel `displayName`, and room names.
-   - Filter 840 s cyclic keep-alive repeats in `FahBinarySensor`, never suppressing safety PIDs (`PID_FIRE_ALARM_ACTIVE`, `PID_CO_ALARM_ACTIVE`).
-   - Persist registered virtual devices in `entry.data[CONF_VIRTUAL_DEVICES]` with TTL heartbeats; exclude `CONF_VIRTUAL_DEVICES` from `_connection_snapshot` and honor `runtime.suppress_reload` so virtual device updates never trigger entry reloads.
-5. **Naming, Platform Semantics & Zero Recorder Bloat:**
-   - Preserve per-channel names on multi-channel actuators and binary sensors (do **not** set `_attr_has_entity_name = True` globally on `FreeAtHomeNgEntity`, as MDRC actuators group channels across rooms under one physical device). Keep `_attr_has_entity_name = True` + `translation_key` on typed `sensor.py` entities.
-   - Never dump raw SysAP configuration or frame JSON into `extra_state_attributes`. Expose redacted telemetry via `diagnostics.py` (both Config Entry and single Device diagnostics) and raise `ServiceValidationError` on invalid service targets.
-6. **Domain Isolation & Migration Safety:** Never reuse legacy `freeathome` domain names, device identifiers, entity unique IDs, event bus names (`freeathome_event`), or services during normal operation. In `migration.py`, run `dry_run=True` non-destructively, abort cutover before deleting legacy entries if zero matching NG entities exist, block partial cutover with `serialnumbers`, keep `runtime.suppress_reload = True` during cutover, copy user-only `disabled_by`/`hidden_by`, and update `entity_registry` options on `final_entity_id` after renaming.
-7. **Documentation Constraint:** Keep `README.md` strictly free of third-party attribution/credit sections or links to external legacy forks. Refer to HACS on `HA 2026.11+` accurately as **Home Assistant Marketplace**.
-
----
-
-## 5. Testing, Linting & CI Quality Gates
-
-Before finishing any change, verify all checks match CI (`.github/workflows/validate.yml`):
+## 6. Testing
 
 ```bash
-ruff check custom_components tests
-pytest
-python3 -m compileall -q custom_components/freeathome_ng tests
+pip install -e ".[dev]"
+pytest                                   # whole suite
+pytest tests/test_migration.py tests/test_coexistence.py   # guard suites
+pytest --cov --cov-report=term-missing   # coverage
 ```
 
-- Every sensor translation key, dimming state, config/options step, error/abort reason, and service/field requires parity across `services.yaml`, `strings.json`, and all 7 `translations/*.json` files (`test_translations_and_services_yaml_valid`).
-- Never break `api/` zero-HA-import AST checks, `manifest.json`, `hacs.json`, or `brand/*.png` invariants verified by tests, Hassfest, or `hacs/action`.
+- Every feature or bug fix comes with a test. Config flow: every step and every error path. Platforms: setup, state updates via WebSocket frames, actions, unavailability.
+- Use `tests/mock_sysap_server.py` and `tests/fixtures/configuration.json` for SysAP behaviour; extend the fixture rather than mocking internals.
+- **Snapshots (syrupy, from AP2):** entity and device registry snapshots per platform. Regenerate only intentionally with `pytest --snapshot-update`, and review the `.ambr` diff in the PR like code.
+- Target: > 95 % coverage for the integration package ([ADR-003](docs/DECISIONS.md)).
 
----
+## 7. Quality gate
 
-## 6. Release & Marketplace Workflow
+A change is done only when all of these pass (the `/check-quality` skill runs them and summarises):
 
-1. Keep versions synchronized in `custom_components/freeathome_ng/manifest.json`, `pyproject.toml`, `CHANGELOG.md`, and the Git tag/release (`vX.Y.Z`).
-2. Maintain strict `manifest.json` key order (`"domain"`, `"name"`, then alphabetical, including `"integration_type": "hub"` and `"categories": ["hubs_protocols"]`).
-3. Ensure GitHub repository topics (`home-assistant`, `hacs`, `custom-component`, `freeathome`, `busch-jaeger`, `abb`) stay intact for Marketplace/HACS validation.
-4. Confirm GitHub Actions (`Run pytest`, `Home Assistant Hassfest`, `HACS Validation`) pass `success`, and when testing on a live HA instance, inspect `homeassistant.helpers.frame` and `system_log` to verify zero deprecation warnings.
+```bash
+ruff check custom_components tests scripts
+ruff format --check custom_components tests scripts
+mypy
+pytest --cov --cov-report=term
+python3 scripts/check_translations.py
+```
 
----
+CI (`.github/workflows/validate.yml`) additionally runs Hassfest and HACS validation.
 
-## 7. Reference Documents
+## 8. Workflow
 
-- [HA Integration Engineering Standards](docs/HA_INTEGRATION_STANDARDS.md) — Complete reusable patterns, HA 2025–2027 deprecation table, multi-channel naming rules, Recorder hygiene, and Marketplace checklist.
-- [Legacy Migration Guide](docs/MIGRATION.md) — Step-by-step end-user migration instructions (`dry_run`, side-by-side sync, `cutover`, event/service updates, and troubleshooting).
-- [Contributing Guidelines](CONTRIBUTING.md) — Contributor environment setup, localization parity, and PR rules.
-- [Changelog](CHANGELOG.md) — Release history and implemented changes.
+- Small, single-purpose PRs on a feature branch; never push to `main` directly.
+- Add user-visible changes to `CHANGELOG.md` under `[Unreleased]`.
+- Keep this file, `docs/`, `quality_scale.yaml` and the code consistent in the same PR.
+- Releases follow the `/release` skill; versions stay in sync across `manifest.json`, `pyproject.toml`, `CHANGELOG.md` and the `vX.Y.Z` tag.
+
+## 9. Claude Code skills
+
+- `/check-quality` — run the full quality gate and report.
+- `/add-entity` — add a new entity type or platform end to end.
+- `/sync-translations` — reconcile `strings.json` with all 7 locales.
+- `/release` — prepare a release.
+
+## 10. Current gaps
+
+The code does not yet meet every rule above; open items are tracked as `todo` in `quality_scale.yaml` with their work package (AP2–AP7). When touching code in a `todo` area, move it toward the rule; never add new code that violates it.
+
+## 11. References
+
+- Integration Quality Scale: https://developers.home-assistant.io/docs/core/integration-quality-scale/
+- Architecture: https://developers.home-assistant.io/docs/architecture_index
+- Config flow, reauth, reconfigure: https://developers.home-assistant.io/docs/config_entries_config_flow_handler
+- Entities (`has_entity_name`, `EntityDescription`): https://developers.home-assistant.io/docs/core/entity
+- Diagnostics: https://developers.home-assistant.io/docs/core/integration-diagnostics
+- Repairs: https://developers.home-assistant.io/docs/core/platform/repairs
+- Translations and icons: https://developers.home-assistant.io/docs/internationalization/core
+- Testing: https://developers.home-assistant.io/docs/development_testing
+- HACS publishing: https://hacs.xyz/docs/publish/integration/
+- Ruff: https://docs.astral.sh/ruff/

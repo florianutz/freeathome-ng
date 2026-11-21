@@ -1,0 +1,106 @@
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: Services are registered in async_setup_entry and removed on last unload; move to async_setup (AP3).
+  appropriate-polling:
+    status: exempt
+    comment: local_push integration; all state arrives via the SysAP WebSocket.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Config flow tests run against HA stubs; port to pytest-homeassistant-custom-component (AP2).
+  config-flow:
+    status: todo
+    comment: data_description missing for all config and options fields (AP3).
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: README has no removal section (AP7).
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name:
+    status: todo
+    comment: Only sensor.py uses has_entity_name; channel devices per ADR-001 (AP4).
+  runtime-data:
+    status: todo
+    comment: entry.runtime_data is used; service routing still keeps loaded_entries in hass.data (AP3).
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Domain services raise ServiceValidationError; entity actions must wrap API errors in HomeAssistantError (AP3).
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: Options are mentioned but not documented as a parameter list (AP7).
+  docs-installation-parameters:
+    status: todo
+    comment: Setup fields not documented individually (AP7).
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: Coverage is 77 % (line+branch) against stubs; target is >95 % against real HA (AP2, AP3).
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update:
+    status: todo
+    comment: AP7.
+  docs-examples: done
+  docs-known-limitations:
+    status: todo
+    comment: AP7.
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: todo
+    comment: AP7.
+  docs-use-cases:
+    status: todo
+    comment: AP7.
+  dynamic-devices: done
+  entity-category:
+    status: todo
+    comment: No entity sets entity_category (AP4).
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: todo
+    comment: No entity is disabled by default (AP4).
+  entity-translations:
+    status: todo
+    comment: Only sensors use translation_key (AP4).
+  exception-translations:
+    status: todo
+    comment: All exceptions use hard-coded English text (AP5).
+  icon-translations:
+    status: todo
+    comment: icons.json does not exist yet (AP4).
+  reconfiguration-flow: done
+  repair-issues:
+    status: todo
+    comment: Candidates are legacy entry still active after cutover, SysAP firmware below 2.6, Local API disabled (AP5).
+  stale-devices:
+    status: todo
+    comment: devicesRemoved only marks devices unavailable; remove them from the device registry (AP5).
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: mypy --strict passes for api/; the HA layer follows once real HA is in the test env (AP6).
